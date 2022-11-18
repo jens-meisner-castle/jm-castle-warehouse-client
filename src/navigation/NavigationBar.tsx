@@ -10,6 +10,7 @@ const pages = [
   { to: "/", label: "Home" },
   { to: "/dashboard", label: "Dashboard" },
   { to: "/history", label: "History" },
+  { to: "/masterdata", label: "Masterdata" },
   { to: "/database-test", label: "DB-Test" },
   { to: "/system", label: "System" },
   { to: "/system-setup", label: "Setup" },

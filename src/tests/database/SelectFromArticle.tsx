@@ -3,11 +3,11 @@ import { useCallback, useMemo, useState } from "react";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { TextareaComponent } from "../../components/TextareaComponent";
 import { backendApiUrl } from "../../configuration/Urls";
-import { useStoreSelect } from "../../hooks/useStoreSelect";
+import { useArticleSelect } from "../../hooks/useArticleSelect";
 
-export const SelectFromStore = () => {
+export const SelectFromArticle = () => {
   const [indicatorSelect, setIndicatorSelect] = useState(0);
-  const { error, result, errorDetails } = useStoreSelect(
+  const { error, result, errorDetails } = useArticleSelect(
     backendApiUrl,
     undefined,
     indicatorSelect
@@ -29,7 +29,7 @@ export const SelectFromStore = () => {
   return (
     <Grid container direction="column">
       <Grid item>
-        <Typography variant="h5">{"Test: Select from store"}</Typography>
+        <Typography variant="h5">{"Test: Select from article"}</Typography>
       </Grid>
       <Grid item>
         <Grid container direction="row">

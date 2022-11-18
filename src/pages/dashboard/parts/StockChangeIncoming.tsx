@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { StockChangeTable } from "../../../components/StockChangeTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { TimeintervalFilter } from "../../../filter/Types";
-import { useReceiptLogSelect } from "../../../hooks/useReceiptLogSelect";
+import { useReceiptSelect } from "../../../hooks/useReceiptSelect";
 import { StockChangingRow } from "../../../types/RowTypes";
 
 export interface StockChangeIncomingProps {
@@ -12,7 +12,7 @@ export interface StockChangeIncomingProps {
 
 export const StockChangeIncoming = (props: StockChangeIncomingProps) => {
   const { filter } = props;
-  const { result, error } = useReceiptLogSelect(
+  const { result, error } = useReceiptSelect(
     backendApiUrl,
     filter.from,
     filter.to,
@@ -37,10 +37,10 @@ export const StockChangeIncoming = (props: StockChangeIncomingProps) => {
         const newRow: StockChangingRow = {
           type: "in",
           articleId: row.article_id,
-          at: new Date(row.at * 1000),
+          at: new Date(row.at_seconds * 1000),
           sectionId: row.section_id,
-          by: row.by,
-          count: row.count,
+          by: row.by_user,
+          count: row.article_count,
         };
         perArticle.rows.push(newRow);
         allRows.push(newRow);

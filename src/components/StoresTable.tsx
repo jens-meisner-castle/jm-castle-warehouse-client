@@ -1,5 +1,5 @@
-import { NorthEast, SouthWest } from "@mui/icons-material";
-import { Typography } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import { IconButton } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -11,7 +11,7 @@ import TablePagination, {
 } from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import { CSSProperties, useEffect, useMemo, useState } from "react";
-import { StockChangingRow } from "../types/RowTypes";
+import { StoreRow } from "../types/RowTypes";
 import { getDateFormat, getDateFormatter } from "../utils/Format";
 import { TablePaginationActions } from "./TablePaginationActions";
 
@@ -19,17 +19,23 @@ interface TableSettings {
   rowsPerPage: number;
 }
 
-export interface StockChangeTableProps {
-  data: StockChangingRow[];
+export interface StoresTableProps {
+  data: StoreRow[];
+  editable?: boolean;
   cellSize?: "small" | "medium";
   containerStyle?: CSSProperties;
+  onEdit?: (row: StoreRow) => void;
 }
 
-export const StockChangeTable = (props: StockChangeTableProps) => {
-  const { data, cellSize, containerStyle } = props;
+export const StoresTable = (props: StoresTableProps) => {
+  const { data, cellSize, containerStyle, editable, onEdit } = props;
   const [tableSettings, setTableSettings] = useState<TableSettings>({
     rowsPerPage: 20,
   });
+  const atFormatFunction = useMemo(() => {
+    const atFormat = getDateFormat("minute");
+    return getDateFormatter({ format: atFormat });
+  }, []);
   const { rowsPerPage } = tableSettings;
   const maxPage = Math.max(0, Math.ceil(data.length / rowsPerPage) - 1);
   const [page, setPage] = useState(0);
@@ -55,12 +61,11 @@ export const StockChangeTable = (props: StockChangeTableProps) => {
       rowsPerPage: parseInt(event.target.value),
     }));
   const cellStyle: CSSProperties | undefined =
-    cellSize === "small" ? { padding: 2 } : undefined;
-
-  const atFormatFunction = useMemo(() => {
-    const atFormat = getDateFormat("minute");
-    return getDateFormatter({ format: atFormat });
-  }, []);
+    cellSize === "small"
+      ? { padding: 2 }
+      : cellSize === "medium"
+      ? { padding: 6 }
+      : undefined;
 
   return (
     <TableContainer style={containerStyle} component={Paper}>
@@ -91,44 +96,49 @@ export const StockChangeTable = (props: StockChangeTableProps) => {
             />
           </TableRow>
           <TableRow>
-            <TableCell>{"Artikel"}</TableCell>
-            <TableCell align="right">{"gebucht um"}</TableCell>
-            <TableCell align="right">{"Anzahl"}</TableCell>
-            <TableCell align="center">{"gebucht von"}</TableCell>
-            <TableCell align="center">
-              <>
-                <Typography component={"span"}>{"in"}</Typography>
-                <SouthWest />
-                <Typography component={"span"}>{"out"}</Typography>
-                <NorthEast />
-              </>
+            {editable && (
+              <TableCell style={cellStyle} align="center">
+                {"Bearbeiten"}
+              </TableCell>
+            )}
+            <TableCell style={cellStyle}>{"Lager"}</TableCell>
+            <TableCell style={cellStyle}>{"Name"}</TableCell>
+            <TableCell style={cellStyle}>{"erzeugt"}</TableCell>
+            <TableCell style={cellStyle}>{"bearbeitet"}</TableCell>
+            <TableCell style={cellStyle} align="right">
+              {"Version"}
             </TableCell>
-            <TableCell align="center">{"Lagerbereich"}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {visibleRows.map((d, i) => {
-            const { articleId, sectionId, by, count, type, at } = d;
+            const { storeId, name, datasetVersion, createdAt, editedAt } = d;
 
             return (
               <TableRow key={i}>
+                {editable && (
+                  <TableCell align="center" style={cellStyle}>
+                    {
+                      <IconButton onClick={() => onEdit && onEdit(d)}>
+                        <EditIcon />
+                      </IconButton>
+                    }
+                  </TableCell>
+                )}
                 <TableCell style={cellStyle} size={cellSize}>
-                  {articleId}
+                  {storeId}
                 </TableCell>
-                <TableCell style={cellStyle} size={cellSize} align="right">
-                  {atFormatFunction(at)}
+                <TableCell style={cellStyle} size={cellSize}>
+                  {name}
                 </TableCell>
-                <TableCell style={cellStyle} size={cellSize} align="right">
-                  {count}
+                <TableCell style={cellStyle} size={cellSize}>
+                  {atFormatFunction(createdAt)}
                 </TableCell>
-                <TableCell style={cellStyle} size={cellSize} align="center">
-                  {by}
+                <TableCell style={cellStyle} size={cellSize}>
+                  {atFormatFunction(editedAt)}
                 </TableCell>
-                <TableCell style={cellStyle} size={cellSize} align="center">
-                  {type === "in" ? <SouthWest /> : <NorthEast />}
-                </TableCell>
-                <TableCell style={cellStyle} size={cellSize} align="center">
-                  {sectionId}
+                <TableCell align="right" style={cellStyle} size={cellSize}>
+                  {datasetVersion}
                 </TableCell>
               </TableRow>
             );

@@ -11,14 +11,14 @@ import { defaultFetchOptions } from "./options/Utils";
  * @param updateIndicator change to re-select (0 => no fetch)
  * @returns
  */
-export const useEmissionLogSelect = (
+export const useEmissionSelect = (
   apiUrl: string,
   from: DateTime,
   to: DateTime,
   updateIndicator: number
 ) => {
   const [queryStatus, setQueryStatus] = useState<
-    | SelectResponse<Row_Emission & { executed: never; success: never }>
+    | SelectResponse<Row_Emission>
     | {
         result: undefined;
         error: undefined;
@@ -31,10 +31,10 @@ export const useEmissionLogSelect = (
 
   useEffect(() => {
     if (updateIndicator) {
-      const logged_at_from = Math.floor(from.toMillis() / 1000);
-      const logged_at_to = Math.ceil(to.toMillis() / 1000);
+      const at_from = Math.floor(from.toMillis() / 1000);
+      const at_to = Math.ceil(to.toMillis() / 1000);
       const options = defaultFetchOptions();
-      const url = `${apiUrl}/receipt-log/select?logged_at_from=${logged_at_from}&logged_at_to=${logged_at_to}`;
+      const url = `${apiUrl}/emission/select?at_from=${at_from}&at_to=${at_to}`;
       fetch(url, options)
         .then((response) => {
           response.json().then((obj) => {

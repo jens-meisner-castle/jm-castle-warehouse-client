@@ -1,40 +1,36 @@
-import { Row_Receipt, SelectResponse } from "jm-castle-warehouse-types/build";
-import { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 import { defaultFetchOptions } from "./options/Utils";
 
 /**
  *
  * @param apiUrl backend api
- * @param logged_at_from Filter from (seconds of a date)
- * @param logged_at_to Filter to (seconds of a date)
+ * @param name Filter from (seconds of a date)
  * @param updateIndicator change to re-select (0 => no fetch)
  * @returns
  */
-export const useReceiptLogSelect = (
+export const useExampleCreate = (
   apiUrl: string,
-  from: DateTime,
-  to: DateTime,
+  name: string | undefined,
   updateIndicator: number
 ) => {
   const [queryStatus, setQueryStatus] = useState<
-    | SelectResponse<Row_Receipt>
+    | { result: Record<string, unknown[]>; error?: never; errorDetails?: never }
+    | { result?: never; error: string; errorDetails?: Record<string, unknown> }
     | {
         result: undefined;
         error: undefined;
-        errorDetails?: Record<string, unknown>;
+        errorDetails: undefined;
       }
   >({
     result: undefined,
     error: undefined,
+    errorDetails: undefined,
   });
 
   useEffect(() => {
-    if (updateIndicator) {
-      const logged_at_from = Math.floor(from.toMillis() / 1000);
-      const logged_at_to = Math.ceil(to.toMillis() / 1000);
+    if (updateIndicator && name) {
       const options = defaultFetchOptions();
-      const url = `${apiUrl}/receipt-log/select?logged_at_from=${logged_at_from}&logged_at_to=${logged_at_to}`;
+      const url = `${apiUrl}/example/create?name=${name}`;
       fetch(url, options)
         .then((response) => {
           response.json().then((obj) => {
@@ -52,9 +48,10 @@ export const useReceiptLogSelect = (
           setQueryStatus((previous) => ({
             error: error.toString(),
             result: previous.result,
+            errorDetails: undefined,
           }));
         });
     }
-  }, [apiUrl, updateIndicator, from, to]);
+  }, [apiUrl, updateIndicator, name]);
   return queryStatus;
 };

@@ -1,20 +1,37 @@
 import { Grid, Typography } from "@mui/material";
+import { Row_Article } from "jm-castle-warehouse-types/build";
 import { useCallback, useMemo, useState } from "react";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { TextareaComponent } from "../../components/TextareaComponent";
 import { backendApiUrl } from "../../configuration/Urls";
-import { useStoreSelect } from "../../hooks/useStoreSelect";
+import { useArticleInsert } from "../../hooks/useArticleInsert";
+import { toRawMasterdataFields } from "../../types/RowTypes";
 
-export const SelectFromStore = () => {
+export const InsertTestArticle = () => {
   const [indicatorSelect, setIndicatorSelect] = useState(0);
-  const { error, result, errorDetails } = useStoreSelect(
+  const [article, setArticle] = useState<Row_Article | undefined>(undefined);
+  const { error, result, errorDetails } = useArticleInsert(
     backendApiUrl,
-    undefined,
+    article,
     indicatorSelect
   );
-  const { rows, cmd } = result || {};
+  const { cmd } = result || {};
   const executeTest = useCallback(() => {
-    setIndicatorSelect((previous) => previous + 1);
+    let nextArticleNumber = -1;
+    setIndicatorSelect((previous) => {
+      nextArticleNumber = previous + 1;
+      return nextArticleNumber;
+    });
+    setArticle({
+      article_id: `test-${nextArticleNumber}`,
+      name: `test Artikel ${nextArticleNumber}`,
+      count_unit: "piece",
+      ...toRawMasterdataFields({
+        datasetVersion: 1,
+        createdAt: new Date(),
+        editedAt: new Date(),
+      }),
+    });
   }, []);
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
@@ -29,7 +46,7 @@ export const SelectFromStore = () => {
   return (
     <Grid container direction="column">
       <Grid item>
-        <Typography variant="h5">{"Test: Select from store"}</Typography>
+        <Typography variant="h5">{"Test: Insert article"}</Typography>
       </Grid>
       <Grid item>
         <Grid container direction="row">
@@ -103,21 +120,11 @@ export const SelectFromStore = () => {
       <Grid item>
         <Grid container direction="row">
           <Grid item style={{ width: leftColumnWidth }}>
-            <Typography>{"Result (count of rows)"}</Typography>
-          </Grid>
-          <Grid item flexGrow={1}>
-            <Typography>{rows ? rows.length : 0}</Typography>
-          </Grid>
-        </Grid>
-      </Grid>
-      <Grid item>
-        <Grid container direction="row">
-          <Grid item style={{ width: leftColumnWidth }}>
             <Typography>{"Result (rows)"}</Typography>
           </Grid>
           <Grid item flexGrow={1}>
             <TextareaComponent
-              value={rows || ""}
+              value={article || ""}
               formatObject
               maxRows={10}
               style={{

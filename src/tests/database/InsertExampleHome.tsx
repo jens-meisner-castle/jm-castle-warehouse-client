@@ -3,17 +3,19 @@ import { useCallback, useMemo, useState } from "react";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { TextareaComponent } from "../../components/TextareaComponent";
 import { backendApiUrl } from "../../configuration/Urls";
-import { useStoreSelect } from "../../hooks/useStoreSelect";
+import { useExampleCreate } from "../../hooks/useExampleCreate";
 
-export const SelectFromStore = () => {
+export const InsertExampleHome = () => {
   const [indicatorSelect, setIndicatorSelect] = useState(0);
-  const { error, result, errorDetails } = useStoreSelect(
+  const [name, setName] = useState<string | undefined>(undefined);
+  const { error, result, errorDetails } = useExampleCreate(
     backendApiUrl,
-    undefined,
+    name,
     indicatorSelect
   );
-  const { rows, cmd } = result || {};
+  const { cmd } = result || {};
   const executeTest = useCallback(() => {
+    setName("home");
     setIndicatorSelect((previous) => previous + 1);
   }, []);
   const actions = useMemo(() => {
@@ -29,7 +31,7 @@ export const SelectFromStore = () => {
   return (
     <Grid container direction="column">
       <Grid item>
-        <Typography variant="h5">{"Test: Select from store"}</Typography>
+        <Typography variant="h5">{"Test: Create example 'home'."}</Typography>
       </Grid>
       <Grid item>
         <Grid container direction="row">
@@ -103,22 +105,11 @@ export const SelectFromStore = () => {
       <Grid item>
         <Grid container direction="row">
           <Grid item style={{ width: leftColumnWidth }}>
-            <Typography>{"Result (count of rows)"}</Typography>
-          </Grid>
-          <Grid item flexGrow={1}>
-            <Typography>{rows ? rows.length : 0}</Typography>
-          </Grid>
-        </Grid>
-      </Grid>
-      <Grid item>
-        <Grid container direction="row">
-          <Grid item style={{ width: leftColumnWidth }}>
             <Typography>{"Result (rows)"}</Typography>
           </Grid>
           <Grid item flexGrow={1}>
             <TextareaComponent
-              value={rows || ""}
-              formatObject
+              value={result || ""}
               maxRows={10}
               style={{
                 width: "90%",

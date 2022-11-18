@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { SystemSetupResultComponent } from "../../components/SystemSetupResultComponent";
 import { SystemSetupStatusComponent } from "../../components/SystemSetupStatusComponent";
+import { TextareaComponent } from "../../components/TextareaComponent";
 import { TextComponent } from "../../components/TextComponent";
 import { backendApiUrl } from "../../configuration/Urls";
 import {
@@ -66,8 +67,16 @@ export const Page = () => {
               <Grid item style={{ width: leftColumnWidth }}>
                 <Typography>{"Setup error"}</Typography>
               </Grid>
-              <Grid item>
-                <TextComponent value={setupError} />
+              <Grid item flexGrow={1}>
+                <TextareaComponent
+                  value={setupError}
+                  maxRows={10}
+                  style={{
+                    width: "90%",
+                    resize: "none",
+                    marginRight: 30,
+                  }}
+                />
               </Grid>
             </Grid>
           </Paper>

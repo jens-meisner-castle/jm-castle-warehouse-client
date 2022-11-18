@@ -6,8 +6,8 @@ import { StockChangeTable } from "../../components/StockChangeTable";
 import { backendApiUrl } from "../../configuration/Urls";
 import { FilterComponent } from "../../filter/FilterComponent";
 import { TimeintervalFilter } from "../../filter/Types";
-import { useEmissionLogSelect } from "../../hooks/useEmissionLogSelect";
-import { useReceiptLogSelect } from "../../hooks/useReceiptLogSelect";
+import { useEmissionSelect } from "../../hooks/useEmissionSelect";
+import { useReceiptSelect } from "../../hooks/useReceiptSelect";
 import { StockChangingRow } from "../../types/RowTypes";
 import { getNewFilter } from "../../utils/Filter";
 import {
@@ -89,14 +89,9 @@ export const Page = () => {
     return [filter.from.toJSDate(), filter.to.toJSDate()];
   }, [filter]);
   const { error: selectError1, result: selectResultReceiptLog } =
-    useReceiptLogSelect(backendApiUrl, filter.from, filter.to, indicatorSelect);
+    useReceiptSelect(backendApiUrl, filter.from, filter.to, indicatorSelect);
   const { error: selectError2, result: selectResultEmissionLog } =
-    useEmissionLogSelect(
-      backendApiUrl,
-      filter.from,
-      filter.to,
-      indicatorSelect
-    );
+    useEmissionSelect(backendApiUrl, filter.from, filter.to, indicatorSelect);
   const { rowsPerStockChange, tableData } = useMemo(() => {
     const newTableData: StockChangingRow[] = [];
     const newPerStockChange: {
@@ -113,9 +108,9 @@ export const Page = () => {
         type: "in",
         sectionId: row.section_id,
         articleId: row.article_id,
-        at: new Date(row.at * 1000),
-        count: row.count,
-        by: row.by,
+        at: new Date(row.at_seconds * 1000),
+        count: row.article_count,
+        by: row.by_user,
       };
       newTableData.push(newRow);
       newPerStockChange.in.rows.push(newRow);
@@ -125,9 +120,9 @@ export const Page = () => {
         type: "out",
         sectionId: row.section_id,
         articleId: row.article_id,
-        at: new Date(row.at * 1000),
-        count: row.count,
-        by: row.by,
+        at: new Date(row.at_seconds * 1000),
+        count: row.article_count,
+        by: row.by_user,
       };
       newTableData.push(newRow);
       newPerStockChange.out.rows.push(newRow);

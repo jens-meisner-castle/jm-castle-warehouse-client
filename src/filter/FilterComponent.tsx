@@ -98,11 +98,11 @@ export const FilterComponent = (props: FilterComponentProps) => {
                 <RemoveCircleOutlineIcon />
               </IconButton>
             </Tooltip>
-            <Tooltip title={"Set the interval to [-1 hour, now]."}>
+            <Tooltip title={"Set the interval to [-7 days, now]."}>
               <IconButton
                 onClick={() =>
                   setNewTimeInterval(
-                    DateTime.now().minus({ hours: 1 }).startOf("hour"),
+                    DateTime.now().minus({ days: 7 }).startOf("day"),
                     DateTime.now()
                   )
                 }
@@ -130,11 +130,11 @@ export const FilterComponent = (props: FilterComponentProps) => {
                 <RemoveCircleOutlineIcon />
               </IconButton>
             </Tooltip>
-            <Tooltip title={"Set the interval to [-15 minutes, now]."}>
+            <Tooltip title={"Set the interval to [yesterday, now]."}>
               <IconButton
                 onClick={() =>
                   setNewTimeInterval(
-                    DateTime.now().minus({ minutes: 15 }),
+                    DateTime.now().minus({ days: 1 }).startOf("day"),
                     DateTime.now()
                   )
                 }

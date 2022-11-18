@@ -14,7 +14,7 @@ export const muiThemeDark = responsiveFontSizes(
   createTheme({
     palette: {
       mode: "dark",
-      primary: { main: "#f9a825" },
+      primary: { main: "#ab7865" },
       secondary: { main: "#1b5e20" },
     },
   })

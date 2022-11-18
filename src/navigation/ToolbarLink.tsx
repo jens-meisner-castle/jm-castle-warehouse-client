@@ -9,15 +9,19 @@ export interface ToolbarLinkProps extends LinkProps {
 }
 
 export const ToolbarLink = (props: ToolbarLinkProps) => {
-  const { to, label, variant, ...otherLinkProps } = props;
+  const { to, label, variant, style, ...otherLinkProps } = props;
   const theme = useTheme();
+  const allStyles = style
+    ? { ...style, textDecorationColor: theme.palette.text.primary }
+    : { textDecorationColor: theme.palette.text.primary };
+
   return (
-    <Link
-      to={to}
-      style={{ textDecorationColor: theme.palette.text.primary }}
-      {...otherLinkProps}
-    >
-      <Typography color={theme.palette.text.primary} variant={variant}>
+    <Link to={to} style={allStyles} {...otherLinkProps}>
+      <Typography
+        component="span"
+        color={theme.palette.text.primary}
+        variant={variant}
+      >
         {label}
       </Typography>
     </Link>

@@ -1,4 +1,4 @@
-import { Row_Store, SelectResponse } from "jm-castle-warehouse-types/build";
+import { Row_Article, SelectResponse } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
 import { defaultFetchOptions } from "./options/Utils";
 
@@ -9,13 +9,13 @@ import { defaultFetchOptions } from "./options/Utils";
  * @param updateIndicator change to re-select (0 => no fetch)
  * @returns
  */
-export const useStoreSelect = (
+export const useArticleSelect = (
   apiUrl: string,
   nameFragment: string | undefined,
   updateIndicator: number
 ) => {
   const [queryStatus, setQueryStatus] = useState<
-    | SelectResponse<Row_Store>
+    | SelectResponse<Row_Article>
     | {
         result: undefined;
         error: undefined;
@@ -29,7 +29,7 @@ export const useStoreSelect = (
   useEffect(() => {
     if (updateIndicator) {
       const options = defaultFetchOptions();
-      const url = `${apiUrl}/store/select?name=${nameFragment || "%"}`;
+      const url = `${apiUrl}/article/select?name=${nameFragment || "%"}`;
       fetch(url, options)
         .then((response) => {
           response.json().then((obj) => {
