@@ -1,6 +1,15 @@
 {
   "short_name": "Castle ac-dc",
   "name": "Castle ac-dc",
+  "type": "privileged",
+  "permissions": {
+    "audio-capture": {
+      "description": "Audio capture"
+    },
+    "speech-recognition": {
+      "description": "Speech recognition"
+    }
+  },
   "icons": [
     {
       "src": "favicon.ico",

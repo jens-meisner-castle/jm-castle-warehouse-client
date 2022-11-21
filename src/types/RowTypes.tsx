@@ -1,7 +1,9 @@
 import {
   CountUnit,
   Row_Article,
+  Row_Emission,
   Row_Masterdata,
+  Row_Receipt,
   Row_Store,
   Row_StoreSection,
 } from "jm-castle-warehouse-types/build";
@@ -99,6 +101,7 @@ export const fromRawStoreSection = (raw: Row_StoreSection): StoreSectionRow => {
 export type EmployeeId = string;
 
 export interface ReceiptRow {
+  datasetId: number | "new";
   sectionId: string;
   articleId: string;
   count: number;
@@ -107,6 +110,7 @@ export interface ReceiptRow {
 }
 
 export interface EmissionRow {
+  datasetId: number | "new";
   sectionId: string;
   articleId: string;
   count: number;
@@ -116,4 +120,20 @@ export interface EmissionRow {
 
 export type StockChangingRow = (ReceiptRow | EmissionRow) & {
   type: "in" | "out";
+};
+
+export const stockChangingRowFromRaw = (
+  row: Row_Receipt | Row_Emission,
+  type: "in" | "out"
+) => {
+  const newRow: StockChangingRow = {
+    type,
+    datasetId: row.dataset_id,
+    articleId: row.article_id,
+    at: new Date(row.at_seconds * 1000),
+    sectionId: row.section_id,
+    by: row.by_user,
+    count: row.article_count,
+  };
+  return newRow;
 };

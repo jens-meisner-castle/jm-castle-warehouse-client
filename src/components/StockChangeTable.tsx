@@ -104,11 +104,12 @@ export const StockChangeTable = (props: StockChangeTableProps) => {
               </>
             </TableCell>
             <TableCell align="center">{"Lagerbereich"}</TableCell>
+            <TableCell align="center">{"Datensatz ID"}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {visibleRows.map((d, i) => {
-            const { articleId, sectionId, by, count, type, at } = d;
+            const { articleId, sectionId, by, count, type, at, datasetId } = d;
 
             return (
               <TableRow key={i}>
@@ -129,6 +130,9 @@ export const StockChangeTable = (props: StockChangeTableProps) => {
                 </TableCell>
                 <TableCell style={cellStyle} size={cellSize} align="center">
                   {sectionId}
+                </TableCell>
+                <TableCell style={cellStyle} size={cellSize} align="center">
+                  {datasetId}
                 </TableCell>
               </TableRow>
             );

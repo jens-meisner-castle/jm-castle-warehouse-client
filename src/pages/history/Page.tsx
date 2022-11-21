@@ -106,6 +106,7 @@ export const Page = () => {
     selectResultReceiptLog?.rows?.forEach((row) => {
       const newRow: StockChangingRow = {
         type: "in",
+        datasetId: row.dataset_id,
         sectionId: row.section_id,
         articleId: row.article_id,
         at: new Date(row.at_seconds * 1000),
@@ -118,6 +119,7 @@ export const Page = () => {
     selectResultEmissionLog?.rows?.forEach((row) => {
       const newRow: StockChangingRow = {
         type: "out",
+        datasetId: row.dataset_id,
         sectionId: row.section_id,
         articleId: row.article_id,
         at: new Date(row.at_seconds * 1000),
