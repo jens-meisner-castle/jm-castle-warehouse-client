@@ -23,3 +23,8 @@ export interface FormatterFactory {
   getNumberFormatter: (options: NumberFormatOptions) => ValueFormatter;
   getDateFormatter: (options: DateFormatOptions) => ValueFormatter;
 }
+
+export interface ImageFile {
+  file: File;
+  extension: string;
+}

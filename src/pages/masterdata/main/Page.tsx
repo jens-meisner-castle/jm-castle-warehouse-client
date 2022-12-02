@@ -12,9 +12,6 @@ import { StoreSections } from "./parts/StoreSections";
 export const pageUrl = "/masterdata/main";
 
 export const Page = () => {
-  // eslint-disable-next-line
-  // @ts-ignore: disable-next-line
-  console.log(window, window.SpeechSynthesis, window.SpeechRecognition);
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const refreshStatus = useCallback(() => {
     setUpdateIndicator((previous) => previous + 1);

@@ -6,16 +6,18 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
-import { StoreRow } from "../../../types/RowTypes";
+import { StoreRow } from "../../../../types/RowTypes";
 
-export interface CreateStoreDialogProps {
+export interface EditStoreDialogProps {
   store: StoreRow;
   open: boolean;
   handleCancel: () => void;
   handleAccept: (store: StoreRow) => void;
 }
 
-export const CreateStoreDialog = (props: CreateStoreDialogProps) => {
+const neverUpdate = () => console.error("never");
+
+export const EditStoreDialog = (props: EditStoreDialogProps) => {
   const { store, handleAccept, handleCancel, open } = props;
   const [data, setData] = useState(store);
   const updateData = (updates: Partial<StoreRow>) => {
@@ -24,25 +26,24 @@ export const CreateStoreDialog = (props: CreateStoreDialogProps) => {
 
   return (
     <Dialog open={open} onClose={handleCancel}>
-      <DialogTitle>Neues Lager</DialogTitle>
+      <DialogTitle>Lager bearbeiten</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          {
-            "Füllen Sie die notwendigen Felder aus und drücken Sie am Ende 'Speichern'."
-          }
+          {"Führen Sie Ihre Änderungen durch und drücken am Ende 'Speichern'."}
         </DialogContentText>
         <TextField
-          autoFocus
+          disabled
           margin="dense"
           id="storeId"
           label="Lager"
           value={data.storeId}
-          onChange={(event) => updateData({ storeId: event.target.value })}
+          onChange={() => neverUpdate()}
           type="text"
           fullWidth
           variant="standard"
         />
         <TextField
+          autoFocus
           margin="dense"
           id="name"
           label="Name"

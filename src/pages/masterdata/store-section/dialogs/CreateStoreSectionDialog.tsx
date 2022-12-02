@@ -7,7 +7,7 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
-import { StoreRow, StoreSectionRow } from "../../../types/RowTypes";
+import { StoreRow, StoreSectionRow } from "../../../../types/RowTypes";
 
 export interface CreateStoreSectionDialogProps {
   section: StoreSectionRow;

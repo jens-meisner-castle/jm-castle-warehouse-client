@@ -1,4 +1,27 @@
-export type ReducerState<T> =
+export type FinalActionState<T> =
+  | { action: "error-new"; data: T; error: string }
+  | { action: "error-edit"; data: T; error: string }
+  | { action: "success-new"; data: T; error?: never }
+  | { action: "success-edit"; data: T; error?: never };
+
+export const getFinalActionState = <T>(
+  state: ReducerState<T>
+): FinalActionState<T> | undefined => {
+  switch (state.action) {
+    case "error-new":
+      return { action: "error-new", data: state.data, error: state.error };
+    case "error-edit":
+      return { action: "error-edit", data: state.data, error: state.error };
+    case "success-new":
+      return { action: "success-new", data: state.data };
+    case "success-edit":
+      return { action: "success-edit", data: state.data };
+    default:
+      return undefined;
+  }
+};
+
+export type ReducerState<T> = { previous?: FinalActionState<T> } & (
   | {
       action: "new";
       data: T;
@@ -15,9 +38,8 @@ export type ReducerState<T> =
   | { action: "error-new"; data: T; error: string }
   | { action: "error-edit"; data: T; error: string }
   | { action: "success-new"; data: T; error?: never }
-  | { action: "success-edit"; data: T; error?: never };
-
-export type ActionType = "new" | "cancel" | "accept" | "none";
+  | { action: "success-edit"; data: T; error?: never }
+);
 
 export type ReducerAction<T> =
   | {
@@ -36,8 +58,9 @@ export function ActionStateReducer<T>(
   prevState: ReducerState<T>,
   action: ReducerAction<T>
 ): ReducerState<T> {
-  const { type, data, error } = action;
   console.log("action in reducer", action);
+  const { type, data, error } = action;
+
   switch (type) {
     case "new":
       return { action: "new", data };
@@ -73,7 +96,7 @@ export function ActionStateReducer<T>(
           return { action: "none" };
       }
     case "reset":
-      return { action: "none" };
+      return { previous: getFinalActionState(prevState), action: "none" };
     default:
       return prevState;
   }
@@ -81,9 +104,10 @@ export function ActionStateReducer<T>(
 
 export const getValidInitialAction = (
   s: string | null | undefined
-): "new" | "edit" | "none" => {
+): "new" | "edit" | "duplicate" | "none" => {
   switch (s) {
     case "new":
+    case "duplicate":
     case "edit":
     case "none":
       return s;

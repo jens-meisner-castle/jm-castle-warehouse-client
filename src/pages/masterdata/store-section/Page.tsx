@@ -15,13 +15,13 @@ import {
   StoreSectionRow,
   toRawStoreSection,
 } from "../../../types/RowTypes";
-import { CreateStoreSectionDialog } from "../dialogs/CreateStoreSectionDialog";
-import { EditStoreSectionDialog } from "../dialogs/EditStoreSectionDialog";
 import {
   ActionStateReducer,
   getValidInitialAction,
   ReducerState,
 } from "../utils/Reducer";
+import { CreateStoreSectionDialog } from "./dialogs/CreateStoreSectionDialog";
+import { EditStoreSectionDialog } from "./dialogs/EditStoreSectionDialog";
 
 export const pageUrl = "/masterdata/store-section";
 

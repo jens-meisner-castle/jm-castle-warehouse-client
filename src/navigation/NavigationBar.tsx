@@ -32,12 +32,6 @@ export const NavigationBar = () => {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Toolbar>
-          <img
-            src="/image/castle192.png"
-            width="48px"
-            height="auto"
-            style={{ marginRight: 10 }}
-          />
           <Box sx={{ flexGrow: 1, display: { xs: "flex", lg: "none" } }}>
             <IconButton size="large" onClick={handleOpenNavMenu}>
               <MenuIcon />

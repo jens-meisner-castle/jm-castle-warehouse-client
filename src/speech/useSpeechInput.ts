@@ -45,7 +45,7 @@ export type SpeechInputResult =
 export const useSpeechInput = (topic: string, updateIndicator: number) => {
   const [recognition, setRecognition] =
     useState<SpeechRecognitionInterface | null>(null);
-  console.log(recognition && 1 > 2 && console.log("never"));
+  recognition && 1 > 2 && console.log("never");
   const [result, setResult] = useState<SpeechInputResult>({
     topic,
     recognitionInProgress: false,
@@ -95,7 +95,7 @@ export const useSpeechInput = (topic: string, updateIndicator: number) => {
         error: event.toString(),
         recognitionInProgress: false,
       });
-      console.log("Received error event from speech recognition: ", event);
+      console.error("Received error event from speech recognition: ", event);
     };
     setRecognition(newRecognition);
     newRecognition.start();

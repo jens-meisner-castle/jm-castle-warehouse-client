@@ -12,7 +12,7 @@
 /build
 
 #certificates
-/public/cert
+/cert
 
 # misc
 .DS_Store

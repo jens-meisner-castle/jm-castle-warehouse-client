@@ -8,13 +8,13 @@ import { useStoreInsert } from "../../../hooks/useStoreInsert";
 import { useStoreSelect } from "../../../hooks/useStoreSelect";
 import { useStoreUpdate } from "../../../hooks/useStoreUpdate";
 import { fromRawStore, StoreRow, toRawStore } from "../../../types/RowTypes";
-import { CreateStoreDialog } from "../dialogs/CreateStoreDialog";
-import { EditStoreDialog } from "../dialogs/EditStoreDialog";
 import {
   ActionStateReducer,
   getValidInitialAction,
   ReducerState,
 } from "../utils/Reducer";
+import { CreateStoreDialog } from "./dialogs/CreateStoreDialog";
+import { EditStoreDialog } from "./dialogs/EditStoreDialog";
 
 export const pageUrl = "/masterdata/store";
 

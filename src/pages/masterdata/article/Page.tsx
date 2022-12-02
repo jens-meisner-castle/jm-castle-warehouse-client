@@ -1,4 +1,5 @@
 import { Alert, Grid, Paper, Snackbar, Typography } from "@mui/material";
+import { Row_ImageContent } from "jm-castle-warehouse-types/build";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AppAction, AppActions } from "../../../components/AppActions";
@@ -6,19 +7,21 @@ import { ArticlesTable } from "../../../components/ArticlesTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useArticleInsert } from "../../../hooks/useArticleInsert";
 import { useArticleSelect } from "../../../hooks/useArticleSelect";
-import { useArticleUpdate } from "../../../hooks/useArticleUpdate";
+import { useArticleUpdateWithImage } from "../../../hooks/useArticleUpdateWithImage";
 import {
   ArticleRow,
   fromRawArticle,
   toRawArticle,
 } from "../../../types/RowTypes";
-import { CreateArticleDialog } from "../dialogs/CreateArticleDialog";
-import { EditArticleDialog } from "../dialogs/EditArticleDialog";
+import { initialMasterdataFields } from "../../../utils/DbValues";
 import {
   ActionStateReducer,
   getValidInitialAction,
   ReducerState,
 } from "../utils/Reducer";
+import { CreateArticleDialog } from "./dialogs/CreateArticleDialog";
+import { EditArticleDialog } from "./dialogs/EditArticleDialog";
+import { ArticleEditState } from "./Types";
 
 export const pageUrl = "/masterdata/article";
 
@@ -29,7 +32,6 @@ export const Page = () => {
   const { search } = useLocation();
   const params = useMemo(() => new URLSearchParams(search), [search]);
   const initialAction = getValidInitialAction(params.get("action"));
-
   const resetInitialAction = useCallback(
     () => initialAction !== "none" && navigate(pageUrl),
     [initialAction, navigate]
@@ -54,10 +56,10 @@ export const Page = () => {
   }, [selectResult]);
 
   const [actionState, dispatch] = useReducer<
-    typeof ActionStateReducer<ArticleRow>,
-    ReducerState<ArticleRow>
+    typeof ActionStateReducer<ArticleEditState>,
+    ReducerState<ArticleEditState>
   >(
-    ActionStateReducer<ArticleRow>,
+    ActionStateReducer<ArticleEditState>,
     { action: "none", data: undefined },
     () => ({ action: "none", data: undefined })
   );
@@ -74,27 +76,50 @@ export const Page = () => {
           dispatch({
             type: "new",
             data: {
-              articleId: "",
-              name: "",
-              countUnit: "piece",
-              datasetVersion: 1,
-              createdAt: new Date(),
-              editedAt: new Date(),
+              row: {
+                articleId: "",
+                name: "",
+                countUnit: "piece",
+                articleImgRef: undefined,
+                datasetVersion: 1,
+                createdAt: new Date(),
+                editedAt: new Date(),
+              },
             },
           });
           break;
         case "edit": {
           const articleId = params.get("articleId");
-          const data = articleId
+          const row = articleId
             ? rows.find((row) => row.articleId === articleId)
             : undefined;
-          data &&
+          row &&
             dispatch({
               type: "edit",
-              data,
+              data: { row },
             });
           break;
         }
+        case "duplicate":
+          {
+            const articleId = params.get("articleId");
+            const data = articleId
+              ? rows.find((row) => row.articleId === articleId)
+              : undefined;
+            data &&
+              dispatch({
+                type: "new",
+                data: {
+                  row: {
+                    ...data,
+                    datasetVersion: 1,
+                    createdAt: new Date(),
+                    editedAt: new Date(),
+                  },
+                },
+              });
+          }
+          break;
       }
     }
   }, [initialAction, params, rows]);
@@ -104,19 +129,30 @@ export const Page = () => {
     },
     [navigate]
   );
+  const handleDuplicate = useCallback(
+    (row: ArticleRow) => {
+      navigate(`${pageUrl}?action=duplicate&articleId=${row.articleId}`);
+    },
+    [navigate]
+  );
   const handleCancel = useCallback(() => {
     dispatch({ type: "cancel" });
     resetInitialAction();
   }, [resetInitialAction]);
   const handleAcceptNew = useCallback(
-    (article: ArticleRow) => dispatch({ type: "accept", data: article }),
+    (article: ArticleRow) =>
+      dispatch({ type: "accept", data: { row: article } }),
+    []
+  );
+  const handleAccept = useCallback(
+    (data: ArticleEditState) => dispatch({ type: "accept", data }),
     []
   );
 
   const dataToInsert = useMemo(() => {
     if (actionState.action === "accept-new") {
       const { data } = actionState;
-      const newToInsert = toRawArticle(data);
+      const newToInsert = toRawArticle(data.row);
       return newToInsert;
     }
     return undefined;
@@ -124,8 +160,24 @@ export const Page = () => {
   const dataToUpdate = useMemo(() => {
     if (actionState.action === "accept-edit") {
       const { data } = actionState;
-      const newToInsert = toRawArticle(data);
-      return newToInsert;
+      const { row, newImage } = data;
+      const { file, extension } = newImage || {};
+      const imageContent:
+        | Omit<Omit<Omit<Row_ImageContent, "size_in_bytes">, "width">, "height">
+        | undefined =
+        extension && file && row.articleImgRef
+          ? {
+              image_id: row.articleImgRef,
+              image_extension: extension,
+              ...initialMasterdataFields(),
+            }
+          : undefined;
+      const newToUpdate = {
+        row: toRawArticle(row),
+        imageContent:
+          imageContent && file ? { row: imageContent, file } : undefined,
+      };
+      return newToUpdate;
     }
     return undefined;
   }, [actionState]);
@@ -134,10 +186,16 @@ export const Page = () => {
     dataToInsert,
     1
   );
-  const { result: updateResult, error: updateError } = useArticleUpdate(
+
+  const {
+    result: completeUpdateResult,
+    error: completeUpdateError,
+    completed,
+  } = useArticleUpdateWithImage(
     backendApiUrl,
-    dataToUpdate,
-    1
+    dataToUpdate ? dataToUpdate.row : undefined,
+    dataToUpdate ? dataToUpdate.imageContent : undefined,
+    dataToUpdate ? 1 : 0
   );
 
   useEffect(() => {
@@ -145,7 +203,10 @@ export const Page = () => {
     if (dataToInsert && resultData) {
       if (dataToInsert.article_id === resultData.article_id) {
         // dann hat das Einfügen geklappt
-        dispatch({ type: "success", data: fromRawArticle(resultData) });
+        dispatch({
+          type: "success",
+          data: { row: fromRawArticle(resultData) },
+        });
         setIsAnySnackbarOpen(true);
         resetInitialAction();
         refreshStatus();
@@ -154,7 +215,7 @@ export const Page = () => {
       // dann ist etwas schief gelaufen
       dispatch({
         type: "error",
-        data: fromRawArticle(dataToInsert),
+        data: { row: fromRawArticle(dataToInsert) },
         error: insertError,
       });
       setIsAnySnackbarOpen(true);
@@ -169,29 +230,45 @@ export const Page = () => {
   ]);
 
   useEffect(() => {
-    const { data: resultData } = updateResult || {};
-    if (dataToUpdate && resultData) {
-      if (dataToUpdate.article_id === resultData.article_id) {
-        // dann hat das Aktualisieren geklappt
-        dispatch({ type: "success", data: fromRawArticle(resultData) });
-        setIsAnySnackbarOpen(true);
-        resetInitialAction();
-        refreshStatus();
+    if (completed) {
+      const { article, imageRef, imageContent } = completeUpdateResult || {};
+      const { result, error: errorArticle } = article || {};
+      const { error: errorImageRef } = imageRef || {};
+      const { error: errorImageContent } = imageContent || {};
+      if (dataToUpdate && result) {
+        const { data: resultData } = result || {};
+        if (
+          resultData &&
+          dataToUpdate.row.article_id === resultData.article_id
+        ) {
+          // dann hat das Aktualisieren geklappt
+          dispatch({
+            type: "success",
+            data: { row: fromRawArticle(resultData) },
+          });
+          setIsAnySnackbarOpen(true);
+          resetInitialAction();
+          refreshStatus();
+        }
+      } else {
+        const anyError = errorArticle || errorImageRef || errorImageContent;
+        if (dataToUpdate && anyError) {
+          // dann ist etwas schief gelaufen
+          dispatch({
+            type: "error",
+            data: { row: fromRawArticle(dataToUpdate.row) },
+            error: anyError,
+          });
+          setIsAnySnackbarOpen(true);
+          resetInitialAction();
+        }
       }
-    } else if (dataToUpdate && updateError) {
-      // dann ist etwas schief gelaufen
-      dispatch({
-        type: "error",
-        data: fromRawArticle(dataToUpdate),
-        error: updateError,
-      });
-      setIsAnySnackbarOpen(true);
-      resetInitialAction();
     }
   }, [
+    completed,
     dataToUpdate,
-    updateResult,
-    updateError,
+    completeUpdateError,
+    completeUpdateResult,
     resetInitialAction,
     refreshStatus,
   ]);
@@ -211,49 +288,49 @@ export const Page = () => {
 
   return (
     <>
-      {actionState.action === "error-new" && (
+      {actionState.previous && actionState.previous.action === "error-new" && (
         <Snackbar
           anchorOrigin={{ vertical: "top", horizontal: "center" }}
           open={isAnySnackbarOpen}
           autoHideDuration={6000}
           onClose={() => setIsAnySnackbarOpen(false)}
         >
-          <Alert severity="error">{`Fehler beim Speichern von Artikel <${actionState.data.articleId}>. ${actionState.error}`}</Alert>
+          <Alert severity="error">{`Fehler beim Speichern von Artikel <${actionState.previous.data.row.articleId}>. ${actionState.previous.error}`}</Alert>
         </Snackbar>
       )}
-      {actionState.action === "success-new" && (
+      {actionState.previous && actionState.previous.action === "success-new" && (
         <Snackbar
           anchorOrigin={{ vertical: "top", horizontal: "center" }}
           open={isAnySnackbarOpen}
           autoHideDuration={6000}
           onClose={() => setIsAnySnackbarOpen(false)}
         >
-          <Alert severity="success">{`Artikel <${actionState.data.articleId}> wurde gespeichert.`}</Alert>
+          <Alert severity="success">{`Artikel <${actionState.previous.data.row.articleId}> wurde gespeichert.`}</Alert>
         </Snackbar>
       )}
-      {actionState.action === "error-edit" && (
+      {actionState.previous && actionState.previous.action === "error-edit" && (
         <Snackbar
           anchorOrigin={{ vertical: "top", horizontal: "center" }}
           open={isAnySnackbarOpen}
           autoHideDuration={6000}
           onClose={() => setIsAnySnackbarOpen(false)}
         >
-          <Alert severity="error">{`Fehler beim Ändern von Artikel <${actionState.data.articleId}>. ${actionState.error}`}</Alert>
+          <Alert severity="error">{`Fehler beim Ändern von Artikel <${actionState.previous.data.row.articleId}>. ${actionState.previous.error}`}</Alert>
         </Snackbar>
       )}
-      {actionState.action === "success-edit" && (
+      {actionState.previous && actionState.previous.action === "success-edit" && (
         <Snackbar
           anchorOrigin={{ vertical: "top", horizontal: "center" }}
           open={isAnySnackbarOpen}
           autoHideDuration={6000}
           onClose={() => setIsAnySnackbarOpen(false)}
         >
-          <Alert severity="success">{`Artikel <${actionState.data.articleId}> wurde gespeichert.`}</Alert>
+          <Alert severity="success">{`Artikel <${actionState.previous.data.row.articleId}> wurde gespeichert.`}</Alert>
         </Snackbar>
       )}
       {actionState.action === "new" && actionState.data && (
         <CreateArticleDialog
-          article={actionState.data}
+          article={actionState.data.row}
           open={true}
           handleCancel={handleCancel}
           handleAccept={handleAcceptNew}
@@ -261,10 +338,10 @@ export const Page = () => {
       )}
       {actionState.action === "edit" && actionState.data && (
         <EditArticleDialog
-          article={actionState.data}
+          article={actionState.data.row}
           open={true}
           handleCancel={handleCancel}
-          handleAccept={handleAcceptNew}
+          handleAccept={handleAccept}
         />
       )}
       <Grid container direction="column">
@@ -291,8 +368,10 @@ export const Page = () => {
               >
                 <ArticlesTable
                   editable
+                  displayImage="small"
                   data={rows || []}
                   onEdit={handleEdit}
+                  onDuplicate={handleDuplicate}
                   cellSize="medium"
                 />
               </Paper>

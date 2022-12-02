@@ -6,46 +6,50 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
-import { useState } from "react";
-import { StoreRow, StoreSectionRow } from "../../../types/RowTypes";
+import { CountUnits, isCountUnit } from "jm-castle-warehouse-types/build";
+import { useMemo, useState } from "react";
+import { ArticleRow } from "../../../../types/RowTypes";
 
-export interface EditStoreSectionDialogProps {
-  section: StoreSectionRow;
-  stores: StoreRow[];
+export interface CreateArticleDialogProps {
+  article: ArticleRow;
   open: boolean;
   handleCancel: () => void;
-  handleAccept: (section: StoreSectionRow) => void;
+  handleAccept: (article: ArticleRow) => void;
 }
 
-const neverUpdate = () => console.log("never");
-
-export const EditStoreSectionDialog = (props: EditStoreSectionDialogProps) => {
-  const { section, stores, handleAccept, handleCancel, open } = props;
-  const [data, setData] = useState(section);
-  const updateData = (updates: Partial<StoreSectionRow>) => {
+export const CreateArticleDialog = (props: CreateArticleDialogProps) => {
+  const { article, handleAccept, handleCancel, open } = props;
+  const [data, setData] = useState(article);
+  const updateData = (updates: Partial<ArticleRow>) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
+  const countUnits = useMemo(
+    () =>
+      Object.keys(CountUnits).map((k) => ({ id: k, name: CountUnits[k].name })),
+    []
+  );
 
   return (
     <Dialog open={open} onClose={handleCancel}>
-      <DialogTitle>Lager bearbeiten</DialogTitle>
+      <DialogTitle>Neuer Artikel</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          {"Führen Sie Ihre Änderungen durch und drücken am Ende 'Speichern'."}
+          {
+            "Füllen Sie die notwendigen Felder aus und drücken Sie am Ende 'Speichern'."
+          }
         </DialogContentText>
         <TextField
-          disabled
+          autoFocus
           margin="dense"
-          id="sectionId"
-          label="Lagerbereich"
-          value={data.sectionId}
-          onChange={() => neverUpdate()}
+          id="articleId"
+          label="Artikel"
+          value={data.articleId}
+          onChange={(event) => updateData({ articleId: event.target.value })}
           type="text"
           fullWidth
           variant="standard"
         />
         <TextField
-          autoFocus
           margin="dense"
           id="name"
           label="Name"
@@ -57,19 +61,20 @@ export const EditStoreSectionDialog = (props: EditStoreSectionDialogProps) => {
         />
         <TextField
           margin="dense"
-          id="storeId"
+          id="countUnit"
           select
-          label="Lager"
-          value={data.storeId}
+          label="Zähleinheit"
+          value={data.countUnit}
           onChange={(event) => {
-            updateData({ storeId: event.target.value });
+            isCountUnit(event.target.value) &&
+              updateData({ countUnit: event.target.value });
           }}
-          helperText="Ordnen Sie den Bereich einem Lager zu"
+          helperText="Bitte wählen Sie eine Zähleinheit aus"
           variant="standard"
         >
-          {stores.map((store) => (
-            <MenuItem key={store.storeId} value={store.storeId}>
-              {`${store.storeId} (${store.name})`}
+          {countUnits.map((unit) => (
+            <MenuItem key={unit.id} value={unit.id}>
+              {`${unit.id} (${unit.name})`}
             </MenuItem>
           ))}
         </TextField>

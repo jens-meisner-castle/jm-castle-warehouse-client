@@ -28,6 +28,7 @@ export interface ArticleRow extends MasterdataRow {
   articleId: string;
   name: string;
   countUnit: CountUnit;
+  articleImgRef: string | undefined;
 }
 
 export const toRawMasterdataFields = (row: MasterdataRow): Row_Masterdata => {
@@ -50,6 +51,7 @@ export const toRawArticle = (row: ArticleRow): Row_Article => {
   return {
     article_id: row.articleId,
     name: row.name,
+    article_img_ref: row.articleImgRef || null,
     count_unit: row.countUnit,
     ...toRawMasterdataFields(row),
   };
@@ -59,6 +61,7 @@ export const fromRawArticle = (raw: Row_Article): ArticleRow => {
   return {
     articleId: raw.article_id,
     name: raw.name,
+    articleImgRef: raw.article_img_ref || undefined,
     countUnit: raw.count_unit,
     ...fromRawMasterdataFields(raw),
   };
@@ -137,3 +140,5 @@ export const stockChangingRowFromRaw = (
   };
   return newRow;
 };
+
+export type ImageContent = ReadableStream;

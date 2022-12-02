@@ -1,21 +1,17 @@
-import { Row_Article, UpdateResponse } from "jm-castle-warehouse-types/build";
+import {
+  InsertResponse,
+  Row_ImageReference,
+} from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
 import { defaultFetchOptions } from "./options/Utils";
 
-/**
- *
- * @param apiUrl backend api
- * @param name Filter from (seconds of a date)
- * @param updateIndicator change to re-select (0 => no fetch)
- * @returns
- */
-export const useArticleUpdate = (
+export const useImageReferenceInsert = (
   apiUrl: string,
-  article: Row_Article | undefined,
+  imageRef: Row_ImageReference | undefined,
   updateIndicator: number
 ) => {
   const [queryStatus, setQueryStatus] = useState<
-    | UpdateResponse<Row_Article>
+    | InsertResponse<Row_ImageReference>
     | {
         result: undefined;
         error: undefined;
@@ -27,18 +23,16 @@ export const useArticleUpdate = (
   });
 
   useEffect(() => {
-    if (!updateIndicator) {
-      setQueryStatus({ result: undefined, error: undefined });
-    } else {
-      if (article) {
-        console.log("update article", updateIndicator, article);
+    if (updateIndicator) {
+      if (imageRef) {
+        console.log("use image ref insert", updateIndicator, imageRef);
         const options = defaultFetchOptions();
         options.method = "POST";
-        options.body = JSON.stringify(article);
+        options.body = JSON.stringify(imageRef);
         options.headers = options.headers
           ? { ...options.headers, "Content-Type": "application/json" }
           : { "Content-Type": "application/json" };
-        const url = `${apiUrl}/article/update?article_id=${article.article_id}`;
+        const url = `${apiUrl}/image-ref/insert?image_id=${imageRef.image_id}`;
         setQueryStatus({ result: undefined, error: undefined });
         fetch(url, options)
           .then((response) => {
@@ -67,6 +61,6 @@ export const useArticleUpdate = (
         );
       }
     }
-  }, [apiUrl, updateIndicator, article]);
+  }, [apiUrl, updateIndicator, imageRef]);
   return queryStatus;
 };

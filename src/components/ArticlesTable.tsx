@@ -1,3 +1,4 @@
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import EditIcon from "@mui/icons-material/Edit";
 import { IconButton } from "@mui/material";
 import Paper from "@mui/material/Paper";
@@ -11,6 +12,7 @@ import TablePagination, {
 } from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import { CSSProperties, useEffect, useMemo, useState } from "react";
+import { backendApiUrl, getImageDisplayUrl } from "../configuration/Urls";
 import { ArticleRow } from "../types/RowTypes";
 import { getDateFormat, getDateFormatter } from "../utils/Format";
 import { TablePaginationActions } from "./TablePaginationActions";
@@ -22,13 +24,23 @@ interface TableSettings {
 export interface ArticlesTableProps {
   data: ArticleRow[];
   editable?: boolean;
+  displayImage?: "small" | "none";
   cellSize?: "small" | "medium";
   containerStyle?: CSSProperties;
   onEdit?: (row: ArticleRow) => void;
+  onDuplicate?: (row: ArticleRow) => void;
 }
 
 export const ArticlesTable = (props: ArticlesTableProps) => {
-  const { data, cellSize, containerStyle, editable, onEdit } = props;
+  const {
+    data,
+    cellSize,
+    containerStyle,
+    editable,
+    onEdit,
+    onDuplicate,
+    displayImage,
+  } = props;
   const [tableSettings, setTableSettings] = useState<TableSettings>({
     rowsPerPage: 20,
   });
@@ -98,7 +110,12 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
           <TableRow>
             {editable && (
               <TableCell style={cellStyle} align="center">
-                {"Bearbeiten"}
+                {""}
+              </TableCell>
+            )}
+            {editable && (
+              <TableCell style={cellStyle} align="center">
+                {""}
               </TableCell>
             )}
             <TableCell style={cellStyle}>{"Artikel"}</TableCell>
@@ -109,21 +126,35 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
             <TableCell style={cellStyle} align="right">
               {"Version"}
             </TableCell>
+            {displayImage === "small" && (
+              <TableCell style={cellStyle}>{"Artikelbild"}</TableCell>
+            )}
           </TableRow>
         </TableHead>
         <TableBody>
           {visibleRows.map((d, i) => {
             const {
               articleId,
+              articleImgRef,
               name,
               countUnit,
               datasetVersion,
               createdAt,
               editedAt,
             } = d;
+            const imageUrl = getImageDisplayUrl(backendApiUrl, articleImgRef);
 
             return (
               <TableRow key={i}>
+                {editable && (
+                  <TableCell align="center" style={cellStyle}>
+                    {
+                      <IconButton onClick={() => onDuplicate && onDuplicate(d)}>
+                        <ContentCopyIcon />
+                      </IconButton>
+                    }
+                  </TableCell>
+                )}
                 {editable && (
                   <TableCell align="center" style={cellStyle}>
                     {
@@ -150,6 +181,17 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
                 </TableCell>
                 <TableCell align="right" style={cellStyle} size={cellSize}>
                   {datasetVersion}
+                </TableCell>
+                <TableCell align="right" style={cellStyle} size={cellSize}>
+                  {displayImage === "small" && imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      width={displayImage === "small" ? 50 : 0}
+                      height="auto"
+                    />
+                  ) : (
+                    "-"
+                  )}
                 </TableCell>
               </TableRow>
             );
