@@ -1,6 +1,6 @@
 import { Grid, Typography } from "@mui/material";
 import { ApiServices } from "./parts/ApiServices";
-import { CreatingCerts } from "./parts/CreatingCerts";
+import { HowToCreateCertificates } from "./parts/HowToCreateCertificates";
 
 export const Page = () => {
   return (
@@ -12,7 +12,7 @@ export const Page = () => {
         <ApiServices />
       </Grid>
       <Grid item>
-        <CreatingCerts />
+        <HowToCreateCertificates />
       </Grid>
     </Grid>
   );

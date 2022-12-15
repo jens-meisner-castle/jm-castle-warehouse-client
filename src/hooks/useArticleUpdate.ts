@@ -1,6 +1,12 @@
-import { Row_Article, UpdateResponse } from "jm-castle-warehouse-types/build";
+import {
+  ApiServiceResponse,
+  Row_Article,
+  TokenExpiredErrorCode,
+  UnknownErrorCode,
+  UpdateResponse,
+} from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
-import { defaultFetchOptions } from "./options/Utils";
+import { useDefaultFetchOptions } from "./options/Utils";
 
 /**
  *
@@ -12,61 +18,63 @@ import { defaultFetchOptions } from "./options/Utils";
 export const useArticleUpdate = (
   apiUrl: string,
   article: Row_Article | undefined,
-  updateIndicator: number
+  updateIndicator: number,
+  handleExpiredToken?: () => void
 ) => {
   const [queryStatus, setQueryStatus] = useState<
-    | UpdateResponse<Row_Article>
-    | {
-        result: undefined;
-        error: undefined;
-        errorDetails?: Record<string, unknown>;
-      }
+    | ApiServiceResponse<UpdateResponse<Row_Article>>
+    | ApiServiceResponse<undefined>
   >({
-    result: undefined,
-    error: undefined,
+    response: undefined,
   });
-
+  const options = useDefaultFetchOptions();
   useEffect(() => {
     if (!updateIndicator) {
-      setQueryStatus({ result: undefined, error: undefined });
-    } else {
-      if (article) {
-        console.log("update article", updateIndicator, article);
-        const options = defaultFetchOptions();
-        options.method = "POST";
-        options.body = JSON.stringify(article);
-        options.headers = options.headers
-          ? { ...options.headers, "Content-Type": "application/json" }
-          : { "Content-Type": "application/json" };
-        const url = `${apiUrl}/article/update?article_id=${article.article_id}`;
-        setQueryStatus({ result: undefined, error: undefined });
-        fetch(url, options)
-          .then((response) => {
-            response.json().then((obj) => {
-              const { response, error, errorDetails } = obj || {};
-              const { result } = response || {};
-              setQueryStatus({
-                error,
-                result,
-                errorDetails,
-              });
-            });
-          })
-          .catch((error) => {
-            console.error(error);
-            setQueryStatus((previous) => ({
-              error: error.toString(),
-              result: previous.result,
-            }));
-          });
-      } else {
-        setQueryStatus((previous) =>
-          previous.error || previous.result
-            ? { result: undefined, error: undefined }
-            : previous
-        );
-      }
+      return setQueryStatus({ response: undefined });
     }
-  }, [apiUrl, updateIndicator, article]);
+    if (!article) {
+      return setQueryStatus((previous) =>
+        previous.error || previous.response ? { response: undefined } : previous
+      );
+    }
+
+    options.method = "POST";
+    options.body = JSON.stringify(article);
+    options.headers = options.headers
+      ? { ...options.headers, "Content-Type": "application/json" }
+      : { "Content-Type": "application/json" };
+    const url = `${apiUrl}/article/update?article_id=${article.article_id}`;
+    setQueryStatus({ response: undefined });
+    fetch(url, options)
+      .then((response) => {
+        response
+          .json()
+          .then((obj: ApiServiceResponse<UpdateResponse<Row_Article>>) => {
+            const { response, error, errorDetails, errorCode } = obj || {};
+            if (handleExpiredToken && errorCode === TokenExpiredErrorCode) {
+              handleExpiredToken();
+            }
+            if (error) {
+              return setQueryStatus({ error, errorCode, errorDetails });
+            }
+            const { result } = response || {};
+            if (result) {
+              return setQueryStatus({
+                response: { result },
+              });
+            }
+            return setQueryStatus({
+              errorCode: UnknownErrorCode,
+              error: `Received no error and undefined result.`,
+            });
+          });
+      })
+      .catch((error) => {
+        setQueryStatus({
+          errorCode: UnknownErrorCode,
+          error: error.toString(),
+        });
+      });
+  }, [apiUrl, updateIndicator, article, options, handleExpiredToken]);
   return queryStatus;
 };

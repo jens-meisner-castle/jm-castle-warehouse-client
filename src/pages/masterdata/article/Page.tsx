@@ -1,7 +1,17 @@
-import { Alert, Grid, Paper, Snackbar, Typography } from "@mui/material";
+import AddBoxIcon from "@mui/icons-material/AddBox";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import {
+  Alert,
+  Grid,
+  Paper,
+  Snackbar,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { Row_ImageContent } from "jm-castle-warehouse-types/build";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useSetTokenHasExpired } from "../../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../../components/AppActions";
 import { ArticlesTable } from "../../../components/ArticlesTable";
 import { backendApiUrl } from "../../../configuration/Urls";
@@ -28,6 +38,7 @@ export const pageUrl = "/masterdata/article";
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
+  const handleExpiredToken = useSetTokenHasExpired();
   const navigate = useNavigate();
   const { search } = useLocation();
   const params = useMemo(() => new URLSearchParams(search), [search]);
@@ -37,11 +48,12 @@ export const Page = () => {
     [initialAction, navigate]
   );
 
-  const { result: selectResult, error: selectError } = useArticleSelect(
+  const { response: selectResponse, error: selectError } = useArticleSelect(
     backendApiUrl,
     "%",
     updateIndicator
   );
+  const { result: selectResult } = selectResponse || {};
   const rows = useMemo(() => {
     if (selectResult) {
       const newRows: ArticleRow[] = [];
@@ -63,6 +75,7 @@ export const Page = () => {
     { action: "none", data: undefined },
     () => ({ action: "none", data: undefined })
   );
+
   const refreshStatus = useCallback(() => {
     setUpdateIndicator((previous) => previous + 1);
     dispatch({ type: "reset" });
@@ -181,11 +194,13 @@ export const Page = () => {
     }
     return undefined;
   }, [actionState]);
-  const { result: insertResult, error: insertError } = useArticleInsert(
+  const { response: insertResponse, error: insertError } = useArticleInsert(
     backendApiUrl,
     dataToInsert,
-    1
+    1,
+    handleExpiredToken
   );
+  const { result: insertResult } = insertResponse || {};
 
   const {
     result: completeUpdateResult,
@@ -220,6 +235,7 @@ export const Page = () => {
       });
       setIsAnySnackbarOpen(true);
       resetInitialAction();
+      refreshStatus();
     }
   }, [
     dataToInsert,
@@ -261,6 +277,7 @@ export const Page = () => {
           });
           setIsAnySnackbarOpen(true);
           resetInitialAction();
+          refreshStatus();
         }
       }
     }
@@ -276,11 +293,15 @@ export const Page = () => {
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
-      label: "Aktualisieren",
+      label: (
+        <Tooltip title="Daten aktualisieren">
+          <RefreshIcon />
+        </Tooltip>
+      ),
       onClick: refreshStatus,
     });
     newActions.push({
-      label: "Neu",
+      label: <AddBoxIcon />,
       onClick: () => navigate(`${pageUrl}?action=new`),
     });
     return newActions;
@@ -290,7 +311,7 @@ export const Page = () => {
     <>
       {actionState.previous && actionState.previous.action === "error-new" && (
         <Snackbar
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
           open={isAnySnackbarOpen}
           autoHideDuration={6000}
           onClose={() => setIsAnySnackbarOpen(false)}
@@ -300,7 +321,7 @@ export const Page = () => {
       )}
       {actionState.previous && actionState.previous.action === "success-new" && (
         <Snackbar
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
           open={isAnySnackbarOpen}
           autoHideDuration={6000}
           onClose={() => setIsAnySnackbarOpen(false)}
@@ -310,7 +331,7 @@ export const Page = () => {
       )}
       {actionState.previous && actionState.previous.action === "error-edit" && (
         <Snackbar
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
           open={isAnySnackbarOpen}
           autoHideDuration={6000}
           onClose={() => setIsAnySnackbarOpen(false)}
@@ -320,7 +341,7 @@ export const Page = () => {
       )}
       {actionState.previous && actionState.previous.action === "success-edit" && (
         <Snackbar
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
           open={isAnySnackbarOpen}
           autoHideDuration={6000}
           onClose={() => setIsAnySnackbarOpen(false)}

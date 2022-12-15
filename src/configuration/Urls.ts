@@ -7,4 +7,4 @@ export const getImageDisplayUrl = (
   apiUrl: string,
   imageId: string | undefined
 ) =>
-  imageId ? `${apiUrl}/image-content/select?image_id=${imageId}` : undefined;
+  imageId ? `${apiUrl}/image-content/image?image_id=${imageId}` : undefined;

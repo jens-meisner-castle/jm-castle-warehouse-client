@@ -1,6 +1,9 @@
-import { Grid, Paper, Typography } from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
+import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Tuple } from "victory";
+import { useSetTokenHasExpired } from "../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { StockChangeTable } from "../../components/StockChangeTable";
 import { backendApiUrl } from "../../configuration/Urls";
@@ -22,6 +25,7 @@ import { OptionsMenu } from "./parts/OptionsMenu";
 export const pageUrl = "/history";
 
 export const Page = () => {
+  const handleExpiredToken = useSetTokenHasExpired();
   const [pageOptions, setPageOptions] = useState(
     getNewOptions(loadOptionsForPage(pageUrl) || {})
   );
@@ -88,10 +92,24 @@ export const Page = () => {
   const xDomain = useMemo((): Tuple<Date> => {
     return [filter.from.toJSDate(), filter.to.toJSDate()];
   }, [filter]);
-  const { error: selectError1, result: selectResultReceiptLog } =
-    useReceiptSelect(backendApiUrl, filter.from, filter.to, indicatorSelect);
-  const { error: selectError2, result: selectResultEmissionLog } =
-    useEmissionSelect(backendApiUrl, filter.from, filter.to, indicatorSelect);
+  const { error: selectError1, response: selectResponseReceiptLog } =
+    useReceiptSelect(
+      backendApiUrl,
+      filter.from,
+      filter.to,
+      indicatorSelect,
+      handleExpiredToken
+    );
+  const { error: selectError2, response: selectResponseEmissionLog } =
+    useEmissionSelect(
+      backendApiUrl,
+      filter.from,
+      filter.to,
+      indicatorSelect,
+      handleExpiredToken
+    );
+  const { result: selectResultEmissionLog } = selectResponseEmissionLog || {};
+  const { result: selectResultReceiptLog } = selectResponseReceiptLog || {};
   const { rowsPerStockChange, tableData } = useMemo(() => {
     const newTableData: StockChangingRow[] = [];
     const newPerStockChange: {
@@ -147,9 +165,16 @@ export const Page = () => {
 
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
-    newActions.push({ label: "Refresh", onClick: executeSelect });
     newActions.push({
-      label: "Options",
+      label: (
+        <Tooltip title="Daten aktualisieren">
+          <RefreshIcon />
+        </Tooltip>
+      ),
+      onClick: executeSelect,
+    });
+    newActions.push({
+      label: <SettingsApplicationsIcon />,
       onClick: () => setIsOptionsVisible((previous) => !previous),
       elementRef: optionsSelectionRef,
     });

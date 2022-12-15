@@ -1,9 +1,12 @@
 import {
+  ApiServiceResponse,
   InsertResponse,
   Row_ImageContent,
+  TokenExpiredErrorCode,
+  UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
-import { defaultFetchOptions } from "./options/Utils";
+import { useDefaultFetchOptions } from "./options/Utils";
 
 /**
  *
@@ -18,29 +21,24 @@ export const useImageContentInsert = (
   imageId: string | undefined,
   imageExtension: string | undefined,
   content: File | undefined,
-  updateIndicator: number
+  updateIndicator: number,
+  handleExpiredToken?: () => void
 ) => {
   const [queryStatus, setQueryStatus] = useState<
-    | InsertResponse<Row_ImageContent>
-    | {
-        result: undefined;
-        error: undefined;
-        errorDetails?: Record<string, unknown>;
-      }
+    | ApiServiceResponse<InsertResponse<Row_ImageContent>>
+    | ApiServiceResponse<undefined>
   >({
-    result: undefined,
-    error: undefined,
+    response: undefined,
   });
+  const options = useDefaultFetchOptions();
 
   useEffect(() => {
     if (updateIndicator) {
       if (imageId && imageExtension && content) {
-        console.log("use image content insert", updateIndicator, imageId);
         const formData = new FormData();
         formData.append("image_id", imageId);
         formData.append("image_extension", imageExtension);
         formData.append("file", content);
-        const options = defaultFetchOptions();
         options.method = "POST";
         options.body = formData;
         options.headers = options.headers
@@ -52,34 +50,57 @@ export const useImageContentInsert = (
               enctype: "multipart/form-data",
             };
         const url = `${apiUrl}/image-content/insert?image_id=${imageId}`;
-        setQueryStatus({ result: undefined, error: undefined });
+        setQueryStatus({ response: undefined });
         fetch(url, options)
           .then((response) => {
-            response.json().then((obj) => {
-              const { response, error, errorDetails } = obj || {};
-              const { result } = response || {};
-              setQueryStatus({
-                error,
-                result,
-                errorDetails,
-              });
-            });
+            response
+              .json()
+              .then(
+                (obj: ApiServiceResponse<InsertResponse<Row_ImageContent>>) => {
+                  const { response, error, errorDetails, errorCode } =
+                    obj || {};
+                  if (
+                    handleExpiredToken &&
+                    errorCode === TokenExpiredErrorCode
+                  ) {
+                    handleExpiredToken();
+                  }
+                  if (error) {
+                    return setQueryStatus({ error, errorCode, errorDetails });
+                  }
+                  const { result } = response || {};
+                  if (result) {
+                    return setQueryStatus({ response: { result } });
+                  }
+                  return setQueryStatus({
+                    errorCode: UnknownErrorCode,
+                    error: `Received no error and undefined result.`,
+                  });
+                }
+              );
           })
           .catch((error) => {
-            console.error(error);
-            setQueryStatus((previous) => ({
+            setQueryStatus({
               error: error.toString(),
-              result: previous.result,
-            }));
+              errorCode: UnknownErrorCode,
+            });
           });
       } else {
         setQueryStatus((previous) =>
-          previous.error || previous.result
-            ? { result: undefined, error: undefined }
+          previous.error || previous.response
+            ? { response: undefined }
             : previous
         );
       }
     }
-  }, [apiUrl, updateIndicator, imageId, imageExtension, content]);
+  }, [
+    apiUrl,
+    updateIndicator,
+    imageId,
+    imageExtension,
+    content,
+    options,
+    handleExpiredToken,
+  ]);
   return queryStatus;
 };

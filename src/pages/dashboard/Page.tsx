@@ -1,4 +1,6 @@
-import { Grid, Paper, Typography } from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
+import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { DateTime } from "luxon";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { AppAction, AppActions } from "../../components/AppActions";
@@ -42,11 +44,15 @@ export const Page = () => {
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
-      label: "Refresh",
+      label: (
+        <Tooltip title="Daten aktualisieren">
+          <RefreshIcon />
+        </Tooltip>
+      ),
       onClick: refreshStatus,
     });
     newActions.push({
-      label: "Options",
+      label: <SettingsApplicationsIcon />,
       onClick: () => setIsOptionsVisible((previous) => !previous),
       elementRef: optionsSelectionRef,
     });

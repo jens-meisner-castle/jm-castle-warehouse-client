@@ -4,20 +4,11 @@ import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { MouseEventHandler, useState } from "react";
+import { usePages } from "./Pages";
 import { ToolbarLink } from "./ToolbarLink";
 
-const pages = [
-  { to: "/", label: "Home" },
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/history", label: "History" },
-  { to: "/masterdata", label: "Masterdata" },
-  { to: "/database-test", label: "DB-Test" },
-  { to: "/system", label: "System" },
-  { to: "/system-setup", label: "Setup" },
-  { to: "/help", label: "Help" },
-];
-
 export const NavigationBar = () => {
+  const pages = usePages();
   const [anchorElNav, setAnchorElNav] = useState<HTMLButtonElement | null>(
     null
   );

@@ -1,6 +1,8 @@
+import PlayCircleFilledIcon from "@mui/icons-material/PlayCircleFilled";
 import { Grid, Typography } from "@mui/material";
 import { Row_Article } from "jm-castle-warehouse-types/build";
 import { useCallback, useMemo, useState } from "react";
+import { useSetTokenHasExpired } from "../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { TextareaComponent } from "../../components/TextareaComponent";
 import { backendApiUrl } from "../../configuration/Urls";
@@ -10,12 +12,14 @@ import { toRawMasterdataFields } from "../../types/RowTypes";
 export const InsertTestArticle = () => {
   const [indicatorSelect, setIndicatorSelect] = useState(0);
   const [article, setArticle] = useState<Row_Article | undefined>(undefined);
-  const { error, result, errorDetails } = useArticleInsert(
+  const handleExpiredToken = useSetTokenHasExpired();
+  const { error, response, errorDetails, errorCode } = useArticleInsert(
     backendApiUrl,
     article,
-    indicatorSelect
+    indicatorSelect,
+    handleExpiredToken
   );
-  const { cmd } = result || {};
+  const { cmd } = response?.result || {};
   const executeTest = useCallback(() => {
     let nextArticleNumber = -1;
     setIndicatorSelect((previous) => {
@@ -37,7 +41,7 @@ export const InsertTestArticle = () => {
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
-      label: "Execute",
+      label: <PlayCircleFilledIcon />,
       onClick: executeTest,
     });
     return newActions;
@@ -59,6 +63,18 @@ export const InsertTestArticle = () => {
           </Grid>
         </Grid>
       </Grid>
+      {errorCode && (
+        <Grid item>
+          <Grid container direction="row">
+            <Grid item style={{ width: leftColumnWidth }}>
+              <Typography>{"Error code"}</Typography>
+            </Grid>
+            <Grid item flexGrow={1}>
+              <Typography>{errorCode}</Typography>
+            </Grid>
+          </Grid>
+        </Grid>
+      )}
       {error && (
         <Grid item>
           <Grid container direction="row">
@@ -121,7 +137,7 @@ export const InsertTestArticle = () => {
       <Grid item>
         <Grid container direction="row">
           <Grid item style={{ width: leftColumnWidth }}>
-            <Typography>{"Result (rows)"}</Typography>
+            <Typography>{"Article to insert"}</Typography>
           </Grid>
           <Grid item flexGrow={1}>
             <TextareaComponent

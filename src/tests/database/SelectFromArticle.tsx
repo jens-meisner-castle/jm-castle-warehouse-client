@@ -1,5 +1,7 @@
+import PlayCircleFilledIcon from "@mui/icons-material/PlayCircleFilled";
 import { Grid, Typography } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
+import { useSetTokenHasExpired } from "../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { TextareaComponent } from "../../components/TextareaComponent";
 import { backendApiUrl } from "../../configuration/Urls";
@@ -7,19 +9,21 @@ import { useArticleSelect } from "../../hooks/useArticleSelect";
 
 export const SelectFromArticle = () => {
   const [indicatorSelect, setIndicatorSelect] = useState(0);
-  const { error, result, errorDetails } = useArticleSelect(
+  const handleExpiredToken = useSetTokenHasExpired();
+  const { error, response, errorDetails, errorCode } = useArticleSelect(
     backendApiUrl,
     undefined,
-    indicatorSelect
+    indicatorSelect,
+    handleExpiredToken
   );
-  const { rows, cmd } = result || {};
+  const { rows, cmd } = response?.result || {};
   const executeTest = useCallback(() => {
     setIndicatorSelect((previous) => previous + 1);
   }, []);
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
-      label: "Execute",
+      label: <PlayCircleFilledIcon />,
       onClick: executeTest,
     });
     return newActions;
@@ -41,6 +45,18 @@ export const SelectFromArticle = () => {
           </Grid>
         </Grid>
       </Grid>
+      {errorCode && (
+        <Grid item>
+          <Grid container direction="row">
+            <Grid item style={{ width: leftColumnWidth }}>
+              <Typography>{"Error code"}</Typography>
+            </Grid>
+            <Grid item flexGrow={1}>
+              <Typography>{errorCode}</Typography>
+            </Grid>
+          </Grid>
+        </Grid>
+      )}
       {error && (
         <Grid item>
           <Grid container direction="row">

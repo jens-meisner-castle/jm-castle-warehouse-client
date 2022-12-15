@@ -1,5 +1,10 @@
+import {
+  ApiServiceResponse,
+  TokenExpiredErrorCode,
+  UnknownErrorCode,
+} from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
-import { defaultFetchOptions } from "./options/Utils";
+import { useDefaultFetchOptions } from "./options/Utils";
 
 /**
  *
@@ -11,47 +16,48 @@ import { defaultFetchOptions } from "./options/Utils";
 export const useExampleCreate = (
   apiUrl: string,
   name: string | undefined,
-  updateIndicator: number
+  updateIndicator: number,
+  handleExpiredToken?: () => void
 ) => {
   const [queryStatus, setQueryStatus] = useState<
-    | { result: Record<string, unknown[]>; error?: never; errorDetails?: never }
-    | { result?: never; error: string; errorDetails?: Record<string, unknown> }
-    | {
-        result: undefined;
-        error: undefined;
-        errorDetails: undefined;
-      }
-  >({
-    result: undefined,
-    error: undefined,
-    errorDetails: undefined,
-  });
-
+    ApiServiceResponse<{ result: Record<string, unknown> } | undefined>
+  >({ response: undefined });
+  const options = useDefaultFetchOptions();
   useEffect(() => {
     if (updateIndicator && name) {
-      const options = defaultFetchOptions();
       const url = `${apiUrl}/example/create?name=${name}`;
       fetch(url, options)
         .then((response) => {
-          response.json().then((obj) => {
-            const { response, error, errorDetails } = obj || {};
-            const { result } = response || {};
-            setQueryStatus({
-              error,
-              result,
-              errorDetails,
-            });
-          });
+          response
+            .json()
+            .then(
+              (
+                obj: ApiServiceResponse<{ result: Record<string, unknown> }>
+              ) => {
+                const { response, error, errorDetails, errorCode } = obj || {};
+                if (handleExpiredToken && errorCode === TokenExpiredErrorCode) {
+                  handleExpiredToken();
+                }
+                if (error) {
+                  return setQueryStatus({ error, errorCode, errorDetails });
+                }
+                if (!response) {
+                  return setQueryStatus({
+                    errorCode: UnknownErrorCode,
+                    error: "Received no error and undefined result.",
+                  });
+                }
+                setQueryStatus({ response });
+              }
+            );
         })
         .catch((error) => {
-          console.error(error);
-          setQueryStatus((previous) => ({
+          setQueryStatus({
             error: error.toString(),
-            result: previous.result,
-            errorDetails: undefined,
-          }));
+            errorCode: UnknownErrorCode,
+          });
         });
     }
-  }, [apiUrl, updateIndicator, name]);
+  }, [apiUrl, updateIndicator, name, options, handleExpiredToken]);
   return queryStatus;
 };

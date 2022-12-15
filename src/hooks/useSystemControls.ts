@@ -1,41 +1,68 @@
+import {
+  ApiServiceResponse,
+  SystemControlResponse,
+  TokenExpiredErrorCode,
+  UnknownErrorCode,
+} from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
-import { SystemControlResponse } from "jm-castle-warehouse-types/build";
-import { defaultFetchOptions } from "./options/Utils";
+import { useDefaultFetchOptions } from "./options/Utils";
 
-export interface SystemControlsQueryStatus {
-  action: ControlAction;
-  response: SystemControlResponse | undefined;
-  error: string | undefined;
-}
 export type ControlAction = "restart" | "none";
 
-export const useSystemControls = (apiUrl: string, action: ControlAction) => {
-  const [queryStatus, setQueryStatus] = useState<SystemControlsQueryStatus>({
+export const useSystemControls = (
+  apiUrl: string,
+  action: ControlAction,
+  handleExpiredToken?: () => void
+) => {
+  const [queryStatus, setQueryStatus] = useState<
+    ApiServiceResponse<SystemControlResponse | undefined> & {
+      action: ControlAction;
+    }
+  >({
     action: "none",
     response: undefined,
-    error: undefined,
   });
+  const options = useDefaultFetchOptions();
   useEffect(() => {
-    setQueryStatus({ action, response: undefined, error: undefined });
+    setQueryStatus({ action, response: undefined });
     if (action === "restart") {
-      const options = defaultFetchOptions();
       const url = `${apiUrl}/system/control/${action}`;
       fetch(url, options)
         .then((response) => {
-          response.json().then((obj) => {
-            const { response, error } = obj;
-            setQueryStatus({ action, error, response });
-          });
+          response
+            .json()
+            .then((obj: ApiServiceResponse<SystemControlResponse>) => {
+              const { response, error, errorCode, errorDetails } = obj;
+              if (handleExpiredToken && errorCode === TokenExpiredErrorCode) {
+                handleExpiredToken();
+              }
+              if (error) {
+                return setQueryStatus({
+                  error,
+                  errorCode,
+                  errorDetails,
+                  action,
+                });
+              }
+              if (!response) {
+                return setQueryStatus({
+                  action,
+                  errorCode: UnknownErrorCode,
+                  errorDetails,
+                  error: "Received no error and undefined response.",
+                });
+              }
+              setQueryStatus({ action, response });
+            });
         })
         .catch((error: Error) => {
-          console.error(error);
           setQueryStatus({
             action,
             error: error.toString(),
-            response: undefined,
+            errorCode: UnknownErrorCode,
           });
         });
     }
-  }, [apiUrl, action]);
+  }, [apiUrl, action, options, handleExpiredToken]);
   return queryStatus;
 };

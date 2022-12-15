@@ -1,8 +1,11 @@
-import { Grid, Paper, Typography } from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
+import { useSetTokenHasExpired } from "../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { SystemStatusComponent } from "../../components/SystemStatusComponent";
-import { TextComponent } from "../../components/TextComponent";
+import { TextareaComponent } from "../../components/TextareaComponent";
 import { backendApiUrl } from "../../configuration/Urls";
 import {
   ControlAction,
@@ -11,11 +14,13 @@ import {
 import { useSystemStatus } from "../../hooks/useSystemStatus";
 
 export const Page = () => {
+  const handleExpiredToken = useSetTokenHasExpired();
   const [updateIndicator, setUpdateIndicator] = useState(1);
-  const { status, error: statusError } = useSystemStatus(
-    backendApiUrl,
-    updateIndicator
-  );
+  const {
+    response: status,
+    error: statusError,
+    errorCode: statusErrorCode,
+  } = useSystemStatus(backendApiUrl, updateIndicator, handleExpiredToken);
   const refreshStatus = useCallback(() => {
     setUpdateIndicator((previous) => previous + 1);
   }, []);
@@ -42,9 +47,20 @@ export const Page = () => {
 
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
-    newActions.push({ label: "Refresh", onClick: refreshStatus });
     newActions.push({
-      label: "Restart",
+      label: (
+        <Tooltip title="Daten aktualisieren">
+          <RefreshIcon />
+        </Tooltip>
+      ),
+      onClick: refreshStatus,
+    });
+    newActions.push({
+      label: (
+        <Tooltip title="System neu starten">
+          <RestartAltIcon />
+        </Tooltip>
+      ),
       onClick: restartSystem,
       disabled: isWaitingForActionResponse,
     });
@@ -70,18 +86,36 @@ export const Page = () => {
           </Paper>
         </Grid>
       )}
+      {statusErrorCode && (
+        <Grid item>
+          <Grid container direction="row">
+            <Grid item style={{ width: leftColumnWidth }}>
+              <Typography>{"Error code"}</Typography>
+            </Grid>
+            <Grid item flexGrow={1}>
+              <Typography>{statusErrorCode}</Typography>
+            </Grid>
+          </Grid>
+        </Grid>
+      )}
       {statusError && (
         <Grid item>
-          <Paper>
-            <Grid container direction="row">
-              <Grid item style={{ width: leftColumnWidth }}>
-                <Typography>{"Status error"}</Typography>
-              </Grid>
-              <Grid item>
-                <TextComponent value={statusError} />
-              </Grid>
+          <Grid container direction="row">
+            <Grid item style={{ width: leftColumnWidth }}>
+              <Typography>{"Error"}</Typography>
             </Grid>
-          </Paper>
+            <Grid item flexGrow={1}>
+              <TextareaComponent
+                value={statusError}
+                maxRows={10}
+                style={{
+                  width: "90%",
+                  resize: "none",
+                  marginRight: 30,
+                }}
+              />
+            </Grid>
+          </Grid>
         </Grid>
       )}
       <Grid item>

@@ -11,7 +11,7 @@ export interface ApiServiceComponentProps {
 
 export const ApiServiceComponent = (props: ApiServiceComponentProps) => {
   const { service } = props;
-  const { url, method, name, parameters } = service;
+  const { url, method, name, parameters, neededRole } = service;
   const [isParamsSchemaOpen, setIsParamsSchemaOpen] = useState(false);
   const exampleQuery = useMemo(() => {
     const { properties, required } = parameters || {};
@@ -55,6 +55,16 @@ export const ApiServiceComponent = (props: ApiServiceComponentProps) => {
           </Grid>
           <Grid item>
             <Typography>{name}</Typography>
+          </Grid>
+        </Grid>
+      </Grid>
+      <Grid item>
+        <Grid container direction="row">
+          <Grid item style={{ width: leftColumnWidth }}>
+            <Typography>{"Needed role"}</Typography>
+          </Grid>
+          <Grid item>
+            <Typography>{neededRole}</Typography>
           </Grid>
         </Grid>
       </Grid>

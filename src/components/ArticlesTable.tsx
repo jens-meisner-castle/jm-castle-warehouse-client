@@ -176,8 +176,10 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
                 <TableCell style={cellStyle} size={cellSize}>
                   {atFormatFunction(createdAt)}
                 </TableCell>
-                <TableCell style={cellStyle} size={cellSize}>
-                  {atFormatFunction(editedAt)}
+                <TableCell align="center" style={cellStyle} size={cellSize}>
+                  {createdAt.getTime() === editedAt.getTime()
+                    ? "-"
+                    : atFormatFunction(editedAt)}
                 </TableCell>
                 <TableCell align="right" style={cellStyle} size={cellSize}>
                   {datasetVersion}

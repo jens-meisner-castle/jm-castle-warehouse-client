@@ -1,5 +1,7 @@
-import { Grid, Paper, Typography } from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
+import { useSetTokenHasExpired } from "../../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../../components/AppActions";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useArticleSelect } from "../../../hooks/useArticleSelect";
@@ -12,26 +14,41 @@ import { StoreSections } from "./parts/StoreSections";
 export const pageUrl = "/masterdata/main";
 
 export const Page = () => {
+  const handleExpiredToken = useSetTokenHasExpired();
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const refreshStatus = useCallback(() => {
     setUpdateIndicator((previous) => previous + 1);
   }, []);
-  const { result: articleResult, error: articleError } = useArticleSelect(
+  const { response: articleResponse, error: articleError } = useArticleSelect(
     backendApiUrl,
     "%",
-    updateIndicator
+    updateIndicator,
+    handleExpiredToken
   );
-  const { result: storeResult, error: storeError } = useStoreSelect(
+  const { result: articleResult } = articleResponse || {};
+  const { response: storeResponse, error: storeError } = useStoreSelect(
     backendApiUrl,
     "%",
-    updateIndicator
+    updateIndicator,
+    handleExpiredToken
   );
-  const { result: storeSectionResult, error: storeSectionError } =
-    useStoreSectionSelect(backendApiUrl, "%", updateIndicator);
+  const { result: storeResult } = storeResponse || {};
+  const { response: storeSectionResponse, error: storeSectionError } =
+    useStoreSectionSelect(
+      backendApiUrl,
+      "%",
+      updateIndicator,
+      handleExpiredToken
+    );
+  const { result: storeSectionResult } = storeSectionResponse || {};
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
-      label: "Refresh",
+      label: (
+        <Tooltip title="Daten aktualisieren">
+          <RefreshIcon />
+        </Tooltip>
+      ),
       onClick: refreshStatus,
     });
     return newActions;

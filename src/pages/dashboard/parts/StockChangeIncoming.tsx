@@ -1,5 +1,6 @@
 import { Paper, Typography } from "@mui/material";
 import { useMemo } from "react";
+import { useSetTokenHasExpired } from "../../../auth/AuthorizationProvider";
 import { StockChangeTable } from "../../../components/StockChangeTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { TimeintervalFilter } from "../../../filter/Types";
@@ -15,12 +16,15 @@ export interface StockChangeIncomingProps {
 
 export const StockChangeIncoming = (props: StockChangeIncomingProps) => {
   const { filter } = props;
-  const { result, error } = useReceiptSelect(
+  const handleExpiredToken = useSetTokenHasExpired();
+  const { response, error } = useReceiptSelect(
     backendApiUrl,
     filter.from,
     filter.to,
-    1
+    1,
+    handleExpiredToken
   );
+  const { result } = response || {};
   const { dataPerArticle, allRows } = useMemo(() => {
     const newPerArticle: Record<
       string,

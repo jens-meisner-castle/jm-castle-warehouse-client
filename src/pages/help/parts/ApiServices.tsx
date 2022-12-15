@@ -2,12 +2,15 @@ import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import SecurityIcon from "@mui/icons-material/Security";
 import { Grid, IconButton, Paper, Typography } from "@mui/material";
 import { useMemo, useState } from "react";
+import { useSetTokenHasExpired } from "../../../auth/AuthorizationProvider";
 import { ApiServiceComponent } from "../../../components/ApiServiceComponent";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useApiServices } from "../../../hooks/useApiServices";
 
 export const ApiServices = () => {
-  const { apiServices, error } = useApiServices(backendApiUrl);
+  const handleExpiredToken = useSetTokenHasExpired();
+  const { response, error } = useApiServices(backendApiUrl, handleExpiredToken);
+  const { services: apiServices } = response || {};
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isPrivateVisible, setIsPrivateVisible] = useState(false);
   const sortedPublicServices = useMemo(

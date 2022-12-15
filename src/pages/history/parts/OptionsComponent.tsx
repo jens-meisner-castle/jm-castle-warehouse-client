@@ -1,3 +1,4 @@
+import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
 import { Button, Grid } from "@mui/material";
 import { MouseEventHandler, useState } from "react";
 import { OptionsMenu } from "./OptionsMenu";
@@ -47,7 +48,7 @@ export const OptionsComponent = (props: OptionsComponentProps) => {
       <Grid container direction="row" alignContent={"center"}>
         <Grid item>
           <Button variant="contained" onClick={openMenu}>
-            {"Options"}
+            <SettingsApplicationsIcon />
           </Button>
         </Grid>
       </Grid>

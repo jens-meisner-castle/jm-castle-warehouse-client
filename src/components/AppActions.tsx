@@ -3,7 +3,7 @@ import { MutableRefObject } from "react";
 import { ToolbarLink } from "../navigation/ToolbarLink";
 
 export type AppAction = {
-  label: string;
+  label: string | React.ReactElement;
   disabled?: boolean;
 } & (
   | {

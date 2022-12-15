@@ -1,6 +1,12 @@
-import { InsertResponse, Row_Article } from "jm-castle-warehouse-types/build";
+import {
+  ApiServiceResponse,
+  InsertResponse,
+  Row_Article,
+  TokenExpiredErrorCode,
+  UnknownErrorCode,
+} from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
-import { defaultFetchOptions } from "./options/Utils";
+import { useDefaultFetchOptions } from "./options/Utils";
 
 /**
  *
@@ -12,58 +18,60 @@ import { defaultFetchOptions } from "./options/Utils";
 export const useArticleInsert = (
   apiUrl: string,
   article: Row_Article | undefined,
-  updateIndicator: number
+  updateIndicator: number,
+  handleExpiredToken?: () => void
 ) => {
   const [queryStatus, setQueryStatus] = useState<
-    | InsertResponse<Row_Article>
-    | {
-        result: undefined;
-        error: undefined;
-        errorDetails?: Record<string, unknown>;
-      }
+    | ApiServiceResponse<InsertResponse<Row_Article>>
+    | ApiServiceResponse<undefined>
   >({
-    result: undefined,
-    error: undefined,
+    response: undefined,
   });
-
+  const options = useDefaultFetchOptions();
   useEffect(() => {
-    if (updateIndicator) {
-      if (article) {
-        const options = defaultFetchOptions();
-        options.method = "POST";
-        options.body = JSON.stringify(article);
-        options.headers = options.headers
-          ? { ...options.headers, "Content-Type": "application/json" }
-          : { "Content-Type": "application/json" };
-        const url = `${apiUrl}/article/insert?article_id=${article.article_id}`;
-        setQueryStatus({ result: undefined, error: undefined });
-        fetch(url, options)
-          .then((response) => {
-            response.json().then((obj) => {
-              const { response, error, errorDetails } = obj || {};
-              const { result } = response || {};
-              setQueryStatus({
-                error,
-                result,
-                errorDetails,
-              });
-            });
-          })
-          .catch((error) => {
-            console.error(error);
-            setQueryStatus((previous) => ({
-              error: error.toString(),
-              result: previous.result,
-            }));
-          });
-      } else {
-        setQueryStatus((previous) =>
-          previous.error || previous.result
-            ? { result: undefined, error: undefined }
-            : previous
-        );
-      }
+    if (!updateIndicator) return;
+    if (!article) {
+      return setQueryStatus((previous) =>
+        previous.error || previous.response ? { response: undefined } : previous
+      );
     }
-  }, [apiUrl, updateIndicator, article]);
+    options.method = "POST";
+    options.body = JSON.stringify(article);
+    options.headers = options.headers
+      ? { ...options.headers, "Content-Type": "application/json" }
+      : { "Content-Type": "application/json" };
+    const url = `${apiUrl}/article/insert?article_id=${article.article_id}`;
+    setQueryStatus({ response: undefined });
+    fetch(url, options)
+      .then((response) => {
+        response
+          .json()
+          .then((obj: ApiServiceResponse<InsertResponse<Row_Article>>) => {
+            const { response, error, errorDetails, errorCode } = obj || {};
+            if (handleExpiredToken && errorCode === TokenExpiredErrorCode) {
+              handleExpiredToken();
+            }
+            if (error) {
+              return setQueryStatus({ error, errorCode, errorDetails });
+            }
+            const { result } = response || {};
+            if (result) {
+              return setQueryStatus({
+                response: { result },
+              });
+            }
+            return setQueryStatus({
+              errorCode: UnknownErrorCode,
+              error: `Received no error and undefined result.`,
+            });
+          });
+      })
+      .catch((error) => {
+        setQueryStatus({
+          errorCode: UnknownErrorCode,
+          error: error.toString(),
+        });
+      });
+  }, [apiUrl, updateIndicator, article, options, handleExpiredToken]);
   return queryStatus;
 };

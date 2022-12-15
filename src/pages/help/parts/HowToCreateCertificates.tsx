@@ -42,7 +42,7 @@ const description = [
   },
 ];
 
-export const CreatingCerts = () => {
+export const HowToCreateCertificates = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   return (

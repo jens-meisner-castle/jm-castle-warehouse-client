@@ -1,19 +1,23 @@
+import PlayCircleFilledIcon from "@mui/icons-material/PlayCircleFilled";
 import { Grid, Typography } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
+import { useSetTokenHasExpired } from "../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { TextareaComponent } from "../../components/TextareaComponent";
 import { backendApiUrl } from "../../configuration/Urls";
 import { useExampleCreate } from "../../hooks/useExampleCreate";
 
 export const InsertExampleHome = () => {
+  const handleExpiredToken = useSetTokenHasExpired();
   const [indicatorSelect, setIndicatorSelect] = useState(0);
   const [name, setName] = useState<string | undefined>(undefined);
-  const { error, result, errorDetails } = useExampleCreate(
+  const { error, response, errorDetails } = useExampleCreate(
     backendApiUrl,
     name,
-    indicatorSelect
+    indicatorSelect,
+    handleExpiredToken
   );
-  const { cmd } = result || {};
+  const { result } = response || {};
   const executeTest = useCallback(() => {
     setName("home");
     setIndicatorSelect((previous) => previous + 1);
@@ -21,7 +25,7 @@ export const InsertExampleHome = () => {
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
-      label: "Execute",
+      label: <PlayCircleFilledIcon />,
       onClick: executeTest,
     });
     return newActions;
@@ -84,24 +88,6 @@ export const InsertExampleHome = () => {
           </Grid>
         </Grid>
       )}
-      <Grid item>
-        <Grid container direction="row">
-          <Grid item style={{ width: leftColumnWidth }}>
-            <Typography>{"Command"}</Typography>
-          </Grid>
-          <Grid item flexGrow={1}>
-            <TextareaComponent
-              value={cmd || ""}
-              maxRows={10}
-              style={{
-                width: "90%",
-                resize: "none",
-                marginRight: 30,
-              }}
-            />
-          </Grid>
-        </Grid>
-      </Grid>
       <Grid item>
         <Grid container direction="row">
           <Grid item style={{ width: leftColumnWidth }}>

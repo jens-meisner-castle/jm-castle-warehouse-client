@@ -1,4 +1,13 @@
-import { Alert, Grid, Paper, Snackbar, Typography } from "@mui/material";
+import AddBoxIcon from "@mui/icons-material/AddBox";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import {
+  Alert,
+  Grid,
+  Paper,
+  Snackbar,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AppAction, AppActions } from "../../../components/AppActions";
@@ -31,11 +40,12 @@ export const Page = () => {
     [initialAction, navigate]
   );
 
-  const { result: selectResult, error: selectError } = useStoreSelect(
+  const { response: selectResponse, error: selectError } = useStoreSelect(
     backendApiUrl,
     "%",
     updateIndicator
   );
+  const { result: selectResult } = selectResponse || {};
   const rows = useMemo(() => {
     if (selectResult) {
       const newRows: StoreRow[] = [];
@@ -123,16 +133,18 @@ export const Page = () => {
     }
     return undefined;
   }, [actionState]);
-  const { result: insertResult, error: insertError } = useStoreInsert(
+  const { response: insertResponse, error: insertError } = useStoreInsert(
     backendApiUrl,
     dataToInsert,
     1
   );
-  const { result: updateResult, error: updateError } = useStoreUpdate(
+  const { result: insertResult } = insertResponse || {};
+  const { response: updateResponse, error: updateError } = useStoreUpdate(
     backendApiUrl,
     dataToUpdate,
     1
   );
+  const { result: updateResult } = updateResponse || {};
 
   useEffect(() => {
     const { data: resultData } = insertResult || {};
@@ -193,11 +205,15 @@ export const Page = () => {
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
-      label: "Aktualisieren",
+      label: (
+        <Tooltip title="Daten aktualisieren">
+          <RefreshIcon />
+        </Tooltip>
+      ),
       onClick: refreshStatus,
     });
     newActions.push({
-      label: "Neu",
+      label: <AddBoxIcon />,
       onClick: () => navigate(`${pageUrl}?action=new`),
     });
     return newActions;

@@ -1,11 +1,11 @@
-import { Grid, Paper, Typography } from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { ExecuteSetupResponse } from "jm-castle-warehouse-types/build";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { SystemSetupResultComponent } from "../../components/SystemSetupResultComponent";
 import { SystemSetupStatusComponent } from "../../components/SystemSetupStatusComponent";
 import { TextareaComponent } from "../../components/TextareaComponent";
-import { TextComponent } from "../../components/TextComponent";
 import { backendApiUrl } from "../../configuration/Urls";
 import {
   ExecuteState,
@@ -15,10 +15,11 @@ import { useSystemSetupStatus } from "../../hooks/useSystemSetupStatus";
 
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
-  const { status, error: statusError } = useSystemSetupStatus(
-    backendApiUrl,
-    updateIndicator
-  );
+  const {
+    response: status,
+    error: statusError,
+    errorCode: statusErrorCode,
+  } = useSystemSetupStatus(backendApiUrl, updateIndicator);
   const [execution, setExecution] = useState<{
     setupResult: ExecuteSetupResponse["setup"] | undefined;
     state: ExecuteState;
@@ -42,7 +43,14 @@ export const Page = () => {
 
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
-    newActions.push({ label: "Refresh", onClick: refreshStatus });
+    newActions.push({
+      label: (
+        <Tooltip title="Daten aktualisieren">
+          <RefreshIcon />
+        </Tooltip>
+      ),
+      onClick: refreshStatus,
+    });
     newActions.push({ label: "SETUP", onClick: startSetup });
     return newActions;
   }, [refreshStatus, startSetup]);
@@ -82,18 +90,36 @@ export const Page = () => {
           </Paper>
         </Grid>
       )}
+      {statusErrorCode && (
+        <Grid item>
+          <Grid container direction="row">
+            <Grid item style={{ width: leftColumnWidth }}>
+              <Typography>{"Error code"}</Typography>
+            </Grid>
+            <Grid item flexGrow={1}>
+              <Typography>{statusErrorCode}</Typography>
+            </Grid>
+          </Grid>
+        </Grid>
+      )}
       {statusError && (
         <Grid item>
-          <Paper>
-            <Grid container direction="row">
-              <Grid item style={{ width: leftColumnWidth }}>
-                <Typography>{"Status error"}</Typography>
-              </Grid>
-              <Grid item>
-                <TextComponent value={statusError} />
-              </Grid>
+          <Grid container direction="row">
+            <Grid item style={{ width: leftColumnWidth }}>
+              <Typography>{"Error"}</Typography>
             </Grid>
-          </Paper>
+            <Grid item flexGrow={1}>
+              <TextareaComponent
+                value={statusError}
+                maxRows={10}
+                style={{
+                  width: "90%",
+                  resize: "none",
+                  marginRight: 30,
+                }}
+              />
+            </Grid>
+          </Grid>
         </Grid>
       )}
       {setupResult && (

@@ -4,7 +4,7 @@ import { Link, LinkProps } from "react-router-dom";
 
 export interface ToolbarLinkProps extends LinkProps {
   to: string;
-  label: string;
+  label: string | React.ReactElement;
   variant?: Variant;
 }
 

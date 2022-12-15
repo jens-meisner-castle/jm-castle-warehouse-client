@@ -50,7 +50,6 @@ const reducer = (
   previous: ExecutionStatus,
   action: ExecutionAction
 ): ExecutionStatus => {
-  console.log("action", action);
   const { type, error, payload } = action;
   switch (type) {
     case "completed":
@@ -156,7 +155,8 @@ export const useArticleUpdateWithImage = (
         file: File;
       }
     | undefined,
-  updateIndicator: number
+  updateIndicator: number,
+  handleExpiredToken?: () => void
 ) => {
   const imageRef: Row_ImageReference | undefined = useMemo(() => {
     if (imageContent) {
@@ -189,11 +189,13 @@ export const useArticleUpdateWithImage = (
     }
   }, [updateIndicator, article]);
 
-  const { result: articleResult, error: articleError } = useArticleUpdate(
+  const { response: articleResponse, error: articleError } = useArticleUpdate(
     apiUrl,
     article,
-    status.action === "update-article" ? updateIndicator : 0
+    status.action === "update-article" ? updateIndicator : 0,
+    handleExpiredToken
   );
+  const { result: articleResult } = articleResponse || {};
 
   useEffect(() => {
     if (updateIndicator) {
@@ -222,12 +224,14 @@ export const useArticleUpdateWithImage = (
     }
   }, [updateIndicator, currentAction, imageContent]);
 
-  const { result: imageRefResult, error: imageRefError } =
+  const { response: imageRefResponse, error: imageRefError } =
     useImageReferenceInsert(
       apiUrl,
       imageRef,
-      status.action === "insert-image-ref" ? updateIndicator : 0
+      status.action === "insert-image-ref" ? updateIndicator : 0,
+      handleExpiredToken
     );
+  const { result: imageRefResult } = imageRefResponse || {};
 
   useEffect(() => {
     if (updateIndicator) {
@@ -244,14 +248,16 @@ export const useArticleUpdateWithImage = (
     }
   }, [updateIndicator, imageRefError, imageRefResult]);
 
-  const { result: imageContentResult, error: imageContentError } =
+  const { response: imageContentResponse, error: imageContentError } =
     useImageContentInsert(
       apiUrl,
       imageContent ? imageContent.row.image_id : undefined,
       imageContent ? imageContent.row.image_extension : undefined,
       imageContent ? imageContent.file : undefined,
-      status.action === "insert-image-content" ? updateIndicator : 0
+      status.action === "insert-image-content" ? updateIndicator : 0,
+      handleExpiredToken
     );
+  const { result: imageContentResult } = imageContentResponse || {};
 
   useEffect(() => {
     if (updateIndicator) {

@@ -58,7 +58,6 @@ export function ActionStateReducer<T>(
   prevState: ReducerState<T>,
   action: ReducerAction<T>
 ): ReducerState<T> {
-  console.log("action in reducer", action);
   const { type, data, error } = action;
 
   switch (type) {

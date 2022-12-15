@@ -1,6 +1,12 @@
-import { InsertResponse, Row_Store } from "jm-castle-warehouse-types/build";
+import {
+  ApiServiceResponse,
+  InsertResponse,
+  Row_Store,
+  TokenExpiredErrorCode,
+  UnknownErrorCode,
+} from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
-import { defaultFetchOptions } from "./options/Utils";
+import { useDefaultFetchOptions } from "./options/Utils";
 
 /**
  *
@@ -12,58 +18,60 @@ import { defaultFetchOptions } from "./options/Utils";
 export const useStoreInsert = (
   apiUrl: string,
   store: Row_Store | undefined,
-  updateIndicator: number
+  updateIndicator: number,
+  handleExpiredToken?: () => void
 ) => {
   const [queryStatus, setQueryStatus] = useState<
-    | InsertResponse<Row_Store>
-    | {
-        result: undefined;
-        error: undefined;
-        errorDetails?: Record<string, unknown>;
-      }
+    | ApiServiceResponse<InsertResponse<Row_Store>>
+    | ApiServiceResponse<undefined>
   >({
-    result: undefined,
-    error: undefined,
+    response: undefined,
   });
-
+  const options = useDefaultFetchOptions();
   useEffect(() => {
-    if (updateIndicator) {
-      if (store) {
-        const options = defaultFetchOptions();
-        options.method = "POST";
-        options.body = JSON.stringify(store);
-        options.headers = options.headers
-          ? { ...options.headers, "Content-Type": "application/json" }
-          : { "Content-Type": "application/json" };
-        const url = `${apiUrl}/store/insert?store_id=${store.store_id}`;
-        setQueryStatus({ result: undefined, error: undefined });
-        fetch(url, options)
-          .then((response) => {
-            response.json().then((obj) => {
-              const { response, error, errorDetails } = obj || {};
-              const { result } = response || {};
-              setQueryStatus({
-                error,
-                result,
-                errorDetails,
-              });
-            });
-          })
-          .catch((error) => {
-            console.error(error);
-            setQueryStatus((previous) => ({
-              error: error.toString(),
-              result: previous.result,
-            }));
-          });
-      } else {
-        setQueryStatus((previous) =>
-          previous.error || previous.result
-            ? { result: undefined, error: undefined }
-            : previous
-        );
-      }
+    if (!updateIndicator) return;
+    if (!store) {
+      return setQueryStatus((previous) =>
+        previous.error || previous.response ? { response: undefined } : previous
+      );
     }
-  }, [apiUrl, updateIndicator, store]);
+    options.method = "POST";
+    options.body = JSON.stringify(store);
+    options.headers = options.headers
+      ? { ...options.headers, "Content-Type": "application/json" }
+      : { "Content-Type": "application/json" };
+    const url = `${apiUrl}/store/insert?store_id=${store.store_id}`;
+    setQueryStatus({ response: undefined });
+    fetch(url, options)
+      .then((response) => {
+        response
+          .json()
+          .then((obj: ApiServiceResponse<InsertResponse<Row_Store>>) => {
+            const { response, error, errorDetails, errorCode } = obj || {};
+            if (handleExpiredToken && errorCode === TokenExpiredErrorCode) {
+              handleExpiredToken();
+            }
+            if (error) {
+              return setQueryStatus({ error, errorCode, errorDetails });
+            }
+            const { result } = response || {};
+            if (result) {
+              return setQueryStatus({
+                response: { result },
+              });
+            }
+            return setQueryStatus({
+              errorCode: UnknownErrorCode,
+              error: `Received no error and undefined result.`,
+            });
+          });
+      })
+      .catch((error) => {
+        setQueryStatus({
+          errorCode: UnknownErrorCode,
+          error: error.toString(),
+        });
+      });
+  }, [apiUrl, updateIndicator, store, options, handleExpiredToken]);
   return queryStatus;
 };
