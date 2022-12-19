@@ -1,4 +1,4 @@
-const version = "0.5.0";
+const version = "0.6.1";
 /** die erste Zeile wird im prebuild ersetzt (siehe src/WriteServiceWorker.js) */
 console.log(`execute service-worker.js (version: ${version})`);
 /* eslint-disable */
@@ -62,10 +62,9 @@ const fetchCached = async (request) => {
 
 self.addEventListener("fetch", function (event) {
   const url = new URL(event.request.url);
-  console.log(url.pathname);
-  token && token.length && console.log("I have a token: xxx");
-  const preparedRequest =
-    token && token.length ? addToken(event.request) : event.request;
+  // console.log(url.pathname);
+  // token && token.length && console.log("I have a token: xxx");
+  const preparedRequest = addToken(event.request);
   return shouldUseCache(url.pathname)
     ? event.respondWith(fetchCached(preparedRequest))
     : event.respondWith(fetch(preparedRequest));

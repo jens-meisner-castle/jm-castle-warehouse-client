@@ -1,14 +1,8 @@
-export const registerServiceWorker = () => {
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      console.log("register service-worker");
-      const swUrl = `${window.location.protocol}//${window.location.host}/service-worker.js`;
-      registerValidSW(new URL(swUrl));
-    });
-  }
-};
-
-const registerValidSW = (swUrl: string | URL) => {
+const postLoadServiceWorker = () => {
+  console.log("register service-worker");
+  const swUrl = new URL(
+    `${window.location.protocol}//${window.location.host}/service-worker.js`
+  );
   navigator.serviceWorker
     .register(swUrl)
     .then((registration) => {
@@ -18,15 +12,8 @@ const registerValidSW = (swUrl: string | URL) => {
           installingWorker.onstatechange = () => {
             if (installingWorker.state === "installed") {
               if (navigator.serviceWorker.controller) {
-                // At this point, the old content will have been purged and
-                // the fresh content will have been added to the cache.
-                // It's the perfect time to display a 'New content is
-                // available; please refresh.' message in your web app.
                 console.log("New content is available; please refresh.");
               } else {
-                // At this point, everything has been precached.
-                // It's the perfect time to display a
-                // 'Content is cached for offline use.' message.
                 console.log("Content is cached for offline use.");
               }
             }
@@ -37,4 +24,10 @@ const registerValidSW = (swUrl: string | URL) => {
     .catch((error) => {
       console.error("Error during service worker registration:", error);
     });
+};
+
+export const registerServiceWorker = () => {
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", postLoadServiceWorker);
+  }
 };
