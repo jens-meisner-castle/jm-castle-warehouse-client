@@ -7,22 +7,29 @@ import {
   useEffect,
   useState,
 } from "react";
+import { backendApiUrl } from "../configuration/Urls";
+import { useVerifyToken } from "../hooks/useVerifyToken";
 
 interface Authorization {
-  loginResult?: LoginResult;
+  verifiedUser?: {
+    username: string;
+    roles: string[];
+    expiresAtMs: number;
+    expiresAtDisplay: string;
+  };
   tokenHasExpired: boolean;
-  setLoginResult: (loginResult: LoginResult) => void;
-  resetLoginResult: () => void;
+  handleLoginResult: (loginResult: LoginResult) => void;
+  handleLogoutResult: () => void;
   setTokenHasExpired: () => void;
 }
 
 const initialValue: Authorization = {
   tokenHasExpired: false,
-  setLoginResult: (loginResult: LoginResult) => {
-    console.error("Empty setLoginResult function. Result is", loginResult);
+  handleLoginResult: (loginResult: LoginResult) => {
+    console.error("Empty handleLoginResult function. Result is", loginResult);
   },
-  resetLoginResult: () => {
-    console.error("Empty resetLoginResult function.");
+  handleLogoutResult: () => {
+    console.error("Empty handleLogoutResult function.");
   },
   setTokenHasExpired: () => {
     console.error("Empty setTokenHasExpired function.");
@@ -33,39 +40,82 @@ const context = createContext(initialValue);
 
 export const { Provider } = context;
 
-export interface AuthorizationProviderProps {
-  loginResult?: string;
-}
-
 export const AuthorizationProvider = (props: PropsWithChildren) => {
   const { children } = props;
-  const [loginResult, setLoginResult] = useState<LoginResult | undefined>(
-    undefined
-  );
   const [isTokenExpired, setIsTokenExpired] = useState(false);
   const setTokenHasExpired = useCallback(() => {
     // console.log("token expired");
     setIsTokenExpired(true);
   }, []);
-  const resetLoginResult = useCallback(() => setLoginResult(undefined), []);
+
+  const handleLoginResult = useCallback((loginResult: LoginResult) => {
+    const { token, username, roles, expiresAtDisplay, expiresAtMs } =
+      loginResult || {};
+    if (navigator.serviceWorker?.controller) {
+      if (token) {
+        navigator.serviceWorker.controller.postMessage({
+          type: "SET_TOKEN",
+          token: `Bearer ${token}`,
+        });
+      }
+    }
+    if (username && roles && expiresAtDisplay && expiresAtMs) {
+      const verifiedUser = { username, roles, expiresAtDisplay, expiresAtMs };
+      setProviderValue((previous) => ({
+        ...previous,
+        verifiedUser,
+        tokenHasExpired: false,
+      }));
+    } else {
+      setProviderValue((previous) => ({
+        ...previous,
+        verifiedUser: undefined,
+        tokenHasExpired: false,
+      }));
+    }
+  }, []);
+
+  const handleLogoutResult = useCallback(() => {
+    if (navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: "RESET_TOKEN",
+      });
+    }
+    setProviderValue((previous) => ({
+      ...previous,
+      verifiedUser: undefined,
+      tokenHasExpired: false,
+    }));
+  }, []);
 
   const [providerValue, setProviderValue] = useState<Authorization>({
     tokenHasExpired: isTokenExpired,
-    loginResult,
-    setLoginResult,
-    resetLoginResult,
+    handleLoginResult,
+    handleLogoutResult,
     setTokenHasExpired,
   });
+
+  // check once if the service worker has already a valid token
+  const verifyResult = useVerifyToken(backendApiUrl, 1);
+
   useEffect(() => {
-    // console.log("loginResultChanged", loginResult);
-    setProviderValue((previous) => ({
-      ...previous,
-      loginResult,
-      tokenHasExpired: false,
-    }));
-  }, [loginResult]);
+    // check once if the service worker has already (or still) a valid token
+    const { response } = verifyResult;
+    const { username, roles, expiresAtDisplay, expiresAtMs } = response || {};
+    if (username && roles && expiresAtDisplay && expiresAtMs) {
+      setProviderValue((previous) => ({
+        ...previous,
+        verifiedUser: { username, roles, expiresAtDisplay, expiresAtMs },
+      }));
+    }
+  }, [verifyResult]);
+
   useEffect(() => {
-    // console.log("isTokenExpiredChanged", isTokenExpired);
+    if (isTokenExpired && navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: "RESET_TOKEN",
+      });
+    }
     setProviderValue((previous) => ({
       ...previous,
       tokenHasExpired: isTokenExpired,
@@ -75,22 +125,23 @@ export const AuthorizationProvider = (props: PropsWithChildren) => {
   return <Provider value={providerValue}>{children}</Provider>;
 };
 
-export const useAuthorizationToken = () => {
+export const useVerifiedUser = () => {
   const contextValue = useContext(context);
   if (!contextValue) {
     throw new Error("AuthorizationProvider is needed in react hierarchy.");
   }
-  const { loginResult } = contextValue;
-  return loginResult && loginResult.token;
+  const { verifiedUser } = contextValue;
+  return verifiedUser;
 };
 
-export const useLoginResult = () => {
+export const useUserRoles = () => {
   const contextValue = useContext(context);
   if (!contextValue) {
     throw new Error("AuthorizationProvider is needed in react hierarchy.");
   }
-  const { loginResult } = contextValue;
-  return loginResult;
+  const { verifiedUser } = contextValue;
+  const { roles } = verifiedUser || {};
+  return roles;
 };
 
 export const useTokenHasExpired = () => {
@@ -102,22 +153,22 @@ export const useTokenHasExpired = () => {
   return tokenHasExpired;
 };
 
-export const useSetLoginResult = () => {
+export const useHandleLoginResult = () => {
   const contextValue = useContext(context);
   if (!contextValue) {
     throw new Error("AuthorizationProvider is needed in react hierarchy.");
   }
-  const { setLoginResult } = contextValue;
-  return setLoginResult;
+  const { handleLoginResult } = contextValue;
+  return handleLoginResult;
 };
 
-export const useResetLoginResult = () => {
+export const useHandleLogoutResult = () => {
   const contextValue = useContext(context);
   if (!contextValue) {
     throw new Error("AuthorizationProvider is needed in react hierarchy.");
   }
-  const { resetLoginResult } = contextValue;
-  return resetLoginResult;
+  const { handleLogoutResult } = contextValue;
+  return handleLogoutResult;
 };
 
 export const useSetTokenHasExpired = () => {

@@ -1,6 +1,6 @@
 import { ExecuteSetupResponse } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
-import { useDefaultFetchOptions } from "./options/Utils";
+import { defaultFetchOptions } from "./options/Utils";
 
 export interface ExecuteSystemSetupQueryStatus {
   setup: ExecuteSetupResponse["setup"] | undefined;
@@ -15,9 +15,10 @@ export const useExecuteSystemSetup = (apiUrl: string, state: ExecuteState) => {
       error: undefined,
     }
   );
-  const options = useDefaultFetchOptions();
+
   useEffect(() => {
     if (state === "start") {
+      const options = defaultFetchOptions();
       const url = `${apiUrl}/system/setup`;
       fetch(url, options)
         .then((response) => {
@@ -38,6 +39,6 @@ export const useExecuteSystemSetup = (apiUrl: string, state: ExecuteState) => {
           }));
         });
     }
-  }, [apiUrl, state, options]);
+  }, [apiUrl, state]);
   return queryStatus;
 };

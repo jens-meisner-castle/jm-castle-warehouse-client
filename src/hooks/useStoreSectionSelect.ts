@@ -6,7 +6,7 @@ import {
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
-import { useDefaultFetchOptions } from "./options/Utils";
+import { defaultFetchOptions } from "./options/Utils";
 
 /**
  *
@@ -28,10 +28,9 @@ export const useStoreSectionSelect = (
     response: undefined,
   });
 
-  const options = useDefaultFetchOptions();
-
   useEffect(() => {
     if (updateIndicator) {
+      const options = defaultFetchOptions();
       const url = `${apiUrl}/store-section/select?name=${nameFragment || "%"}`;
       fetch(url, options)
         .then((response) => {
@@ -66,6 +65,6 @@ export const useStoreSectionSelect = (
           });
         });
     }
-  }, [apiUrl, updateIndicator, nameFragment, options, handleExpiredToken]);
+  }, [apiUrl, updateIndicator, nameFragment, handleExpiredToken]);
   return queryStatus;
 };

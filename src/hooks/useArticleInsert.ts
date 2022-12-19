@@ -6,7 +6,7 @@ import {
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
-import { useDefaultFetchOptions } from "./options/Utils";
+import { defaultFetchOptions } from "./options/Utils";
 
 /**
  *
@@ -27,7 +27,7 @@ export const useArticleInsert = (
   >({
     response: undefined,
   });
-  const options = useDefaultFetchOptions();
+
   useEffect(() => {
     if (!updateIndicator) return;
     if (!article) {
@@ -35,6 +35,7 @@ export const useArticleInsert = (
         previous.error || previous.response ? { response: undefined } : previous
       );
     }
+    const options = defaultFetchOptions();
     options.method = "POST";
     options.body = JSON.stringify(article);
     options.headers = options.headers
@@ -72,6 +73,6 @@ export const useArticleInsert = (
           error: error.toString(),
         });
       });
-  }, [apiUrl, updateIndicator, article, options, handleExpiredToken]);
+  }, [apiUrl, updateIndicator, article, handleExpiredToken]);
   return queryStatus;
 };

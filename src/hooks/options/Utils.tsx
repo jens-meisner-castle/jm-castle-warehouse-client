@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useAuthorizationToken } from "../../auth/AuthorizationProvider";
 
 export const defaultFetchOptions = (): RequestInit => {
   return {
@@ -12,7 +11,7 @@ export const defaultFetchOptions = (): RequestInit => {
 };
 
 export const useDefaultFetchOptions = (): RequestInit => {
-  const token = useAuthorizationToken();
+  const token = "stored in service worker"; // useAuthorizationToken();
   const [options, setOptions] = useState({
     method: "GET",
     cache: "no-cache" as RequestCache,

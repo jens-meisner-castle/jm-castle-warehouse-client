@@ -6,7 +6,7 @@ import {
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
-import { useDefaultFetchOptions } from "./options/Utils";
+import { defaultFetchOptions } from "./options/Utils";
 
 /**
  *
@@ -30,11 +30,11 @@ export const useImageContentInsert = (
   >({
     response: undefined,
   });
-  const options = useDefaultFetchOptions();
 
   useEffect(() => {
     if (updateIndicator) {
       if (imageId && imageExtension && content) {
+        const options = defaultFetchOptions();
         const formData = new FormData();
         formData.append("image_id", imageId);
         formData.append("image_extension", imageExtension);
@@ -99,7 +99,6 @@ export const useImageContentInsert = (
     imageId,
     imageExtension,
     content,
-    options,
     handleExpiredToken,
   ]);
   return queryStatus;

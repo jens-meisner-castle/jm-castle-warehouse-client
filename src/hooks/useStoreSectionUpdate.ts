@@ -6,7 +6,7 @@ import {
   UpdateResponse,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
-import { useDefaultFetchOptions } from "./options/Utils";
+import { defaultFetchOptions } from "./options/Utils";
 
 /**
  *
@@ -27,7 +27,7 @@ export const useStoreSectionUpdate = (
   >({
     response: undefined,
   });
-  const options = useDefaultFetchOptions();
+
   useEffect(() => {
     if (!updateIndicator) {
       return setQueryStatus({ response: undefined });
@@ -37,7 +37,7 @@ export const useStoreSectionUpdate = (
         previous.error || previous.response ? { response: undefined } : previous
       );
     }
-
+    const options = defaultFetchOptions();
     options.method = "POST";
     options.body = JSON.stringify(section);
     options.headers = options.headers
@@ -75,6 +75,6 @@ export const useStoreSectionUpdate = (
           error: error.toString(),
         });
       });
-  }, [apiUrl, updateIndicator, section, options, handleExpiredToken]);
+  }, [apiUrl, updateIndicator, section, handleExpiredToken]);
   return queryStatus;
 };

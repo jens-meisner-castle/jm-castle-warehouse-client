@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Route, Routes } from "react-router-dom";
-import { useLoginResult } from "../auth/AuthorizationProvider";
+import { useUserRoles } from "../auth/AuthorizationProvider";
 import { Page as DashboardPage } from "../pages/dashboard/Page";
 import { Page as DbTestPage } from "../pages/database-test/Page";
 import { Page as HelpPage } from "../pages/help/Page";
@@ -58,9 +58,9 @@ export const useAppRoutes = () => {
     allRoutes.login,
     { path: "*", element: StartPage },
   ]);
-  const loginResult = useLoginResult();
+  const roles = useUserRoles();
   useEffect(() => {
-    if (loginResult && loginResult.roles) {
+    if (roles) {
       setRoutes([
         ...Object.values(allRoutes),
         { path: "*", element: StartPage },
@@ -72,6 +72,6 @@ export const useAppRoutes = () => {
         { path: "*", element: StartPage },
       ]);
     }
-  }, [loginResult]);
+  }, [roles]);
   return routes;
 };

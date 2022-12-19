@@ -4,7 +4,10 @@ import { useState } from "react";
 import { TextareaComponent } from "../../../components/TextareaComponent";
 
 const description = [
-  { label: "creating certificate using windows", content: "" },
+  {
+    label: "creating self signed certificate using windows",
+    content: "Replace concrete names with your names.",
+  },
   {
     label: "source",
     content:
@@ -39,6 +42,10 @@ const description = [
     label: "step 3",
     content:
       "openssl x509 -req -in DESKTOP-61MUS1J.csr -CA myCA.pem -CAkey myCA.key -CAcreateserial -out DESKTOP-61MUS1J.crt -days 360 -sha256 -extfile DESKTOP-61MUS1J.ext",
+  },
+  {
+    label: "converting certificate to (for windows)",
+    content: "openssl pkcs12 -in myCA.pem -export -nokeys -out myCA.pfx",
   },
 ];
 

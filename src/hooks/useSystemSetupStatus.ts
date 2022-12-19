@@ -5,7 +5,7 @@ import {
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
-import { useDefaultFetchOptions } from "./options/Utils";
+import { defaultFetchOptions } from "./options/Utils";
 
 export const useSystemSetupStatus = (
   apiUrl: string,
@@ -17,8 +17,9 @@ export const useSystemSetupStatus = (
   >({
     response: undefined,
   });
-  const options = useDefaultFetchOptions();
+
   useEffect(() => {
+    const options = defaultFetchOptions();
     const url = `${apiUrl}/system/setup-status`;
     fetch(url, options)
       .then((response) => {
@@ -48,6 +49,6 @@ export const useSystemSetupStatus = (
           error: error.toString(),
         });
       });
-  }, [apiUrl, updateIndicator, options, handleExpiredToken]);
+  }, [apiUrl, updateIndicator, handleExpiredToken]);
   return queryStatus;
 };

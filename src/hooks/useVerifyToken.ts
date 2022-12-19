@@ -1,55 +1,38 @@
 import {
   ApiServiceResponse,
-  LoginResult,
   UnknownErrorCode,
+  VerifyTokenResult,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
 import { defaultFetchOptions } from "./options/Utils";
 
-export interface LoginData {
-  user: string;
-  password: string;
-}
-
-export const useLogin = (apiUrl: string, loginData: LoginData | undefined) => {
+export const useVerifyToken = (apiUrl: string, updateIndicator: number) => {
   const [queryStatus, setQueryStatus] = useState<
-    ApiServiceResponse<LoginResult> | ApiServiceResponse<undefined>
+    ApiServiceResponse<VerifyTokenResult> | ApiServiceResponse<undefined>
   >({ response: undefined });
 
   useEffect(() => {
     setQueryStatus({ response: undefined });
-    if (loginData) {
+    if (updateIndicator) {
       const options = defaultFetchOptions();
-      options.method = "POST";
-      options.body = JSON.stringify(loginData);
-      options.headers = options.headers
-        ? { ...options.headers, "Content-Type": "application/json" }
-        : { "Content-Type": "application/json" };
-      const url = `${apiUrl}/auth/basic?user_id=${loginData.user}`;
+      const url = `${apiUrl}/auth/token`;
       fetch(url, options)
         .then((response) => {
-          response.json().then((obj: ApiServiceResponse<LoginResult>) => {
+          response.json().then((obj: ApiServiceResponse<VerifyTokenResult>) => {
             const { response, error, errorCode, errorDetails } = obj || {};
             if (error) {
               return setQueryStatus({ error, errorCode, errorDetails });
             }
-            const { token, expiresAtMs, expiresAtDisplay, roles, username } =
+            const { expiresAtMs, expiresAtDisplay, roles, username } =
               response || {};
-            if (
-              !token ||
-              !roles ||
-              !expiresAtDisplay ||
-              !expiresAtMs ||
-              !username
-            ) {
+            if (!roles || !expiresAtDisplay || !expiresAtMs || !username) {
               return setQueryStatus({
-                error: `Fatal error: Received login response without error and withpout token.`,
+                error: `Fatal error: Received verify token response without error and withpout payload.`,
                 errorCode: UnknownErrorCode,
               });
             }
             setQueryStatus({
               response: {
-                token,
                 roles,
                 expiresAtDisplay,
                 expiresAtMs,
@@ -59,10 +42,9 @@ export const useLogin = (apiUrl: string, loginData: LoginData | undefined) => {
           });
         })
         .catch((error) => {
-          console.error(error);
           setQueryStatus({ error: error.toString() });
         });
     }
-  }, [loginData, apiUrl]);
+  }, [apiUrl, updateIndicator]);
   return queryStatus;
 };

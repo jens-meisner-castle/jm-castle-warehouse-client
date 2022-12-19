@@ -1,6 +1,6 @@
 {
-  "short_name": "Castle ac-dc",
-  "name": "Castle ac-dc",
+  "short_name": "Castle warehouse",
+  "name": "Castle warehouse",
   "type": "privileged",
   "permissions": {
     "audio-capture": {
@@ -19,7 +19,8 @@
     {
       "src": "castle192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "castle512.png",

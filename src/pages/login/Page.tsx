@@ -8,10 +8,10 @@ import {
   useState,
 } from "react";
 import {
-  useLoginResult,
-  useResetLoginResult,
-  useSetLoginResult,
+  useHandleLoginResult,
+  useHandleLogoutResult,
   useTokenHasExpired,
+  useVerifiedUser,
 } from "../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { backendApiUrl } from "../../configuration/Urls";
@@ -35,12 +35,12 @@ export const Page = () => {
       })),
     []
   );
-  const setLoginResult = useSetLoginResult();
-  const resetLoginResult = useResetLoginResult();
-  const tryLogout = resetLoginResult;
-  const contextLoginResult = useLoginResult();
+  const handleLoginResult = useHandleLoginResult();
+  const handleLogoutResult = useHandleLogoutResult();
+  const tryLogout = handleLogoutResult;
+  const verifiedUser = useVerifiedUser();
   const tokenHasExpired = useTokenHasExpired();
-  const { username: contextUser, expiresAtMs } = contextLoginResult || {};
+  const { username: contextUser, expiresAtMs } = verifiedUser || {};
   const handlePasswordKeyDown: KeyboardEventHandler<HTMLInputElement> = (
     event
   ) => {
@@ -52,9 +52,9 @@ export const Page = () => {
   useEffect(() => {
     if (loginResult && loginResult.token) {
       setLoginData({ user: "", password: "", updateTrigger: 0 });
-      setLoginResult(loginResult);
+      handleLoginResult(loginResult);
     }
-  }, [loginResult, setLoginResult]);
+  }, [loginResult, handleLoginResult]);
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     !contextUser &&

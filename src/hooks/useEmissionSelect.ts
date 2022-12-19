@@ -7,7 +7,7 @@ import {
 } from "jm-castle-warehouse-types/build";
 import { DateTime } from "luxon";
 import { useEffect, useState } from "react";
-import { useDefaultFetchOptions } from "./options/Utils";
+import { defaultFetchOptions } from "./options/Utils";
 
 /**
  *
@@ -30,9 +30,10 @@ export const useEmissionSelect = (
   >({
     response: undefined,
   });
-  const options = useDefaultFetchOptions();
+
   useEffect(() => {
     if (updateIndicator) {
+      const options = defaultFetchOptions();
       const at_from = Math.floor(from.toMillis() / 1000);
       const at_to = Math.ceil(to.toMillis() / 1000);
       const url = `${apiUrl}/emission/select?at_from=${at_from}&at_to=${at_to}`;
@@ -67,6 +68,6 @@ export const useEmissionSelect = (
           });
         });
     }
-  }, [apiUrl, updateIndicator, from, to, options, handleExpiredToken]);
+  }, [apiUrl, updateIndicator, from, to, handleExpiredToken]);
   return queryStatus;
 };

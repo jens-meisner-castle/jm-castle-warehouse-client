@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLoginResult } from "../auth/AuthorizationProvider";
+import { useUserRoles } from "../auth/AuthorizationProvider";
 
 export interface Page {
   to: string;
@@ -19,13 +19,13 @@ export const allPages = {
 
 export const usePages = () => {
   const [pages, setPages] = useState<Page[]>([allPages.home, allPages.login]);
-  const loginResult = useLoginResult();
+  const roles = useUserRoles();
   useEffect(() => {
-    if (loginResult && loginResult.roles) {
+    if (roles) {
       setPages(Object.values(allPages).sort((a, b) => a.index - b.index));
     } else {
       setPages([allPages.home, allPages.login]);
     }
-  }, [loginResult]);
+  }, [roles]);
   return pages;
 };

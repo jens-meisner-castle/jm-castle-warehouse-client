@@ -5,7 +5,7 @@ import {
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
-import { useDefaultFetchOptions } from "./options/Utils";
+import { defaultFetchOptions } from "./options/Utils";
 
 export interface SystemStatusQueryStatus {
   status: SystemStatus | undefined;
@@ -21,9 +21,10 @@ export const useSystemStatus = (
   >({
     response: undefined,
   });
-  const options = useDefaultFetchOptions();
+
   useEffect(() => {
     if (updateIndicator > 0) {
+      const options = defaultFetchOptions();
       const url = `${apiUrl}/system/status`;
       fetch(url, options)
         .then((response) => {
@@ -53,6 +54,6 @@ export const useSystemStatus = (
           });
         });
     }
-  }, [apiUrl, updateIndicator, options, handleExpiredToken]);
+  }, [apiUrl, updateIndicator, handleExpiredToken]);
   return queryStatus;
 };
