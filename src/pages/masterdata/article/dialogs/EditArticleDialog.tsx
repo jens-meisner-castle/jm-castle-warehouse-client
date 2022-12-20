@@ -282,6 +282,7 @@ export const EditArticleDialog = (props: EditArticleDialogProps) => {
             value={imageFilePath || ""}
             onChange={(event) => setImageFilePath(event.target.value)}
             type="file"
+            inputProps={{ accept: "image/*" }}
             fullWidth
             variant="standard"
           />
