@@ -148,7 +148,9 @@ export const Page = () => {
               </Grid>
             )}
             <Grid item>
-              <AppActions actions={actions} />
+              <div style={{ padding: 5, marginBottom: 5 }}>
+                <AppActions actions={actions} />
+              </div>
             </Grid>
             <Grid item>
               <ErrorDisplay error={loginError} errorCode={loginErrorCode} />

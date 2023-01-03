@@ -307,7 +307,7 @@ export const Page = () => {
           <Typography variant="h5">{"Lagerbereich"}</Typography>
         </Grid>
         <Grid item>
-          <Paper>
+          <Paper style={{ padding: 5, marginBottom: 5 }}>
             <AppActions actions={actions} />
           </Paper>
         </Grid>
@@ -328,9 +328,7 @@ export const Page = () => {
         <Grid item>
           <Grid container direction="row">
             <Grid item>
-              <Paper
-                style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
-              >
+              <Paper style={{ padding: 5 }}>
                 <StoreSectionsTable
                   editable
                   data={rows || []}

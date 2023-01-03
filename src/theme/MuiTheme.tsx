@@ -17,5 +17,6 @@ export const muiThemeDark = responsiveFontSizes(
       primary: { main: "#ab7865" },
       secondary: { main: "#1b5e20" },
     },
-  })
+  }),
+  { factor: 2 }
 );

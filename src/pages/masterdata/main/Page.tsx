@@ -60,7 +60,7 @@ export const Page = () => {
         <Typography variant="h5">{"Stammdaten"}</Typography>
       </Grid>
       <Grid item>
-        <Paper>
+        <Paper style={{ padding: 5, marginBottom: 5 }}>
           <AppActions actions={actions} />
         </Paper>
       </Grid>

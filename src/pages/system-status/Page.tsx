@@ -78,12 +78,12 @@ export const Page = () => {
         <Typography variant="h5">{"System"}</Typography>
       </Grid>
       <Grid item>
-        <Paper>
+        <Paper style={{ padding: 5, marginBottom: 5 }}>
           <AppActions actions={actions} />
         </Paper>
       </Grid>
       <Grid item>
-        <Grid container direction="column" spacing={1}>
+        <Grid container direction="column">
           {isWaitingForActionResponse && (
             <Grid item>
               <Paper>
@@ -107,12 +107,12 @@ export const Page = () => {
             </Paper>
           </Grid>
           <Grid item>
-            <Paper>
+            <Paper style={{ marginTop: 5 }}>
               <DbExportPart />
             </Paper>
           </Grid>
           <Grid item>
-            <Paper>
+            <Paper style={{ marginTop: 5 }}>
               <DbImportPart />
             </Paper>
           </Grid>

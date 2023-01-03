@@ -23,7 +23,7 @@ export const SystemStatusComponent = (props: SystemStatusComponentProps) => {
   const [isValidConfigVisible, setIsValidConfigVisible] = useState(false);
 
   return (
-    <Grid container direction="column" spacing={1}>
+    <Grid container direction="column">
       <Grid item>
         <Typography variant="h6">{"System status"}</Typography>
       </Grid>

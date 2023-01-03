@@ -7,7 +7,7 @@ export const Page = () => {
   const roles = useUserRoles();
 
   return (
-    <Grid container direction="column" gap={2}>
+    <Grid container direction="column">
       <Grid item>
         <Typography variant="h5">{"Help"}</Typography>
       </Grid>
@@ -18,7 +18,9 @@ export const Page = () => {
       )}
       {roles?.includes("admin") && (
         <Grid item>
-          <HowToCreateCertificates />
+          <div style={{ marginTop: 5 }}>
+            <HowToCreateCertificates />
+          </div>
         </Grid>
       )}
     </Grid>

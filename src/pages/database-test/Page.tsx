@@ -16,17 +16,17 @@ export const Page = () => {
         </Paper>
       </Grid>
       <Grid item>
-        <Paper>
+        <Paper style={{ marginTop: 5 }}>
           <SelectFromArticle />
         </Paper>
       </Grid>
       <Grid item>
-        <Paper>
+        <Paper style={{ marginTop: 5 }}>
           <InsertTestArticle />
         </Paper>
       </Grid>
       <Grid item>
-        <Paper>
+        <Paper style={{ marginTop: 5 }}>
           <InsertExampleHome />
         </Paper>
       </Grid>

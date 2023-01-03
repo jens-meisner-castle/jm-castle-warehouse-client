@@ -52,15 +52,7 @@ export const StockChangeIncoming = (props: StockChangeIncomingProps) => {
   console.log(dataPerArticle);
 
   return (
-    <Paper
-      style={{
-        padding: 5,
-        margin: 5,
-        marginTop: 0,
-        marginLeft: 0,
-        maxWidth: 800,
-      }}
-    >
+    <Paper style={{ padding: 5 }}>
       {error && <Typography>{"Error from receipt log: " + error}</Typography>}
 
       <StockChangeTable data={allRows} cellSize="small" />

@@ -1,17 +1,11 @@
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import {
-  Alert,
-  Grid,
-  Paper,
-  Snackbar,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { Row_ImageContent } from "jm-castle-warehouse-types/build";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
+import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
 import { ArticlesTable } from "../../../components/ArticlesTable";
 import { backendApiUrl } from "../../../configuration/Urls";
@@ -309,46 +303,12 @@ export const Page = () => {
 
   return (
     <>
-      {actionState.previous && actionState.previous.action === "error-new" && (
-        <Snackbar
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          open={isAnySnackbarOpen}
-          autoHideDuration={6000}
-          onClose={() => setIsAnySnackbarOpen(false)}
-        >
-          <Alert severity="error">{`Fehler beim Speichern von Artikel <${actionState.previous.data.row.articleId}>. ${actionState.previous.error}`}</Alert>
-        </Snackbar>
-      )}
-      {actionState.previous && actionState.previous.action === "success-new" && (
-        <Snackbar
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          open={isAnySnackbarOpen}
-          autoHideDuration={6000}
-          onClose={() => setIsAnySnackbarOpen(false)}
-        >
-          <Alert severity="success">{`Artikel <${actionState.previous.data.row.articleId}> wurde gespeichert.`}</Alert>
-        </Snackbar>
-      )}
-      {actionState.previous && actionState.previous.action === "error-edit" && (
-        <Snackbar
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          open={isAnySnackbarOpen}
-          autoHideDuration={6000}
-          onClose={() => setIsAnySnackbarOpen(false)}
-        >
-          <Alert severity="error">{`Fehler beim Ändern von Artikel <${actionState.previous.data.row.articleId}>. ${actionState.previous.error}`}</Alert>
-        </Snackbar>
-      )}
-      {actionState.previous && actionState.previous.action === "success-edit" && (
-        <Snackbar
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          open={isAnySnackbarOpen}
-          autoHideDuration={6000}
-          onClose={() => setIsAnySnackbarOpen(false)}
-        >
-          <Alert severity="success">{`Artikel <${actionState.previous.data.row.articleId}> wurde gespeichert.`}</Alert>
-        </Snackbar>
-      )}
+      <ActionStateSnackbars
+        actionState={actionState}
+        displayPayload={`Artikel <${actionState.previous?.data.row.articleId}>`}
+        isAnySnackbarOpen={isAnySnackbarOpen}
+        closeSnackbar={() => setIsAnySnackbarOpen(false)}
+      />
       {actionState.action === "new" && actionState.data && (
         <CreateArticleDialog
           article={actionState.data.row}
@@ -370,13 +330,13 @@ export const Page = () => {
           <Typography variant="h5">{"Artikel"}</Typography>
         </Grid>
         <Grid item>
-          <Paper>
+          <Paper style={{ padding: 5, marginBottom: 5 }}>
             <AppActions actions={actions} />
           </Paper>
         </Grid>
         {selectError && (
           <Grid item>
-            <Paper>
+            <Paper style={{ padding: 5, marginBottom: 5 }}>
               <Typography>{selectError}</Typography>
             </Paper>
           </Grid>
@@ -384,16 +344,15 @@ export const Page = () => {
         <Grid item>
           <Grid container direction="row">
             <Grid item>
-              <Paper
-                style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
-              >
+              <Paper style={{ padding: 5 }}>
                 <ArticlesTable
+                  containerStyle={{ width: "100%", maxWidth: 1200 }}
                   editable
                   displayImage="small"
                   data={rows || []}
                   onEdit={handleEdit}
                   onDuplicate={handleDuplicate}
-                  cellSize="medium"
+                  cellSize="small"
                 />
               </Paper>
             </Grid>

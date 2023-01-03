@@ -37,7 +37,7 @@ export const AppActions = (props: AppActionProps) => {
   }, [actions]);
 
   return (
-    <div style={{ marginBottom: 10, marginTop: 10 }}>
+    <div>
       <Grid container direction="row">
         {actionsDisplay.map((action, i) => (
           <Grid item key={i}>

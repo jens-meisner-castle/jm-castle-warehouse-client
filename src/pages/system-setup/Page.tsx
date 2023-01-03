@@ -65,12 +65,12 @@ export const Page = () => {
         <Typography variant="h5">{"System Setup"}</Typography>
       </Grid>
       <Grid item>
-        <Paper>
+        <Paper style={{ padding: 5, marginBottom: 5 }}>
           <AppActions actions={actions} />
         </Paper>
       </Grid>
       <Grid item>
-        <Grid container direction="column" spacing={1}>
+        <Grid container direction="column">
           <Grid item>
             <Paper>
               <ErrorDisplay error={setupError} errorCode={setupErrorCode} />
