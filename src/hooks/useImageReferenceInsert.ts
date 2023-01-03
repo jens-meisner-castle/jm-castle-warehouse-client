@@ -6,6 +6,7 @@ import {
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
+import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
 export const useImageReferenceInsert = (
@@ -20,6 +21,7 @@ export const useImageReferenceInsert = (
   >({
     response: undefined,
   });
+  const token = useAuthorizationToken();
 
   useEffect(() => {
     if (!updateIndicator) return;
@@ -28,7 +30,7 @@ export const useImageReferenceInsert = (
         previous.error || previous.response ? { response: undefined } : previous
       );
     }
-    const options = defaultFetchOptions();
+    const options = defaultFetchOptions(token);
     options.method = "POST";
     options.body = JSON.stringify(imageRef);
     options.headers = options.headers
@@ -68,6 +70,6 @@ export const useImageReferenceInsert = (
           error: error.toString(),
         });
       });
-  }, [apiUrl, updateIndicator, imageRef, handleExpiredToken]);
+  }, [apiUrl, updateIndicator, imageRef, token, handleExpiredToken]);
   return queryStatus;
 };

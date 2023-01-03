@@ -4,6 +4,7 @@ import {
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
+import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
 /**
@@ -24,11 +25,12 @@ export const useDbExportFile = (
   >({
     response: undefined,
   });
+  const token = useAuthorizationToken();
 
   useEffect(() => {
     setQueryStatus({ response: undefined });
     if (updateIndicator) {
-      const options = defaultFetchOptions();
+      const options = defaultFetchOptions(token);
       options.headers = options.headers
         ? { ...options.headers, responseType: "blob" }
         : { responseType: "blob" };
@@ -63,6 +65,6 @@ export const useDbExportFile = (
           });
         });
     }
-  }, [apiUrl, updateIndicator, handleExpiredToken]);
+  }, [apiUrl, updateIndicator, token, handleExpiredToken]);
   return queryStatus;
 };

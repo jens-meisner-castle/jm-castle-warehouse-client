@@ -28,6 +28,6 @@ const postLoadServiceWorker = () => {
 
 export const registerServiceWorker = () => {
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", postLoadServiceWorker);
+    window.addEventListener("load", () => postLoadServiceWorker());
   }
 };

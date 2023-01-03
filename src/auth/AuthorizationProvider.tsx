@@ -24,6 +24,8 @@ interface Authorization {
     expiresAtMs: number;
     expiresAtDisplay: string;
   };
+  withServiceWorker: boolean;
+  token?: string;
   tokenHasExpired: boolean;
   handleLoginResult: (loginResult: LoginResult) => void;
   handleLogoutResult: () => void;
@@ -32,6 +34,8 @@ interface Authorization {
 
 const initialValue: Authorization = {
   tokenHasExpired: false,
+  withServiceWorker: false,
+  token: undefined,
   handleLoginResult: (loginResult: LoginResult) => {
     console.error("Empty handleLoginResult function. Result is", loginResult);
   },
@@ -47,8 +51,12 @@ const context = createContext(initialValue);
 
 export const { Provider } = context;
 
-export const AuthorizationProvider = (props: PropsWithChildren) => {
-  const { children } = props;
+export type AuthorizationProviderProps = {
+  withServiceWorker: boolean;
+} & PropsWithChildren;
+
+export const AuthorizationProvider = (props: AuthorizationProviderProps) => {
+  const { children, withServiceWorker } = props;
   const [isTokenExpired, setIsTokenExpired] = useState(false);
   const handleExpiredToken = useCallback((errorCode: ErrorCode | undefined) => {
     if (
@@ -59,33 +67,37 @@ export const AuthorizationProvider = (props: PropsWithChildren) => {
       setIsTokenExpired(true);
     }
   }, []);
-
-  const handleLoginResult = useCallback((loginResult: LoginResult) => {
-    const { token, username, roles, expiresAtDisplay, expiresAtMs } =
-      loginResult || {};
-    if (navigator.serviceWorker?.controller) {
-      if (token) {
-        navigator.serviceWorker.controller.postMessage({
-          type: "SET_TOKEN",
-          token: `Bearer ${token}`,
-        });
+  const handleLoginResult = useCallback(
+    (loginResult: LoginResult) => {
+      const { token, username, roles, expiresAtDisplay, expiresAtMs } =
+        loginResult || {};
+      if (navigator.serviceWorker?.controller) {
+        if (token && withServiceWorker) {
+          navigator.serviceWorker.controller.postMessage({
+            type: "SET_TOKEN",
+            token: `Bearer ${token}`,
+          });
+        }
       }
-    }
-    if (username && roles && expiresAtDisplay && expiresAtMs) {
-      const verifiedUser = { username, roles, expiresAtDisplay, expiresAtMs };
-      setProviderValue((previous) => ({
-        ...previous,
-        verifiedUser,
-        tokenHasExpired: false,
-      }));
-    } else {
-      setProviderValue((previous) => ({
-        ...previous,
-        verifiedUser: undefined,
-        tokenHasExpired: false,
-      }));
-    }
-  }, []);
+      if (token && username && roles && expiresAtDisplay && expiresAtMs) {
+        const verifiedUser = { username, roles, expiresAtDisplay, expiresAtMs };
+        setProviderValue((previous) => ({
+          ...previous,
+          token,
+          verifiedUser,
+          tokenHasExpired: false,
+        }));
+      } else {
+        setProviderValue((previous) => ({
+          ...previous,
+          token: undefined,
+          verifiedUser: undefined,
+          tokenHasExpired: false,
+        }));
+      }
+    },
+    [withServiceWorker]
+  );
 
   const handleLogoutResult = useCallback(() => {
     if (navigator.serviceWorker?.controller) {
@@ -95,6 +107,7 @@ export const AuthorizationProvider = (props: PropsWithChildren) => {
     }
     setProviderValue((previous) => ({
       ...previous,
+      token: undefined,
       verifiedUser: undefined,
       tokenHasExpired: false,
     }));
@@ -102,13 +115,14 @@ export const AuthorizationProvider = (props: PropsWithChildren) => {
 
   const [providerValue, setProviderValue] = useState<Authorization>({
     tokenHasExpired: isTokenExpired,
+    withServiceWorker,
     handleLoginResult,
     handleLogoutResult,
     handleExpiredToken,
   });
 
   // check once if the service worker has already a valid token
-  const verifyResult = useVerifyToken(backendApiUrl, 1);
+  const verifyResult = useVerifyToken(backendApiUrl, withServiceWorker ? 1 : 0);
 
   useEffect(() => {
     // check once if the service worker has already (or still) a valid token
@@ -123,7 +137,11 @@ export const AuthorizationProvider = (props: PropsWithChildren) => {
   }, [verifyResult]);
 
   useEffect(() => {
-    if (isTokenExpired && navigator.serviceWorker?.controller) {
+    if (
+      withServiceWorker &&
+      isTokenExpired &&
+      navigator.serviceWorker?.controller
+    ) {
       navigator.serviceWorker.controller.postMessage({
         type: "RESET_TOKEN",
       });
@@ -132,7 +150,7 @@ export const AuthorizationProvider = (props: PropsWithChildren) => {
       ...previous,
       tokenHasExpired: isTokenExpired,
     }));
-  }, [isTokenExpired]);
+  }, [withServiceWorker, isTokenExpired]);
 
   return <Provider value={providerValue}>{children}</Provider>;
 };
@@ -154,6 +172,15 @@ export const useUserRoles = () => {
   const { verifiedUser } = contextValue;
   const { roles } = verifiedUser || {};
   return roles;
+};
+
+export const useAuthorizationToken = () => {
+  const contextValue = useContext(context);
+  if (!contextValue) {
+    throw new Error("AuthorizationProvider is needed in react hierarchy.");
+  }
+  const { token, withServiceWorker } = contextValue;
+  return withServiceWorker ? undefined : token;
 };
 
 export const useTokenHasExpired = () => {

@@ -5,6 +5,7 @@ import {
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
+import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
 /**
@@ -24,10 +25,11 @@ export const useDbExport = (
   >({
     response: undefined,
   });
+  const token = useAuthorizationToken();
 
   useEffect(() => {
     if (updateIndicator) {
-      const options = defaultFetchOptions();
+      const options = defaultFetchOptions(token);
       const url = `${apiUrl}/export/db/data`;
       fetch(url, options)
         .then((response) => {
@@ -57,6 +59,6 @@ export const useDbExport = (
           });
         });
     }
-  }, [apiUrl, updateIndicator, handleExpiredToken]);
+  }, [apiUrl, updateIndicator, token, handleExpiredToken]);
   return queryStatus;
 };

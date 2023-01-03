@@ -6,6 +6,7 @@ import {
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
+import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
 /**
@@ -27,6 +28,7 @@ export const useStoreInsert = (
   >({
     response: undefined,
   });
+  const token = useAuthorizationToken();
 
   useEffect(() => {
     if (!updateIndicator) return;
@@ -35,7 +37,7 @@ export const useStoreInsert = (
         previous.error || previous.response ? { response: undefined } : previous
       );
     }
-    const options = defaultFetchOptions();
+    const options = defaultFetchOptions(token);
     options.method = "POST";
     options.body = JSON.stringify(store);
     options.headers = options.headers
@@ -73,6 +75,6 @@ export const useStoreInsert = (
           error: error.toString(),
         });
       });
-  }, [apiUrl, updateIndicator, store, handleExpiredToken]);
+  }, [apiUrl, updateIndicator, store, token, handleExpiredToken]);
   return queryStatus;
 };

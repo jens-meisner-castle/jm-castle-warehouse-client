@@ -1,32 +1,36 @@
 import { useEffect, useState } from "react";
+import { useAuthorizationToken } from "../../auth/AuthorizationProvider";
 
-export const defaultFetchOptions = (): RequestInit => {
+export const defaultFetchOptions = (token?: string): RequestInit => {
   return {
     method: "GET",
     cache: "no-cache",
-    credentials: "omit",
-    referrerPolicy: "origin-when-cross-origin",
+    headers: token ? { authorization: `Bearer ${token}` } : undefined,
   };
 };
 
 export const useDefaultFetchOptions = (): RequestInit => {
-  const token = "stored in service worker"; // useAuthorizationToken();
+  const token = useAuthorizationToken();
   const [options, setOptions] = useState({
     method: "GET",
     cache: "no-cache" as RequestCache,
-    headers: { authorization: `Bearer ${token}` },
+    headers: token ? { authorization: `Bearer ${token}` } : undefined,
   });
-  useEffect(
-    () =>
-      setOptions((previous) => {
+  useEffect(() => {
+    setOptions((previous) => {
+      if (token) {
         return previous.headers?.authorization === `Bearer ${token}`
           ? previous
           : {
               ...previous,
               headers: { authorization: `Bearer ${token}` },
             };
-      }),
-    [token]
-  );
+      } else {
+        return previous.headers?.authorization
+          ? { ...previous, headers: undefined }
+          : previous;
+      }
+    });
+  }, [token]);
   return options;
 };

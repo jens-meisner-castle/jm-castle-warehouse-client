@@ -4,6 +4,7 @@ import {
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
+import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
 export type ExecuteState = "not started" | "start";
@@ -14,10 +15,11 @@ export const useExecuteSystemSetup = (apiUrl: string, state: ExecuteState) => {
   >({
     response: undefined,
   });
+  const token = useAuthorizationToken();
 
   useEffect(() => {
     if (state === "start") {
-      const options = defaultFetchOptions();
+      const options = defaultFetchOptions(token);
       const url = `${apiUrl}/system/setup`;
       fetch(url, options)
         .then((response) => {
@@ -41,6 +43,6 @@ export const useExecuteSystemSetup = (apiUrl: string, state: ExecuteState) => {
           });
         });
     }
-  }, [apiUrl, state]);
+  }, [apiUrl, state, token]);
   return queryStatus;
 };

@@ -5,6 +5,7 @@ import {
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
+import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
 export const useApiServices = (
@@ -16,9 +17,10 @@ export const useApiServices = (
   >({
     response: undefined,
   });
+  const token = useAuthorizationToken();
 
   useEffect(() => {
-    const options = defaultFetchOptions();
+    const options = defaultFetchOptions(token);
     const url = `${apiUrl}/`;
     fetch(url, options)
       .then((response) => {
@@ -49,6 +51,6 @@ export const useApiServices = (
           errorCode: UnknownErrorCode,
         });
       });
-  }, [apiUrl, handleExpiredToken]);
+  }, [apiUrl, token, handleExpiredToken]);
   return queryStatus;
 };

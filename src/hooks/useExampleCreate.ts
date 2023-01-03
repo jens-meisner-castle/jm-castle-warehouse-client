@@ -4,6 +4,7 @@ import {
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
+import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
 /**
@@ -22,10 +23,11 @@ export const useExampleCreate = (
   const [queryStatus, setQueryStatus] = useState<
     ApiServiceResponse<{ result: Record<string, unknown> } | undefined>
   >({ response: undefined });
+  const token = useAuthorizationToken();
 
   useEffect(() => {
     if (updateIndicator && name) {
-      const options = defaultFetchOptions();
+      const options = defaultFetchOptions(token);
       const url = `${apiUrl}/example/create?name=${name}`;
       fetch(url, options)
         .then((response) => {
@@ -59,6 +61,6 @@ export const useExampleCreate = (
           });
         });
     }
-  }, [apiUrl, updateIndicator, name, handleExpiredToken]);
+  }, [apiUrl, updateIndicator, name, token, handleExpiredToken]);
   return queryStatus;
 };

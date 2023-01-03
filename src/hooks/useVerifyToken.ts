@@ -4,17 +4,19 @@ import {
   VerifyTokenResult,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
+import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
 export const useVerifyToken = (apiUrl: string, updateIndicator: number) => {
   const [queryStatus, setQueryStatus] = useState<
     ApiServiceResponse<VerifyTokenResult> | ApiServiceResponse<undefined>
   >({ response: undefined });
+  const token = useAuthorizationToken();
 
   useEffect(() => {
     setQueryStatus({ response: undefined });
     if (updateIndicator) {
-      const options = defaultFetchOptions();
+      const options = defaultFetchOptions(token);
       const url = `${apiUrl}/auth/token`;
       fetch(url, options)
         .then((response) => {
@@ -45,6 +47,6 @@ export const useVerifyToken = (apiUrl: string, updateIndicator: number) => {
           setQueryStatus({ error: error.toString() });
         });
     }
-  }, [apiUrl, updateIndicator]);
+  }, [apiUrl, updateIndicator, token]);
   return queryStatus;
 };

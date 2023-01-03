@@ -62,7 +62,12 @@ const fetchCached = async (request) => {
 
 self.addEventListener("fetch", function (event) {
   const url = new URL(event.request.url);
-  // console.log(url.pathname);
+  if (url.pathname === "/service-worker/exists") {
+    const response = new Response(
+      JSON.stringify({ response: { exists: true } })
+    );
+    return event.respondWith(response);
+  }
   // token && token.length && console.log("I have a token: xxx");
   const preparedRequest = addToken(event.request);
   return shouldUseCache(url.pathname)

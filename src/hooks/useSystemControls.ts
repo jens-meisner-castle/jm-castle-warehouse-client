@@ -5,6 +5,7 @@ import {
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
+import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
 export type ControlAction = "restart" | "none";
@@ -22,11 +23,12 @@ export const useSystemControls = (
     action: "none",
     response: undefined,
   });
+  const token = useAuthorizationToken();
 
   useEffect(() => {
     setQueryStatus({ action, response: undefined });
     if (action === "restart") {
-      const options = defaultFetchOptions();
+      const options = defaultFetchOptions(token);
       const url = `${apiUrl}/system/control/${action}`;
       fetch(url, options)
         .then((response) => {
@@ -64,6 +66,6 @@ export const useSystemControls = (
           });
         });
     }
-  }, [apiUrl, action, handleExpiredToken]);
+  }, [apiUrl, action, token, handleExpiredToken]);
   return queryStatus;
 };

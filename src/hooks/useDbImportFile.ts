@@ -4,6 +4,7 @@ import {
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
+import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
 interface ImportResult {
@@ -21,11 +22,12 @@ export const useDbImportFile = (
   >({
     response: undefined,
   });
+  const token = useAuthorizationToken();
 
   useEffect(() => {
     if (updateIndicator) {
       if (content) {
-        const options = defaultFetchOptions();
+        const options = defaultFetchOptions(token);
         const formData = new FormData();
         formData.append("file", content);
         options.method = "POST";
@@ -74,6 +76,6 @@ export const useDbImportFile = (
         );
       }
     }
-  }, [apiUrl, updateIndicator, content, handleExpiredToken]);
+  }, [apiUrl, updateIndicator, content, token, handleExpiredToken]);
   return queryStatus;
 };

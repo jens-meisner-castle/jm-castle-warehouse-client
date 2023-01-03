@@ -7,6 +7,7 @@ import {
 } from "jm-castle-warehouse-types/build";
 import { DateTime } from "luxon";
 import { useEffect, useState } from "react";
+import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
 /**
@@ -30,10 +31,11 @@ export const useReceiptSelect = (
   >({
     response: undefined,
   });
+  const token = useAuthorizationToken();
 
   useEffect(() => {
     if (updateIndicator) {
-      const options = defaultFetchOptions();
+      const options = defaultFetchOptions(token);
       const at_from = Math.floor(from.toMillis() / 1000);
       const at_to = Math.ceil(to.toMillis() / 1000);
       const url = `${apiUrl}/receipt/select?at_from=${at_from}&at_to=${at_to}`;
@@ -68,6 +70,6 @@ export const useReceiptSelect = (
           });
         });
     }
-  }, [apiUrl, updateIndicator, from, to, handleExpiredToken]);
+  }, [apiUrl, updateIndicator, from, to, token, handleExpiredToken]);
   return queryStatus;
 };
