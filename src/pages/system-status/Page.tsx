@@ -2,24 +2,27 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
-import { useSetTokenHasExpired } from "../../auth/AuthorizationProvider";
+import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../components/AppActions";
+import { ErrorDisplay } from "../../components/ErrorDisplay";
 import { SystemStatusComponent } from "../../components/SystemStatusComponent";
-import { TextareaComponent } from "../../components/TextareaComponent";
 import { backendApiUrl } from "../../configuration/Urls";
 import {
   ControlAction,
   useSystemControls,
 } from "../../hooks/useSystemControls";
 import { useSystemStatus } from "../../hooks/useSystemStatus";
+import { DbExportPart } from "./parts/DbExportPart";
+import { DbImportPart } from "./parts/DbImportPart";
 
 export const Page = () => {
-  const handleExpiredToken = useSetTokenHasExpired();
+  const handleExpiredToken = useHandleExpiredToken();
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const {
     response: status,
     error: statusError,
     errorCode: statusErrorCode,
+    errorDetails: statusErrorDetails,
   } = useSystemStatus(backendApiUrl, updateIndicator, handleExpiredToken);
   const refreshStatus = useCallback(() => {
     setUpdateIndicator((previous) => previous + 1);
@@ -72,54 +75,48 @@ export const Page = () => {
   return (
     <Grid container direction="column">
       <Grid item>
-        <Typography variant="h5">{"System status"}</Typography>
+        <Typography variant="h5">{"System"}</Typography>
       </Grid>
       <Grid item>
         <Paper>
           <AppActions actions={actions} />
         </Paper>
       </Grid>
-      {isWaitingForActionResponse && (
-        <Grid item>
-          <Paper>
-            <Typography>{currentActionFeedback}</Typography>
-          </Paper>
-        </Grid>
-      )}
-      {statusErrorCode && (
-        <Grid item>
-          <Grid container direction="row">
-            <Grid item style={{ width: leftColumnWidth }}>
-              <Typography>{"Error code"}</Typography>
-            </Grid>
-            <Grid item flexGrow={1}>
-              <Typography>{statusErrorCode}</Typography>
-            </Grid>
-          </Grid>
-        </Grid>
-      )}
-      {statusError && (
-        <Grid item>
-          <Grid container direction="row">
-            <Grid item style={{ width: leftColumnWidth }}>
-              <Typography>{"Error"}</Typography>
-            </Grid>
-            <Grid item flexGrow={1}>
-              <TextareaComponent
-                value={statusError}
-                maxRows={10}
-                style={{
-                  width: "90%",
-                  resize: "none",
-                  marginRight: 30,
-                }}
-              />
-            </Grid>
-          </Grid>
-        </Grid>
-      )}
       <Grid item>
-        <SystemStatusComponent status={status} />
+        <Grid container direction="column" spacing={1}>
+          {isWaitingForActionResponse && (
+            <Grid item>
+              <Paper>
+                <Typography>{currentActionFeedback}</Typography>
+              </Paper>
+            </Grid>
+          )}
+          <Grid item>
+            <Paper>
+              <ErrorDisplay
+                leftColumnWidth={leftColumnWidth}
+                error={statusError}
+                errorCode={statusErrorCode}
+                errorDetails={statusErrorDetails}
+              />
+            </Paper>
+          </Grid>
+          <Grid item>
+            <Paper>
+              <SystemStatusComponent status={status} />
+            </Paper>
+          </Grid>
+          <Grid item>
+            <Paper>
+              <DbExportPart />
+            </Paper>
+          </Grid>
+          <Grid item>
+            <Paper>
+              <DbImportPart />
+            </Paper>
+          </Grid>
+        </Grid>
       </Grid>
     </Grid>
   );

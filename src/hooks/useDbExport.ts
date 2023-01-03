@@ -1,56 +1,59 @@
 import {
   ApiServiceResponse,
+  DbExportData,
   ErrorCode,
-  SystemStatus,
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
 import { defaultFetchOptions } from "./options/Utils";
 
-export interface SystemStatusQueryStatus {
-  status: SystemStatus | undefined;
-  error: string | undefined;
-}
-export const useSystemStatus = (
+/**
+ *
+ * @param apiUrl backend api
+ * @param name Filter from (seconds of a date)
+ * @param updateIndicator change to re-select (0 => no fetch)
+ * @returns
+ */
+export const useDbExport = (
   apiUrl: string,
   updateIndicator: number,
   handleExpiredToken?: (errorCode: ErrorCode | undefined) => void
 ) => {
   const [queryStatus, setQueryStatus] = useState<
-    ApiServiceResponse<SystemStatus | undefined>
+    ApiServiceResponse<DbExportData> | ApiServiceResponse<undefined>
   >({
     response: undefined,
   });
 
   useEffect(() => {
-    if (updateIndicator > 0) {
+    if (updateIndicator) {
       const options = defaultFetchOptions();
-      const url = `${apiUrl}/system/status`;
+      const url = `${apiUrl}/export/db/data`;
       fetch(url, options)
         .then((response) => {
-          response.json().then((obj: ApiServiceResponse<SystemStatus>) => {
-            const { error, response, errorCode, errorDetails } = obj || {};
+          response.json().then((obj: ApiServiceResponse<DbExportData>) => {
+            const { response, error, errorDetails, errorCode } = obj || {};
             if (handleExpiredToken) {
               handleExpiredToken(errorCode);
             }
             if (error) {
               return setQueryStatus({ error, errorCode, errorDetails });
             }
-            if (!response) {
+            if (response) {
               return setQueryStatus({
-                errorCode: UnknownErrorCode,
-                error: "Received no error and undefined result.",
+                response,
               });
             }
-            setQueryStatus({
-              response,
+            return setQueryStatus({
+              errorCode: UnknownErrorCode,
+              error: `Received no error and undefined result.`,
             });
           });
         })
         .catch((error) => {
           setQueryStatus({
-            error: error.toString(),
             errorCode: UnknownErrorCode,
+            error: error.toString(),
           });
         });
     }

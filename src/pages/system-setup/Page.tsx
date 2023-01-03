@@ -3,9 +3,9 @@ import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { ExecuteSetupResponse } from "jm-castle-warehouse-types/build";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppAction, AppActions } from "../../components/AppActions";
+import { ErrorDisplay } from "../../components/ErrorDisplay";
 import { SystemSetupResultComponent } from "../../components/SystemSetupResultComponent";
 import { SystemSetupStatusComponent } from "../../components/SystemSetupStatusComponent";
-import { TextareaComponent } from "../../components/TextareaComponent";
 import { backendApiUrl } from "../../configuration/Urls";
 import {
   ExecuteState,
@@ -25,18 +25,20 @@ export const Page = () => {
     state: ExecuteState;
   }>({ setupResult: undefined, state: "not started" });
 
-  const { setup: hookResult, error: setupError } = useExecuteSystemSetup(
-    backendApiUrl,
-    execution.state
-  );
+  const {
+    response: setupResponse,
+    error: setupError,
+    errorCode: setupErrorCode,
+  } = useExecuteSystemSetup(backendApiUrl, execution.state);
 
   useEffect(() => {
-    setExecution({ setupResult: hookResult, state: "not started" });
-  }, [hookResult]);
+    setExecution({ setupResult: setupResponse, state: "not started" });
+  }, [setupResponse]);
 
   const startSetup = useCallback(() => {
     setExecution({ setupResult: undefined, state: "start" });
   }, []);
+
   const refreshStatus = useCallback(() => {
     setUpdateIndicator((previous) => previous + 1);
   }, []);
@@ -55,84 +57,43 @@ export const Page = () => {
     return newActions;
   }, [refreshStatus, startSetup]);
 
-  const leftColumnWidth = 200;
   const { setupResult } = execution;
 
   return (
     <Grid container direction="column">
       <Grid item>
-        <Typography variant="h5">{"System (setup) status"}</Typography>
+        <Typography variant="h5">{"System Setup"}</Typography>
       </Grid>
       <Grid item>
         <Paper>
           <AppActions actions={actions} />
         </Paper>
       </Grid>
-      {setupError && (
-        <Grid item>
-          <Paper>
-            <Grid container direction="row">
-              <Grid item style={{ width: leftColumnWidth }}>
-                <Typography>{"Setup error"}</Typography>
-              </Grid>
-              <Grid item flexGrow={1}>
-                <TextareaComponent
-                  value={setupError}
-                  maxRows={10}
-                  style={{
-                    width: "90%",
-                    resize: "none",
-                    marginRight: 30,
-                  }}
-                />
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
-      )}
-      {statusErrorCode && (
-        <Grid item>
-          <Grid container direction="row">
-            <Grid item style={{ width: leftColumnWidth }}>
-              <Typography>{"Error code"}</Typography>
-            </Grid>
-            <Grid item flexGrow={1}>
-              <Typography>{statusErrorCode}</Typography>
-            </Grid>
-          </Grid>
-        </Grid>
-      )}
-      {statusError && (
-        <Grid item>
-          <Grid container direction="row">
-            <Grid item style={{ width: leftColumnWidth }}>
-              <Typography>{"Error"}</Typography>
-            </Grid>
-            <Grid item flexGrow={1}>
-              <TextareaComponent
-                value={statusError}
-                maxRows={10}
-                style={{
-                  width: "90%",
-                  resize: "none",
-                  marginRight: 30,
-                }}
-              />
-            </Grid>
-          </Grid>
-        </Grid>
-      )}
-      {setupResult && (
-        <Grid item>
-          <Paper>
-            <SystemSetupResultComponent setupResult={setupResult} />
-          </Paper>
-        </Grid>
-      )}
       <Grid item>
-        <Paper>
-          <SystemSetupStatusComponent status={status} />
-        </Paper>
+        <Grid container direction="column" spacing={1}>
+          <Grid item>
+            <Paper>
+              <ErrorDisplay error={setupError} errorCode={setupErrorCode} />
+            </Paper>
+          </Grid>
+          <Grid item>
+            <Paper>
+              <ErrorDisplay error={statusError} errorCode={statusErrorCode} />
+            </Paper>
+          </Grid>
+          {setupResult && (
+            <Grid item>
+              <Paper>
+                <SystemSetupResultComponent setupResult={setupResult} />
+              </Paper>
+            </Grid>
+          )}
+          <Grid item>
+            <Paper>
+              <SystemSetupStatusComponent status={status} />
+            </Paper>
+          </Grid>
+        </Grid>
       </Grid>
     </Grid>
   );

@@ -1,8 +1,8 @@
 import {
   ApiServiceResponse,
+  ErrorCode,
   InsertResponse,
   Row_Store,
-  TokenExpiredErrorCode,
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
@@ -19,7 +19,7 @@ export const useStoreInsert = (
   apiUrl: string,
   store: Row_Store | undefined,
   updateIndicator: number,
-  handleExpiredToken?: () => void
+  handleExpiredToken?: (errorCode: ErrorCode | undefined) => void
 ) => {
   const [queryStatus, setQueryStatus] = useState<
     | ApiServiceResponse<InsertResponse<Row_Store>>
@@ -49,8 +49,8 @@ export const useStoreInsert = (
           .json()
           .then((obj: ApiServiceResponse<InsertResponse<Row_Store>>) => {
             const { response, error, errorDetails, errorCode } = obj || {};
-            if (handleExpiredToken && errorCode === TokenExpiredErrorCode) {
-              handleExpiredToken();
+            if (handleExpiredToken) {
+              handleExpiredToken(errorCode);
             }
             if (error) {
               return setQueryStatus({ error, errorCode, errorDetails });

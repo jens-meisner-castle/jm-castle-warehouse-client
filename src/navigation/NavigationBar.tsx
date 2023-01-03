@@ -3,7 +3,13 @@ import { AppBar, Box, Toolbar } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import { MouseEventHandler, useState } from "react";
+import {
+  MouseEventHandler,
+  ReactElement,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 import { usePages } from "./Pages";
 import { ToolbarLink } from "./ToolbarLink";
 
@@ -12,6 +18,27 @@ export const NavigationBar = () => {
   const [anchorElNav, setAnchorElNav] = useState<HTMLButtonElement | null>(
     null
   );
+  const pagesDisplay = useMemo(() => {
+    const display: {
+      to: string;
+      label: string;
+      icon: ReactElement | undefined;
+    }[] = [];
+    pages.forEach((page) => {
+      display.push({
+        label: page.label,
+        to: page.to,
+        icon: page.icon ? page.icon({ marginTop: 4 }) : undefined,
+      });
+    });
+    return display;
+  }, [pages]);
+
+  const isDisplayedRight = useCallback(
+    (page: typeof pagesDisplay[0]) => page.to === "/" || page.to === "/login",
+    []
+  );
+
   const handleOpenNavMenu: MouseEventHandler<HTMLButtonElement> = (event) => {
     setAnchorElNav(event.currentTarget);
   };
@@ -43,12 +70,13 @@ export const NavigationBar = () => {
             open={Boolean(anchorElNav)}
             onClose={handleCloseNavMenu}
           >
-            {pages.map((page) => (
+            {pagesDisplay.map((page) => (
               <MenuItem key={page.to} onClick={handleCloseNavMenu}>
                 <ToolbarLink
                   key={page.to}
                   to={page.to}
                   label={page.label}
+                  icon={page.icon}
                   variant="h6"
                   style={{
                     marginLeft: 10,
@@ -60,19 +88,45 @@ export const NavigationBar = () => {
             ))}
           </Menu>
           <Box sx={{ flexGrow: 1, display: { xs: "none", lg: "flex" } }}>
-            {pages.map((page) => (
-              <ToolbarLink
-                key={page.to}
-                to={page.to}
-                label={page.label}
-                variant="h6"
-                style={{
-                  marginLeft: 10,
-                  marginRight: 10,
-                  textDecoration: "none",
-                }}
-              />
-            ))}
+            {pagesDisplay
+              .filter((page) => !isDisplayedRight(page))
+              .map((page) => (
+                <ToolbarLink
+                  key={page.to}
+                  to={page.to}
+                  label={page.label}
+                  icon={page.icon}
+                  iconOnly
+                  variant="h6"
+                  style={{
+                    marginLeft: 10,
+                    marginRight: 10,
+                    textDecoration: "none",
+                  }}
+                />
+              ))}
+          </Box>
+          <Box
+            sx={{ flexGrow: 1, display: { xs: "none", lg: "flex" } }}
+            justifyContent="flex-end"
+          >
+            {pagesDisplay
+              .filter((page) => isDisplayedRight(page))
+              .map((page) => (
+                <ToolbarLink
+                  key={page.to}
+                  to={page.to}
+                  label={page.label}
+                  icon={page.icon}
+                  iconOnly
+                  variant="h6"
+                  style={{
+                    marginLeft: 10,
+                    marginRight: 10,
+                    textDecoration: "none",
+                  }}
+                />
+              ))}
           </Box>
         </Toolbar>
       </AppBar>

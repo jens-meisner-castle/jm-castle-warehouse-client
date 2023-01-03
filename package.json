@@ -1,6 +1,6 @@
 {
   "name": "jm-castle-warehouse-client",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "private": false,
   "files": [
     "build",
@@ -32,7 +32,6 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.0",
     "react-scripts": "5.0.1",
-    "use-debounce": "^8.0.4",
     "victory": "^36.6.7"
   },
   "devDependencies": {
@@ -43,9 +42,9 @@
     "eslint": "^8.23.0",
     "eslint-plugin-react": "^7.31.7",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "jm-castle-warehouse-types": "^0.7.9",
-    "prettier": "2.7.1",
-    "typescript": "4.8.2"
+    "jm-castle-warehouse-types": "^0.8.3",
+    "prettier": "^2.8.1",
+    "typescript": "^4.9.4"
   },
   "browserslist": {
     "production": [

@@ -1,14 +1,14 @@
 import PlayCircleFilledIcon from "@mui/icons-material/PlayCircleFilled";
 import { Grid, Typography } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
-import { useSetTokenHasExpired } from "../../auth/AuthorizationProvider";
+import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { TextareaComponent } from "../../components/TextareaComponent";
 import { backendApiUrl } from "../../configuration/Urls";
 import { useExampleCreate } from "../../hooks/useExampleCreate";
 
 export const InsertExampleHome = () => {
-  const handleExpiredToken = useSetTokenHasExpired();
+  const handleExpiredToken = useHandleExpiredToken();
   const [indicatorSelect, setIndicatorSelect] = useState(0);
   const [name, setName] = useState<string | undefined>(undefined);
   const { error, response, errorDetails } = useExampleCreate(

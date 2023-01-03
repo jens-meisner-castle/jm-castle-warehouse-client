@@ -16,6 +16,9 @@ export const SystemSetupStatusComponent = (
   return (
     <Grid container direction="column">
       <Grid item>
+        <Typography variant="h6">{"Status"}</Typography>
+      </Grid>
+      <Grid item>
         <Grid container direction="row">
           <Grid item style={{ width: leftColumnWidth }}>
             <Typography>{"Database"}</Typography>

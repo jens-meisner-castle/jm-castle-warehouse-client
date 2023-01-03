@@ -14,6 +14,7 @@ import {
   useVerifiedUser,
 } from "../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../components/AppActions";
+import { ErrorDisplay } from "../../components/ErrorDisplay";
 import { backendApiUrl } from "../../configuration/Urls";
 import { LoginData, useLogin } from "../../hooks/useLogin";
 
@@ -26,7 +27,11 @@ export const Page = () => {
     backendApiUrl,
     loginData.updateTrigger ? loginData : undefined
   );
-  const { response: loginResult } = loginResponse || {};
+  const {
+    response: loginResult,
+    error: loginError,
+    errorCode: loginErrorCode,
+  } = loginResponse || {};
   const tryLogin = useCallback(
     () =>
       setLoginData((previous) => ({
@@ -55,6 +60,7 @@ export const Page = () => {
       handleLoginResult(loginResult);
     }
   }, [loginResult, handleLoginResult]);
+
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     !contextUser &&
@@ -71,7 +77,9 @@ export const Page = () => {
       });
     return newActions;
   }, [tryLogin, tryLogout, updateTrigger, contextUser]);
-  const { token, error, username, roles } = loginResult || {};
+
+  const { token, username, roles } = loginResult || {};
+
   return (
     <Grid container direction="column">
       <Grid item>
@@ -142,11 +150,9 @@ export const Page = () => {
             <Grid item>
               <AppActions actions={actions} />
             </Grid>
-            {error && (
-              <Grid item>
-                <Alert severity="error">{`Fehler beim Login: ${error}`}</Alert>
-              </Grid>
-            )}
+            <Grid item>
+              <ErrorDisplay error={loginError} errorCode={loginErrorCode} />
+            </Grid>
             {token && username && roles && (
               <Grid item>
                 <Alert severity="success">{`Sie haben sich erfolgreich eingeloggt.

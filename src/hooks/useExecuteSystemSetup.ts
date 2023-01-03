@@ -1,20 +1,19 @@
-import { ExecuteSetupResponse } from "jm-castle-warehouse-types/build";
+import {
+  ApiServiceResponse,
+  ExecuteSetupResponse,
+  UnknownErrorCode,
+} from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
 import { defaultFetchOptions } from "./options/Utils";
 
-export interface ExecuteSystemSetupQueryStatus {
-  setup: ExecuteSetupResponse["setup"] | undefined;
-  error: string | undefined;
-}
 export type ExecuteState = "not started" | "start";
 
 export const useExecuteSystemSetup = (apiUrl: string, state: ExecuteState) => {
-  const [queryStatus, setQueryStatus] = useState<ExecuteSystemSetupQueryStatus>(
-    {
-      setup: undefined,
-      error: undefined,
-    }
-  );
+  const [queryStatus, setQueryStatus] = useState<
+    ApiServiceResponse<ExecuteSetupResponse["setup"] | undefined>
+  >({
+    response: undefined,
+  });
 
   useEffect(() => {
     if (state === "start") {
@@ -22,21 +21,24 @@ export const useExecuteSystemSetup = (apiUrl: string, state: ExecuteState) => {
       const url = `${apiUrl}/system/setup`;
       fetch(url, options)
         .then((response) => {
-          response.json().then((obj) => {
-            const { response, error } = obj || {};
-            const { setup } = response || {};
-            setQueryStatus({
-              error,
-              setup,
+          response
+            .json()
+            .then((obj: ApiServiceResponse<ExecuteSetupResponse["setup"]>) => {
+              const { response, error, errorCode, errorDetails } = obj || {};
+              if (error)
+                return setQueryStatus({
+                  error,
+                  errorCode,
+                  errorDetails,
+                });
+              return setQueryStatus({ response });
             });
-          });
         })
-        .catch((error: Error) => {
-          console.error(error);
-          setQueryStatus((previous) => ({
+        .catch((error) => {
+          setQueryStatus({
             error: error.toString(),
-            setup: previous.setup,
-          }));
+            errorCode: UnknownErrorCode,
+          });
         });
     }
   }, [apiUrl, state]);

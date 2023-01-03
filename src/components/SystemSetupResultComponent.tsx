@@ -30,7 +30,7 @@ export const SystemSetupResultComponent = (
             <TextareaComponent
               value={createDbResult || "?"}
               formatObject
-              maxRows={5}
+              maxRows={10}
               style={{
                 width: "90%",
                 resize: "none",
@@ -49,7 +49,7 @@ export const SystemSetupResultComponent = (
             <TextareaComponent
               value={createDbCmds || "?"}
               formatObject
-              maxRows={5}
+              maxRows={10}
               style={{
                 width: "90%",
                 resize: "none",
@@ -68,7 +68,7 @@ export const SystemSetupResultComponent = (
             <TextareaComponent
               value={createTablesResult || "?"}
               formatObject
-              maxRows={5}
+              maxRows={10}
               style={{
                 width: "90%",
                 resize: "none",
@@ -87,7 +87,7 @@ export const SystemSetupResultComponent = (
             <TextareaComponent
               value={createTablesCmds || "?"}
               formatObject
-              maxRows={5}
+              maxRows={10}
               style={{
                 width: "90%",
                 resize: "none",

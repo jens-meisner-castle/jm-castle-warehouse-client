@@ -1,8 +1,8 @@
 import {
   ApiServiceResponse,
+  ErrorCode,
   Row_StoreSection,
   SelectResponse,
-  TokenExpiredErrorCode,
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
@@ -19,7 +19,7 @@ export const useStoreSectionSelect = (
   apiUrl: string,
   nameFragment: string | undefined,
   updateIndicator: number,
-  handleExpiredToken?: () => void
+  handleExpiredToken?: (errorCode: ErrorCode | undefined) => void
 ) => {
   const [queryStatus, setQueryStatus] = useState<
     | ApiServiceResponse<SelectResponse<Row_StoreSection>>
@@ -39,8 +39,8 @@ export const useStoreSectionSelect = (
             .then(
               (obj: ApiServiceResponse<SelectResponse<Row_StoreSection>>) => {
                 const { response, error, errorDetails, errorCode } = obj || {};
-                if (handleExpiredToken && errorCode === TokenExpiredErrorCode) {
-                  handleExpiredToken();
+                if (handleExpiredToken) {
+                  handleExpiredToken(errorCode);
                 }
                 if (error) {
                   return setQueryStatus({ error, errorCode, errorDetails });

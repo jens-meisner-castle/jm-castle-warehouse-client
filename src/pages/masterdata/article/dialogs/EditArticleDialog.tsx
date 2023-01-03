@@ -87,7 +87,10 @@ export const EditArticleDialog = (props: EditArticleDialogProps) => {
   }, [imageFilePath]);
   const countUnits = useMemo(
     () =>
-      Object.keys(CountUnits).map((k) => ({ id: k, name: CountUnits[k].name })),
+      Object.keys(CountUnits).map((k) => ({
+        id: k,
+        name: CountUnits[k as keyof typeof CountUnits].name,
+      })),
     []
   );
 

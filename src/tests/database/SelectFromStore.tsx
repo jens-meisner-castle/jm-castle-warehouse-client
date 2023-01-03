@@ -1,14 +1,14 @@
 import PlayCircleFilledIcon from "@mui/icons-material/PlayCircleFilled";
 import { Grid, Typography } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
-import { useSetTokenHasExpired } from "../../auth/AuthorizationProvider";
+import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { TextareaComponent } from "../../components/TextareaComponent";
 import { backendApiUrl } from "../../configuration/Urls";
 import { useStoreSelect } from "../../hooks/useStoreSelect";
 
 export const SelectFromStore = () => {
-  const handleExpiredToken = useSetTokenHasExpired();
+  const handleExpiredToken = useHandleExpiredToken();
   const [indicatorSelect, setIndicatorSelect] = useState(0);
   const { error, response, errorDetails, errorCode } = useStoreSelect(
     backendApiUrl,

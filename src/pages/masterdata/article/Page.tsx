@@ -11,7 +11,7 @@ import {
 import { Row_ImageContent } from "jm-castle-warehouse-types/build";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useSetTokenHasExpired } from "../../../auth/AuthorizationProvider";
+import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../../components/AppActions";
 import { ArticlesTable } from "../../../components/ArticlesTable";
 import { backendApiUrl } from "../../../configuration/Urls";
@@ -38,7 +38,7 @@ export const pageUrl = "/masterdata/article";
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
-  const handleExpiredToken = useSetTokenHasExpired();
+  const handleExpiredToken = useHandleExpiredToken();
   const navigate = useNavigate();
   const { search } = useLocation();
   const params = useMemo(() => new URLSearchParams(search), [search]);

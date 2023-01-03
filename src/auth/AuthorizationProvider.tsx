@@ -1,4 +1,11 @@
-import { LoginResult } from "jm-castle-warehouse-types/build";
+import {
+  ErrorCode,
+  JsonWebTokenError,
+  LoginResult,
+  TokenExpiredErrorCode,
+  TokenUndefinedErrorCode,
+  UserRole,
+} from "jm-castle-warehouse-types/build";
 import {
   createContext,
   PropsWithChildren,
@@ -13,14 +20,14 @@ import { useVerifyToken } from "../hooks/useVerifyToken";
 interface Authorization {
   verifiedUser?: {
     username: string;
-    roles: string[];
+    roles: UserRole[];
     expiresAtMs: number;
     expiresAtDisplay: string;
   };
   tokenHasExpired: boolean;
   handleLoginResult: (loginResult: LoginResult) => void;
   handleLogoutResult: () => void;
-  setTokenHasExpired: () => void;
+  handleExpiredToken: (errorCode: ErrorCode | undefined) => void;
 }
 
 const initialValue: Authorization = {
@@ -31,8 +38,8 @@ const initialValue: Authorization = {
   handleLogoutResult: () => {
     console.error("Empty handleLogoutResult function.");
   },
-  setTokenHasExpired: () => {
-    console.error("Empty setTokenHasExpired function.");
+  handleExpiredToken(errorCode) {
+    console.error("Empty handleExpiredToken function.", errorCode);
   },
 };
 
@@ -43,9 +50,14 @@ export const { Provider } = context;
 export const AuthorizationProvider = (props: PropsWithChildren) => {
   const { children } = props;
   const [isTokenExpired, setIsTokenExpired] = useState(false);
-  const setTokenHasExpired = useCallback(() => {
-    // console.log("token expired");
-    setIsTokenExpired(true);
+  const handleExpiredToken = useCallback((errorCode: ErrorCode | undefined) => {
+    if (
+      errorCode === TokenExpiredErrorCode ||
+      errorCode === JsonWebTokenError ||
+      errorCode === TokenUndefinedErrorCode
+    ) {
+      setIsTokenExpired(true);
+    }
   }, []);
 
   const handleLoginResult = useCallback((loginResult: LoginResult) => {
@@ -92,7 +104,7 @@ export const AuthorizationProvider = (props: PropsWithChildren) => {
     tokenHasExpired: isTokenExpired,
     handleLoginResult,
     handleLogoutResult,
-    setTokenHasExpired,
+    handleExpiredToken,
   });
 
   // check once if the service worker has already a valid token
@@ -171,11 +183,11 @@ export const useHandleLogoutResult = () => {
   return handleLogoutResult;
 };
 
-export const useSetTokenHasExpired = () => {
+export const useHandleExpiredToken = () => {
   const contextValue = useContext(context);
   if (!contextValue) {
     throw new Error("AuthorizationProvider is needed in react hierarchy.");
   }
-  const { setTokenHasExpired } = contextValue;
-  return setTokenHasExpired;
+  const { handleExpiredToken } = contextValue;
+  return handleExpiredToken;
 };

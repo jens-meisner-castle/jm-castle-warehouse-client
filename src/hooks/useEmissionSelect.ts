@@ -1,8 +1,8 @@
 import {
   ApiServiceResponse,
+  ErrorCode,
   Row_Emission,
   SelectResponse,
-  TokenExpiredErrorCode,
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { DateTime } from "luxon";
@@ -22,7 +22,7 @@ export const useEmissionSelect = (
   from: DateTime,
   to: DateTime,
   updateIndicator: number,
-  handleExpiredToken?: () => void
+  handleExpiredToken?: (errorCode: ErrorCode | undefined) => void
 ) => {
   const [queryStatus, setQueryStatus] = useState<
     | ApiServiceResponse<SelectResponse<Row_Emission>>
@@ -43,8 +43,8 @@ export const useEmissionSelect = (
             .json()
             .then((obj: ApiServiceResponse<SelectResponse<Row_Emission>>) => {
               const { response, error, errorDetails, errorCode } = obj || {};
-              if (handleExpiredToken && errorCode === TokenExpiredErrorCode) {
-                handleExpiredToken();
+              if (handleExpiredToken) {
+                handleExpiredToken(errorCode);
               }
               if (error) {
                 return setQueryStatus({ error, errorCode, errorDetails });

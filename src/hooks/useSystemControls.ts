@@ -1,7 +1,7 @@
 import {
   ApiServiceResponse,
+  ErrorCode,
   SystemControlResponse,
-  TokenExpiredErrorCode,
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
@@ -12,7 +12,7 @@ export type ControlAction = "restart" | "none";
 export const useSystemControls = (
   apiUrl: string,
   action: ControlAction,
-  handleExpiredToken?: () => void
+  handleExpiredToken?: (errorCode: ErrorCode | undefined) => void
 ) => {
   const [queryStatus, setQueryStatus] = useState<
     ApiServiceResponse<SystemControlResponse | undefined> & {
@@ -34,8 +34,8 @@ export const useSystemControls = (
             .json()
             .then((obj: ApiServiceResponse<SystemControlResponse>) => {
               const { response, error, errorCode, errorDetails } = obj;
-              if (handleExpiredToken && errorCode === TokenExpiredErrorCode) {
-                handleExpiredToken();
+              if (handleExpiredToken) {
+                handleExpiredToken(errorCode);
               }
               if (error) {
                 return setQueryStatus({

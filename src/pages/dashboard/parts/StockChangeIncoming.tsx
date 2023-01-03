@@ -1,6 +1,6 @@
 import { Paper, Typography } from "@mui/material";
 import { useMemo } from "react";
-import { useSetTokenHasExpired } from "../../../auth/AuthorizationProvider";
+import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { StockChangeTable } from "../../../components/StockChangeTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { TimeintervalFilter } from "../../../filter/Types";
@@ -16,7 +16,7 @@ export interface StockChangeIncomingProps {
 
 export const StockChangeIncoming = (props: StockChangeIncomingProps) => {
   const { filter } = props;
-  const handleExpiredToken = useSetTokenHasExpired();
+  const handleExpiredToken = useHandleExpiredToken();
   const { response, error } = useReceiptSelect(
     backendApiUrl,
     filter.from,

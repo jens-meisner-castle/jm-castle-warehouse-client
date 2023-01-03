@@ -3,7 +3,7 @@ import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
 import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Tuple } from "victory";
-import { useSetTokenHasExpired } from "../../auth/AuthorizationProvider";
+import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { StockChangeTable } from "../../components/StockChangeTable";
 import { backendApiUrl } from "../../configuration/Urls";
@@ -25,7 +25,7 @@ import { OptionsMenu } from "./parts/OptionsMenu";
 export const pageUrl = "/history";
 
 export const Page = () => {
-  const handleExpiredToken = useSetTokenHasExpired();
+  const handleExpiredToken = useHandleExpiredToken();
   const [pageOptions, setPageOptions] = useState(
     getNewOptions(loadOptionsForPage(pageUrl) || {})
   );

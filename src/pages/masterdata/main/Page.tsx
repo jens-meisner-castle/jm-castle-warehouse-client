@@ -1,7 +1,7 @@
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
-import { useSetTokenHasExpired } from "../../../auth/AuthorizationProvider";
+import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../../components/AppActions";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useArticleSelect } from "../../../hooks/useArticleSelect";
@@ -14,7 +14,7 @@ import { StoreSections } from "./parts/StoreSections";
 export const pageUrl = "/masterdata/main";
 
 export const Page = () => {
-  const handleExpiredToken = useSetTokenHasExpired();
+  const handleExpiredToken = useHandleExpiredToken();
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const refreshStatus = useCallback(() => {
     setUpdateIndicator((previous) => previous + 1);

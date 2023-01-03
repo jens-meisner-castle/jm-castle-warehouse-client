@@ -1,9 +1,9 @@
 import { Box, Button, Grid } from "@mui/material";
-import { MutableRefObject } from "react";
+import { MutableRefObject, ReactElement, useMemo } from "react";
 import { ToolbarLink } from "../navigation/ToolbarLink";
 
 export type AppAction = {
-  label: string | React.ReactElement;
+  label: string | ReactElement;
   disabled?: boolean;
 } & (
   | {
@@ -24,11 +24,22 @@ export type AppActionProps = {
 
 export const AppActions = (props: AppActionProps) => {
   const { actions } = props;
+  const actionsDisplay = useMemo(() => {
+    const display: (AppAction & { icon?: ReactElement })[] = [];
+    actions.forEach((action) => {
+      display.push({
+        ...action,
+        label: typeof action.label === "string" ? action.label : "",
+        icon: typeof action.label !== "string" ? action.label : undefined,
+      });
+    });
+    return display;
+  }, [actions]);
 
   return (
     <div style={{ marginBottom: 10, marginTop: 10 }}>
       <Grid container direction="row">
-        {actions.map((action, i) => (
+        {actionsDisplay.map((action, i) => (
           <Grid item key={i}>
             {action.onClick ? (
               <Button
@@ -38,13 +49,14 @@ export const AppActions = (props: AppActionProps) => {
                 onClick={action.onClick}
                 disabled={action.disabled}
               >
-                {action.label}
+                {action.icon || action.label}
               </Button>
             ) : (
               <Box style={{ marginLeft: i > 0 ? 10 : 0 }}>
                 <ToolbarLink
                   to={action.onClickNavigate.to}
-                  label={action.label}
+                  label={typeof action.label === "string" ? action.label : ""}
+                  icon={action.icon}
                 />
               </Box>
             )}

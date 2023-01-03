@@ -1,4 +1,4 @@
-const version = "0.6.1";
+const version = "0.6.3";
 /** die erste Zeile wird im prebuild ersetzt (siehe src/WriteServiceWorker.js) */
 console.log(`execute service-worker.js (version: ${version})`);
 /* eslint-disable */
@@ -55,7 +55,7 @@ const fetchCached = async (request) => {
   }
   const response = await fetch(request);
   const cache = await caches.open(cacheName);
-  console.log(`[Service Worker] Caching new resource: ${request.url}`);
+  // console.log(`[Service Worker] Caching new resource: ${request.url}`);
   cache.put(request, response.clone());
   return response;
 };

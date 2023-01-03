@@ -1,7 +1,7 @@
 import {
   ApiServiceResponse,
+  ErrorCode,
   SystemSetupStatus,
-  TokenExpiredErrorCode,
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
@@ -10,7 +10,7 @@ import { defaultFetchOptions } from "./options/Utils";
 export const useSystemSetupStatus = (
   apiUrl: string,
   updateIndicator: number,
-  handleExpiredToken?: () => void
+  handleExpiredToken?: (errorCode: ErrorCode | undefined) => void
 ) => {
   const [queryStatus, setQueryStatus] = useState<
     ApiServiceResponse<SystemSetupStatus | undefined>
@@ -25,8 +25,8 @@ export const useSystemSetupStatus = (
       .then((response) => {
         response.json().then((obj: ApiServiceResponse<SystemSetupStatus>) => {
           const { response, error, errorCode, errorDetails } = obj;
-          if (handleExpiredToken && errorCode === TokenExpiredErrorCode) {
-            handleExpiredToken();
+          if (handleExpiredToken) {
+            handleExpiredToken(errorCode);
           }
           if (error) {
             return setQueryStatus({ error, errorCode, errorDetails });

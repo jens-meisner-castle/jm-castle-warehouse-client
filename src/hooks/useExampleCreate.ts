@@ -1,6 +1,6 @@
 import {
   ApiServiceResponse,
-  TokenExpiredErrorCode,
+  ErrorCode,
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
@@ -17,7 +17,7 @@ export const useExampleCreate = (
   apiUrl: string,
   name: string | undefined,
   updateIndicator: number,
-  handleExpiredToken?: () => void
+  handleExpiredToken?: (errorCode: ErrorCode | undefined) => void
 ) => {
   const [queryStatus, setQueryStatus] = useState<
     ApiServiceResponse<{ result: Record<string, unknown> } | undefined>
@@ -36,8 +36,8 @@ export const useExampleCreate = (
                 obj: ApiServiceResponse<{ result: Record<string, unknown> }>
               ) => {
                 const { response, error, errorDetails, errorCode } = obj || {};
-                if (handleExpiredToken && errorCode === TokenExpiredErrorCode) {
-                  handleExpiredToken();
+                if (handleExpiredToken) {
+                  handleExpiredToken(errorCode);
                 }
                 if (error) {
                   return setQueryStatus({ error, errorCode, errorDetails });

@@ -1,7 +1,7 @@
 import {
   ApiServiceResponse,
+  ErrorCode,
   SerializableService,
-  TokenExpiredErrorCode,
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
@@ -9,7 +9,7 @@ import { defaultFetchOptions } from "./options/Utils";
 
 export const useApiServices = (
   apiUrl: string,
-  handleExpiredToken?: () => void
+  handleExpiredToken?: (errorCode: ErrorCode | undefined) => void
 ) => {
   const [queryStatus, setQueryStatus] = useState<
     ApiServiceResponse<{ services: SerializableService[] } | undefined>
@@ -27,8 +27,8 @@ export const useApiServices = (
           .then(
             (obj: ApiServiceResponse<{ services: SerializableService[] }>) => {
               const { error, response, errorCode, errorDetails } = obj || {};
-              if (handleExpiredToken && errorCode === TokenExpiredErrorCode) {
-                handleExpiredToken();
+              if (handleExpiredToken) {
+                handleExpiredToken(errorCode);
               }
               if (error) {
                 return setQueryStatus({ error, errorCode, errorDetails });

@@ -1,8 +1,8 @@
 import {
   ApiServiceResponse,
+  ErrorCode,
   InsertResponse,
   Row_ImageReference,
-  TokenExpiredErrorCode,
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
@@ -12,7 +12,7 @@ export const useImageReferenceInsert = (
   apiUrl: string,
   imageRef: Row_ImageReference | undefined,
   updateIndicator: number,
-  handleExpiredToken?: () => void
+  handleExpiredToken?: (errorCode: ErrorCode | undefined) => void
 ) => {
   const [queryStatus, setQueryStatus] = useState<
     | ApiServiceResponse<InsertResponse<Row_ImageReference>>
@@ -43,8 +43,8 @@ export const useImageReferenceInsert = (
           .then(
             (obj: ApiServiceResponse<InsertResponse<Row_ImageReference>>) => {
               const { response, error, errorDetails, errorCode } = obj || {};
-              if (handleExpiredToken && errorCode === TokenExpiredErrorCode) {
-                handleExpiredToken();
+              if (handleExpiredToken) {
+                handleExpiredToken(errorCode);
               }
               if (error) {
                 return setQueryStatus({ error, errorCode, errorDetails });

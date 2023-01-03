@@ -2,13 +2,13 @@ import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import SecurityIcon from "@mui/icons-material/Security";
 import { Grid, IconButton, Paper, Typography } from "@mui/material";
 import { useMemo, useState } from "react";
-import { useSetTokenHasExpired } from "../../../auth/AuthorizationProvider";
+import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ApiServiceComponent } from "../../../components/ApiServiceComponent";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useApiServices } from "../../../hooks/useApiServices";
 
 export const ApiServices = () => {
-  const handleExpiredToken = useSetTokenHasExpired();
+  const handleExpiredToken = useHandleExpiredToken();
   const { response, error } = useApiServices(backendApiUrl, handleExpiredToken);
   const { services: apiServices } = response || {};
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);

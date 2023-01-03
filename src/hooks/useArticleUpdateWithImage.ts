@@ -1,4 +1,5 @@
 import {
+  ErrorCode,
   InsertResponse,
   Row_Article,
   Row_ImageContent,
@@ -156,7 +157,7 @@ export const useArticleUpdateWithImage = (
       }
     | undefined,
   updateIndicator: number,
-  handleExpiredToken?: () => void
+  handleExpiredToken?: (errorCode: ErrorCode | undefined) => void
 ) => {
   const imageRef: Row_ImageReference | undefined = useMemo(() => {
     if (imageContent) {
