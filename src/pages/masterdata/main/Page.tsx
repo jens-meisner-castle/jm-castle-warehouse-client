@@ -5,9 +5,13 @@ import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../../components/AppActions";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useArticleSelect } from "../../../hooks/useArticleSelect";
+import { useHashtagSelect } from "../../../hooks/useHashtagSelect";
+import { useImageContentRows } from "../../../hooks/useImageContentRows";
 import { useStoreSectionSelect } from "../../../hooks/useStoreSectionSelect";
 import { useStoreSelect } from "../../../hooks/useStoreSelect";
 import { Articles } from "./parts/Articles";
+import { Hashtags } from "./parts/Hashtags";
+import { Images } from "./parts/Images";
 import { Stores } from "./parts/Stores";
 import { StoreSections } from "./parts/StoreSections";
 
@@ -41,6 +45,21 @@ export const Page = () => {
       handleExpiredToken
     );
   const { result: storeSectionResult } = storeSectionResponse || {};
+  const { response: imageContentResponse, error: imageContentError } =
+    useImageContentRows(
+      backendApiUrl,
+      "%",
+      updateIndicator,
+      handleExpiredToken
+    );
+  const { result: imageContentResult } = imageContentResponse || {};
+  const { response: hashtagResponse, error: hashtagError } = useHashtagSelect(
+    backendApiUrl,
+    "%",
+    updateIndicator,
+    handleExpiredToken
+  );
+  const { result: hashtagResult } = hashtagResponse || {};
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
@@ -85,6 +104,20 @@ export const Page = () => {
           </Paper>
         </Grid>
       )}
+      {imageContentError && (
+        <Grid item>
+          <Paper>
+            <Typography>{imageContentError}</Typography>
+          </Paper>
+        </Grid>
+      )}
+      {hashtagError && (
+        <Grid item>
+          <Paper>
+            <Typography>{hashtagError}</Typography>
+          </Paper>
+        </Grid>
+      )}
       <Grid item>
         <Grid container direction="row">
           <Grid item>
@@ -108,6 +141,22 @@ export const Page = () => {
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
               <Articles articles={articleResult ? articleResult.rows : []} />
+            </Paper>
+          </Grid>
+          <Grid item>
+            <Paper
+              style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
+            >
+              <Images
+                images={imageContentResult ? imageContentResult.rows : []}
+              />
+            </Paper>
+          </Grid>
+          <Grid item>
+            <Paper
+              style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
+            >
+              <Hashtags hashtags={hashtagResult ? hashtagResult.rows : []} />
             </Paper>
           </Grid>
         </Grid>

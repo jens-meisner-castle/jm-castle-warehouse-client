@@ -4,48 +4,51 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
+import TextField from "@mui/material/TextField";
 import { useState } from "react";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
-import { StoreRow } from "../../../../types/RowTypes";
+import { HashtagRow } from "../../../../types/RowTypes";
 
-export interface CreateStoreDialogProps {
-  store: StoreRow;
+export interface EditHashtagDialogProps {
+  hashtag: HashtagRow;
   open: boolean;
   handleCancel: () => void;
-  handleAccept: (store: StoreRow) => void;
+  handleAccept: (data: HashtagRow) => void;
 }
 
-export const CreateStoreDialog = (props: CreateStoreDialogProps) => {
-  const { store, handleAccept, handleCancel, open } = props;
-  const [data, setData] = useState(store);
-  const updateData = (updates: Partial<StoreRow>) => {
+export const EditHashtagDialog = (props: EditHashtagDialogProps) => {
+  const { hashtag, handleAccept, handleCancel, open } = props;
+  const [data, setData] = useState(hashtag);
+  const updateData = (updates: Partial<HashtagRow>) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
+  const { tagId, name } = data;
 
   return (
     <Dialog open={open} onClose={handleCancel}>
-      <DialogTitle>Neues Lager</DialogTitle>
+      <DialogTitle>{"Hashtag bearbeiten"}</DialogTitle>
       <DialogContent>
         <DialogContentText>
           {
-            "Füllen Sie die notwendigen Felder aus und drücken Sie am Ende 'Speichern'."
+            "Führen Sie Ihre Änderungen durch und drücken Sie am Ende 'Speichern'."
           }
         </DialogContentText>
-        <TextFieldWithSpeech
-          autoFocus
+        <TextField
+          disabled
           margin="dense"
-          id="storeId"
-          label="Lager"
-          value={data.storeId}
-          onChange={(s) => updateData({ storeId: s })}
+          id="tagId"
+          label="Artikel"
+          value={tagId}
+          type="text"
           fullWidth
           variant="standard"
         />
         <TextFieldWithSpeech
+          autoFocus
           margin="dense"
           id="name"
           label="Name"
-          value={data.name}
+          value={name}
           onChange={(s) => updateData({ name: s })}
           fullWidth
           variant="standard"

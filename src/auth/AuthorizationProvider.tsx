@@ -98,6 +98,26 @@ export const AuthorizationProvider = (props: AuthorizationProviderProps) => {
     },
     [withServiceWorker]
   );
+  useEffect(
+    () =>
+      setProviderValue((previous) => ({
+        ...previous,
+        handleLoginResult,
+      })),
+    [handleLoginResult]
+  );
+  useEffect(
+    () =>
+      setProviderValue((previous) =>
+        previous.withServiceWorker === withServiceWorker
+          ? previous
+          : {
+              ...previous,
+              withServiceWorker,
+            }
+      ),
+    [withServiceWorker]
+  );
 
   const handleLogoutResult = useCallback(() => {
     if (navigator.serviceWorker?.controller) {

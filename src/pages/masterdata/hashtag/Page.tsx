@@ -6,25 +6,25 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
-import { ArticlesTable } from "../../../components/ArticlesTable";
+import { HashtagsTable } from "../../../components/HashtagsTable";
 import { backendApiUrl } from "../../../configuration/Urls";
-import { useArticleInsert } from "../../../hooks/useArticleInsert";
-import { useArticleSelect } from "../../../hooks/useArticleSelect";
-import { useArticleUpdate } from "../../../hooks/useArticleUpdate";
+import { useHashtagInsert } from "../../../hooks/useHashtagInsert";
+import { useHashtagSelect } from "../../../hooks/useHashtagSelect";
+import { useHashtagUpdate } from "../../../hooks/useHashtagUpdate";
 import {
-  ArticleRow,
-  fromRawArticle,
-  toRawArticle,
+  fromRawHashtag,
+  HashtagRow,
+  toRawHashtag,
 } from "../../../types/RowTypes";
 import {
   ActionStateReducer,
   getValidInitialAction,
   ReducerState,
 } from "../utils/Reducer";
-import { CreateArticleDialog } from "./dialogs/CreateArticleDialog";
-import { EditArticleDialog } from "./dialogs/EditArticleDialog";
+import { CreateHashtagDialog } from "./dialogs/CreateHashtagDialog";
+import { EditHashtagDialog } from "./dialogs/EditHashtagDialog";
 
-export const pageUrl = "/masterdata/article";
+export const pageUrl = "/masterdata/hashtag";
 
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
@@ -39,7 +39,7 @@ export const Page = () => {
     [initialAction, navigate]
   );
 
-  const { response: selectResponse, error: selectError } = useArticleSelect(
+  const { response: selectResponse, error: selectError } = useHashtagSelect(
     backendApiUrl,
     "%",
     updateIndicator
@@ -47,9 +47,9 @@ export const Page = () => {
   const { result: selectResult } = selectResponse || {};
   const rows = useMemo(() => {
     if (selectResult) {
-      const newRows: ArticleRow[] = [];
+      const newRows: HashtagRow[] = [];
       selectResult.rows.forEach((r) => {
-        const newRow = fromRawArticle(r);
+        const newRow = fromRawHashtag(r);
         newRows.push(newRow);
       });
       newRows.sort((a, b) => a.name.localeCompare(b.name));
@@ -59,10 +59,10 @@ export const Page = () => {
   }, [selectResult]);
 
   const [actionState, dispatch] = useReducer<
-    typeof ActionStateReducer<ArticleRow>,
-    ReducerState<ArticleRow>
+    typeof ActionStateReducer<HashtagRow>,
+    ReducerState<HashtagRow>
   >(
-    ActionStateReducer<ArticleRow>,
+    ActionStateReducer<HashtagRow>,
     { action: "none", data: undefined },
     () => ({ action: "none", data: undefined })
   );
@@ -80,10 +80,8 @@ export const Page = () => {
           dispatch({
             type: "new",
             data: {
-              articleId: "",
+              tagId: "",
               name: "",
-              countUnit: "piece",
-              imageRefs: undefined,
               datasetVersion: 1,
               createdAt: new Date(),
               editedAt: new Date(),
@@ -91,9 +89,9 @@ export const Page = () => {
           });
           break;
         case "edit": {
-          const articleId = params.get("articleId");
-          const row = articleId
-            ? rows.find((row) => row.articleId === articleId)
+          const tagId = params.get("tagId");
+          const row = tagId
+            ? rows.find((row) => row.tagId === tagId)
             : undefined;
           row &&
             dispatch({
@@ -104,9 +102,9 @@ export const Page = () => {
         }
         case "duplicate":
           {
-            const articleId = params.get("articleId");
-            const data = articleId
-              ? rows.find((row) => row.articleId === articleId)
+            const tagId = params.get("tagId");
+            const data = tagId
+              ? rows.find((row) => row.tagId === tagId)
               : undefined;
             data &&
               dispatch({
@@ -124,14 +122,14 @@ export const Page = () => {
     }
   }, [initialAction, params, rows]);
   const handleEdit = useCallback(
-    (row: ArticleRow) => {
-      navigate(`${pageUrl}?action=edit&articleId=${row.articleId}`);
+    (row: HashtagRow) => {
+      navigate(`${pageUrl}?action=edit&tagId=${row.tagId}`);
     },
     [navigate]
   );
   const handleDuplicate = useCallback(
-    (row: ArticleRow) => {
-      navigate(`${pageUrl}?action=duplicate&articleId=${row.articleId}`);
+    (row: HashtagRow) => {
+      navigate(`${pageUrl}?action=duplicate&tagId=${row.tagId}`);
     },
     [navigate]
   );
@@ -141,14 +139,14 @@ export const Page = () => {
   }, [resetInitialAction]);
 
   const handleAccept = useCallback(
-    (data: ArticleRow) => dispatch({ type: "accept", data }),
+    (data: HashtagRow) => dispatch({ type: "accept", data }),
     []
   );
 
   const dataToInsert = useMemo(() => {
     if (actionState.action === "accept-new") {
       const { data } = actionState;
-      const newToInsert = toRawArticle(data);
+      const newToInsert = toRawHashtag(data);
       return newToInsert;
     }
     return undefined;
@@ -156,12 +154,12 @@ export const Page = () => {
   const dataToUpdate = useMemo(() => {
     if (actionState.action === "accept-edit") {
       const { data } = actionState;
-      const newToUpdate = toRawArticle(data);
+      const newToUpdate = toRawHashtag(data);
       return newToUpdate;
     }
     return undefined;
   }, [actionState]);
-  const { response: insertResponse, error: insertError } = useArticleInsert(
+  const { response: insertResponse, error: insertError } = useHashtagInsert(
     backendApiUrl,
     dataToInsert,
     1,
@@ -169,7 +167,7 @@ export const Page = () => {
   );
   const { result: insertResult } = insertResponse || {};
 
-  const { response: updateResponse, error: updateError } = useArticleUpdate(
+  const { response: updateResponse, error: updateError } = useHashtagUpdate(
     backendApiUrl,
     dataToUpdate,
     dataToUpdate ? 1 : 0,
@@ -181,11 +179,11 @@ export const Page = () => {
   useEffect(() => {
     const { data: resultData } = insertResult || {};
     if (dataToInsert && resultData) {
-      if (dataToInsert.article_id === resultData.article_id) {
+      if (dataToInsert.tag_id === resultData.tag_id) {
         // dann hat das Einfügen geklappt
         dispatch({
           type: "success",
-          data: fromRawArticle(resultData),
+          data: fromRawHashtag(resultData),
         });
         setIsAnySnackbarOpen(true);
         resetInitialAction();
@@ -195,7 +193,7 @@ export const Page = () => {
       // dann ist etwas schief gelaufen
       dispatch({
         type: "error",
-        data: fromRawArticle(dataToInsert),
+        data: fromRawHashtag(dataToInsert),
         error: insertError,
       });
       setIsAnySnackbarOpen(true);
@@ -213,11 +211,11 @@ export const Page = () => {
   useEffect(() => {
     const { data: resultData } = updateResult || {};
     if (dataToUpdate && resultData) {
-      if (dataToUpdate.article_id === resultData.article_id) {
+      if (dataToUpdate.tag_id === resultData.tag_id) {
         // dann hat das Einfügen geklappt
         dispatch({
           type: "success",
-          data: fromRawArticle(resultData),
+          data: fromRawHashtag(resultData),
         });
         setIsAnySnackbarOpen(true);
         resetInitialAction();
@@ -227,7 +225,7 @@ export const Page = () => {
       // dann ist etwas schief gelaufen
       dispatch({
         type: "error",
-        data: fromRawArticle(dataToUpdate),
+        data: fromRawHashtag(dataToUpdate),
         error: updateError,
       });
       setIsAnySnackbarOpen(true);
@@ -263,21 +261,21 @@ export const Page = () => {
     <>
       <ActionStateSnackbars
         actionState={actionState}
-        displayPayload={`Artikel <${actionState.previous?.data.articleId}>`}
+        displayPayload={`Hashtag <${actionState.previous?.data.tagId}>`}
         isAnySnackbarOpen={isAnySnackbarOpen}
         closeSnackbar={() => setIsAnySnackbarOpen(false)}
       />
       {actionState.action === "new" && actionState.data && (
-        <CreateArticleDialog
-          article={actionState.data}
+        <CreateHashtagDialog
+          hashtag={actionState.data}
           open={true}
           handleCancel={handleCancel}
           handleAccept={handleAccept}
         />
       )}
       {actionState.action === "edit" && actionState.data && (
-        <EditArticleDialog
-          article={actionState.data}
+        <EditHashtagDialog
+          hashtag={actionState.data}
           open={true}
           handleCancel={handleCancel}
           handleAccept={handleAccept}
@@ -285,7 +283,7 @@ export const Page = () => {
       )}
       <Grid container direction="column">
         <Grid item>
-          <Typography variant="h5">{"Artikel"}</Typography>
+          <Typography variant="h5">{"Hashtag"}</Typography>
         </Grid>
         <Grid item>
           <Paper style={{ padding: 5, marginBottom: 5 }}>
@@ -303,10 +301,9 @@ export const Page = () => {
           <Grid container direction="row">
             <Grid item>
               <Paper style={{ padding: 5 }}>
-                <ArticlesTable
+                <HashtagsTable
                   containerStyle={{ width: "100%", maxWidth: 1200 }}
                   editable
-                  displayImage="small"
                   data={rows || []}
                   onEdit={handleEdit}
                   onDuplicate={handleDuplicate}

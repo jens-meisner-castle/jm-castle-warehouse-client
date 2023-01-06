@@ -8,6 +8,8 @@ import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import { CountUnits, isCountUnit } from "jm-castle-warehouse-types/build";
 import { useMemo, useState } from "react";
+import { ImageRefsEditor } from "../../../../components/ImageRefsEditor";
+import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
 import { ArticleRow } from "../../../../types/RowTypes";
 
 export interface CreateArticleDialogProps {
@@ -31,34 +33,35 @@ export const CreateArticleDialog = (props: CreateArticleDialogProps) => {
       })),
     []
   );
+  const { articleId, name, countUnit, imageRefs } = data;
 
   return (
     <Dialog open={open} onClose={handleCancel}>
-      <DialogTitle>Neuer Artikel</DialogTitle>
+      <DialogTitle>{"Neuer Artikel"}</DialogTitle>
       <DialogContent>
         <DialogContentText>
           {
             "Füllen Sie die notwendigen Felder aus und drücken Sie am Ende 'Speichern'."
           }
         </DialogContentText>
-        <TextField
+        <TextFieldWithSpeech
           autoFocus
           margin="dense"
           id="articleId"
           label="Artikel"
-          value={data.articleId}
-          onChange={(event) => updateData({ articleId: event.target.value })}
-          type="text"
+          value={articleId}
+          onChange={(s) => updateData({ articleId: s })}
           fullWidth
           variant="standard"
         />
-        <TextField
+        <TextFieldWithSpeech
           margin="dense"
           id="name"
           label="Name"
-          value={data.name}
-          onChange={(event) => updateData({ name: event.target.value })}
-          type="text"
+          value={name}
+          onChange={(s) => {
+            updateData({ name: s });
+          }}
           fullWidth
           variant="standard"
         />
@@ -67,7 +70,7 @@ export const CreateArticleDialog = (props: CreateArticleDialogProps) => {
           id="countUnit"
           select
           label="Zähleinheit"
-          value={data.countUnit}
+          value={countUnit}
           onChange={(event) => {
             isCountUnit(event.target.value) &&
               updateData({ countUnit: event.target.value });
@@ -81,10 +84,16 @@ export const CreateArticleDialog = (props: CreateArticleDialogProps) => {
             </MenuItem>
           ))}
         </TextField>
+        <ImageRefsEditor
+          imageRefs={imageRefs}
+          onChange={(imageRefs) =>
+            setData((previous) => ({ ...previous, imageRefs }))
+          }
+        />
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => handleAccept(data)}>Speichern</Button>
-        <Button onClick={handleCancel}>Abbrechen</Button>
+        <Button onClick={() => handleAccept(data)}>{"Speichern"}</Button>
+        <Button onClick={handleCancel}>{"Abbrechen"}</Button>
       </DialogActions>
     </Dialog>
   );

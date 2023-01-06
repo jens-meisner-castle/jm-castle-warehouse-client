@@ -5,6 +5,11 @@ export const backendApiUrl =
 
 export const getImageDisplayUrl = (
   apiUrl: string,
-  imageId: string | undefined
+  imageId: string | undefined,
+  dataset_version?: number
 ) =>
-  imageId ? `${apiUrl}/image-content/image?image_id=${imageId}` : undefined;
+  imageId
+    ? dataset_version
+      ? `${apiUrl}/image-content/image?image_id=${imageId}&dataset_version=${dataset_version}`
+      : `${apiUrl}/image-content/image?image_id=${imageId}`
+    : undefined;

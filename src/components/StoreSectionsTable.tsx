@@ -11,6 +11,7 @@ import TablePagination, {
 } from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import { CSSProperties, useEffect, useMemo, useState } from "react";
+import { backendApiUrl, getImageDisplayUrl } from "../configuration/Urls";
 import { StoreSectionRow } from "../types/RowTypes";
 import { getDateFormat, getDateFormatter } from "../utils/Format";
 import { TablePaginationActions } from "./TablePaginationActions";
@@ -22,13 +23,15 @@ interface TableSettings {
 export interface StoreSectionsTableProps {
   data: StoreSectionRow[];
   editable?: boolean;
+  displayImage?: "small" | "none";
   cellSize?: "small" | "medium";
   containerStyle?: CSSProperties;
   onEdit?: (row: StoreSectionRow) => void;
 }
 
 export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
-  const { data, cellSize, containerStyle, editable, onEdit } = props;
+  const { data, cellSize, containerStyle, editable, onEdit, displayImage } =
+    props;
   const [tableSettings, setTableSettings] = useState<TableSettings>({
     rowsPerPage: 20,
   });
@@ -109,6 +112,9 @@ export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
             <TableCell style={cellStyle} align="right">
               {"Version"}
             </TableCell>
+            {displayImage === "small" && (
+              <TableCell style={cellStyle}>{"Bilder"}</TableCell>
+            )}
           </TableRow>
         </TableHead>
         <TableBody>
@@ -117,10 +123,15 @@ export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
               sectionId,
               storeId,
               name,
+              imageRefs,
               datasetVersion,
               createdAt,
               editedAt,
             } = d;
+            const imageUrl = getImageDisplayUrl(
+              backendApiUrl,
+              imageRefs ? imageRefs[0] : undefined
+            );
 
             return (
               <TableRow key={i}>
@@ -153,6 +164,19 @@ export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
                 <TableCell align="right" style={cellStyle} size={cellSize}>
                   {datasetVersion}
                 </TableCell>
+                {displayImage === "small" && (
+                  <TableCell align="right" style={cellStyle} size={cellSize}>
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        width={displayImage === "small" ? 50 : 0}
+                        height="auto"
+                      />
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+                )}
               </TableRow>
             );
           })}

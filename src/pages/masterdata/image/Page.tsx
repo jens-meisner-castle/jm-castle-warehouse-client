@@ -6,25 +6,26 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
-import { ArticlesTable } from "../../../components/ArticlesTable";
+import { ImagesTable } from "../../../components/ImagesTable";
 import { backendApiUrl } from "../../../configuration/Urls";
-import { useArticleInsert } from "../../../hooks/useArticleInsert";
-import { useArticleSelect } from "../../../hooks/useArticleSelect";
-import { useArticleUpdate } from "../../../hooks/useArticleUpdate";
+import { useImageContentInsert } from "../../../hooks/useImageContentInsert";
+import { useImageContentRows } from "../../../hooks/useImageContentRows";
+import { useImageContentUpdate } from "../../../hooks/useImageContentUpdate";
 import {
-  ArticleRow,
-  fromRawArticle,
-  toRawArticle,
+  fromRawImageContent,
+  ImageContentRow,
+  toRawImageContent,
 } from "../../../types/RowTypes";
 import {
   ActionStateReducer,
   getValidInitialAction,
   ReducerState,
 } from "../utils/Reducer";
-import { CreateArticleDialog } from "./dialogs/CreateArticleDialog";
-import { EditArticleDialog } from "./dialogs/EditArticleDialog";
+import { CreateImageContentDialog } from "./dialogs/CreateImageContentDialog";
+import { EditImageContentDialog } from "./dialogs/EditImageContentDialog";
+import { ImageContentEditState } from "./Types";
 
-export const pageUrl = "/masterdata/article";
+export const pageUrl = "/masterdata/image";
 
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
@@ -39,30 +40,31 @@ export const Page = () => {
     [initialAction, navigate]
   );
 
-  const { response: selectResponse, error: selectError } = useArticleSelect(
+  const { response: selectResponse, error: selectError } = useImageContentRows(
     backendApiUrl,
     "%",
-    updateIndicator
+    updateIndicator,
+    handleExpiredToken
   );
   const { result: selectResult } = selectResponse || {};
   const rows = useMemo(() => {
     if (selectResult) {
-      const newRows: ArticleRow[] = [];
+      const newRows: ImageContentRow[] = [];
       selectResult.rows.forEach((r) => {
-        const newRow = fromRawArticle(r);
+        const newRow = fromRawImageContent(r);
         newRows.push(newRow);
       });
-      newRows.sort((a, b) => a.name.localeCompare(b.name));
+      newRows.sort((a, b) => a.imageId.localeCompare(b.imageId));
       return newRows;
     }
     return undefined;
   }, [selectResult]);
 
   const [actionState, dispatch] = useReducer<
-    typeof ActionStateReducer<ArticleRow>,
-    ReducerState<ArticleRow>
+    typeof ActionStateReducer<ImageContentEditState>,
+    ReducerState<ImageContentEditState>
   >(
-    ActionStateReducer<ArticleRow>,
+    ActionStateReducer<ImageContentEditState>,
     { action: "none", data: undefined },
     () => ({ action: "none", data: undefined })
   );
@@ -80,42 +82,52 @@ export const Page = () => {
           dispatch({
             type: "new",
             data: {
-              articleId: "",
-              name: "",
-              countUnit: "piece",
-              imageRefs: undefined,
-              datasetVersion: 1,
-              createdAt: new Date(),
-              editedAt: new Date(),
+              row: {
+                imageId: "",
+                imageExtension: "",
+                sizeInBytes: 0,
+                width: 0,
+                height: 0,
+                datasetVersion: 1,
+                createdAt: new Date(),
+                editedAt: new Date(),
+              },
             },
           });
           break;
         case "edit": {
-          const articleId = params.get("articleId");
-          const row = articleId
-            ? rows.find((row) => row.articleId === articleId)
+          const imageId = params.get("imageId");
+          const row = imageId
+            ? rows.find((row) => row.imageId === imageId)
             : undefined;
           row &&
             dispatch({
               type: "edit",
-              data: row,
+              data: { row },
             });
           break;
         }
         case "duplicate":
           {
-            const articleId = params.get("articleId");
-            const data = articleId
-              ? rows.find((row) => row.articleId === articleId)
+            const imageId = params.get("imageId");
+            const data = imageId
+              ? rows.find((row) => row.imageId === imageId)
               : undefined;
             data &&
               dispatch({
                 type: "new",
                 data: {
-                  ...data,
-                  datasetVersion: 1,
-                  createdAt: new Date(),
-                  editedAt: new Date(),
+                  row: {
+                    ...data,
+                    imageId: `${data.imageId}-copy`,
+                    imageExtension: "",
+                    sizeInBytes: 0,
+                    width: 0,
+                    height: 0,
+                    datasetVersion: 1,
+                    createdAt: new Date(),
+                    editedAt: new Date(),
+                  },
                 },
               });
           }
@@ -124,14 +136,14 @@ export const Page = () => {
     }
   }, [initialAction, params, rows]);
   const handleEdit = useCallback(
-    (row: ArticleRow) => {
-      navigate(`${pageUrl}?action=edit&articleId=${row.articleId}`);
+    (row: ImageContentRow) => {
+      navigate(`${pageUrl}?action=edit&imageId=${row.imageId}`);
     },
     [navigate]
   );
   const handleDuplicate = useCallback(
-    (row: ArticleRow) => {
-      navigate(`${pageUrl}?action=duplicate&articleId=${row.articleId}`);
+    (row: ImageContentRow) => {
+      navigate(`${pageUrl}?action=duplicate&imageId=${row.imageId}`);
     },
     [navigate]
   );
@@ -139,16 +151,18 @@ export const Page = () => {
     dispatch({ type: "cancel" });
     resetInitialAction();
   }, [resetInitialAction]);
-
   const handleAccept = useCallback(
-    (data: ArticleRow) => dispatch({ type: "accept", data }),
+    (data: ImageContentEditState) => dispatch({ type: "accept", data }),
     []
   );
+  console.log("actionState", actionState);
 
   const dataToInsert = useMemo(() => {
     if (actionState.action === "accept-new") {
       const { data } = actionState;
-      const newToInsert = toRawArticle(data);
+      const { row, newImage } = data;
+      const { file } = newImage || {};
+      const newToInsert = { row: toRawImageContent(row), imageFile: file };
       return newToInsert;
     }
     return undefined;
@@ -156,36 +170,47 @@ export const Page = () => {
   const dataToUpdate = useMemo(() => {
     if (actionState.action === "accept-edit") {
       const { data } = actionState;
-      const newToUpdate = toRawArticle(data);
+      const { row, newImage } = data;
+      const { file } = newImage || {};
+      const newToUpdate = {
+        row: toRawImageContent(row),
+        imageFile: file,
+      };
       return newToUpdate;
     }
     return undefined;
   }, [actionState]);
-  const { response: insertResponse, error: insertError } = useArticleInsert(
-    backendApiUrl,
-    dataToInsert,
-    1,
-    handleExpiredToken
-  );
+  const { response: insertResponse, error: insertError } =
+    useImageContentInsert(
+      backendApiUrl,
+      dataToInsert ? dataToInsert.row.image_id : undefined,
+      dataToInsert ? dataToInsert.row.image_extension : undefined,
+      dataToInsert ? dataToInsert.imageFile : undefined,
+      1,
+      handleExpiredToken
+    );
   const { result: insertResult } = insertResponse || {};
 
-  const { response: updateResponse, error: updateError } = useArticleUpdate(
-    backendApiUrl,
-    dataToUpdate,
-    dataToUpdate ? 1 : 0,
-    handleExpiredToken
-  );
-
+  const { response: updateResponse, error: updateError } =
+    useImageContentUpdate(
+      backendApiUrl,
+      dataToUpdate ? dataToUpdate.row.image_id : undefined,
+      dataToUpdate ? dataToUpdate.row.image_extension : undefined,
+      dataToUpdate ? dataToUpdate.row.dataset_version : undefined,
+      dataToUpdate ? dataToUpdate.imageFile : undefined,
+      1,
+      handleExpiredToken
+    );
   const { result: updateResult } = updateResponse || {};
 
   useEffect(() => {
     const { data: resultData } = insertResult || {};
     if (dataToInsert && resultData) {
-      if (dataToInsert.article_id === resultData.article_id) {
+      if (dataToInsert.row.image_id === resultData.image_id) {
         // dann hat das Einfügen geklappt
         dispatch({
           type: "success",
-          data: fromRawArticle(resultData),
+          data: { row: fromRawImageContent(resultData) },
         });
         setIsAnySnackbarOpen(true);
         resetInitialAction();
@@ -195,7 +220,7 @@ export const Page = () => {
       // dann ist etwas schief gelaufen
       dispatch({
         type: "error",
-        data: fromRawArticle(dataToInsert),
+        data: { row: fromRawImageContent(dataToInsert.row) },
         error: insertError,
       });
       setIsAnySnackbarOpen(true);
@@ -213,11 +238,11 @@ export const Page = () => {
   useEffect(() => {
     const { data: resultData } = updateResult || {};
     if (dataToUpdate && resultData) {
-      if (dataToUpdate.article_id === resultData.article_id) {
-        // dann hat das Einfügen geklappt
+      if (dataToUpdate.row.image_id === resultData.image_id) {
+        // dann hat das Aktualisieren geklappt
         dispatch({
           type: "success",
-          data: fromRawArticle(resultData),
+          data: { row: fromRawImageContent(resultData) },
         });
         setIsAnySnackbarOpen(true);
         resetInitialAction();
@@ -227,7 +252,7 @@ export const Page = () => {
       // dann ist etwas schief gelaufen
       dispatch({
         type: "error",
-        data: fromRawArticle(dataToUpdate),
+        data: { row: fromRawImageContent(dataToUpdate.row) },
         error: updateError,
       });
       setIsAnySnackbarOpen(true);
@@ -263,21 +288,21 @@ export const Page = () => {
     <>
       <ActionStateSnackbars
         actionState={actionState}
-        displayPayload={`Artikel <${actionState.previous?.data.articleId}>`}
+        displayPayload={`Bild <${actionState.previous?.data.row.imageId}>`}
         isAnySnackbarOpen={isAnySnackbarOpen}
         closeSnackbar={() => setIsAnySnackbarOpen(false)}
       />
       {actionState.action === "new" && actionState.data && (
-        <CreateArticleDialog
-          article={actionState.data}
+        <CreateImageContentDialog
+          imageContent={actionState.data.row}
           open={true}
           handleCancel={handleCancel}
           handleAccept={handleAccept}
         />
       )}
       {actionState.action === "edit" && actionState.data && (
-        <EditArticleDialog
-          article={actionState.data}
+        <EditImageContentDialog
+          imageContent={actionState.data.row}
           open={true}
           handleCancel={handleCancel}
           handleAccept={handleAccept}
@@ -285,7 +310,7 @@ export const Page = () => {
       )}
       <Grid container direction="column">
         <Grid item>
-          <Typography variant="h5">{"Artikel"}</Typography>
+          <Typography variant="h5">{"Bilder"}</Typography>
         </Grid>
         <Grid item>
           <Paper style={{ padding: 5, marginBottom: 5 }}>
@@ -303,7 +328,7 @@ export const Page = () => {
           <Grid container direction="row">
             <Grid item>
               <Paper style={{ padding: 5 }}>
-                <ArticlesTable
+                <ImagesTable
                   containerStyle={{ width: "100%", maxWidth: 1200 }}
                   editable
                   displayImage="small"

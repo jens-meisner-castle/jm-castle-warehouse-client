@@ -160,16 +160,16 @@ export const useArticleUpdateWithImage = (
   handleExpiredToken?: (errorCode: ErrorCode | undefined) => void
 ) => {
   const imageRef: Row_ImageReference | undefined = useMemo(() => {
-    if (imageContent) {
+    if (imageContent && article) {
       const newRef: Row_ImageReference = {
         image_id: imageContent.row.image_id,
-        reference: "article",
+        reference: "article-" + article.article_id,
         ...initialMasterdataFields(),
       };
       return newRef;
     }
     return undefined;
-  }, [imageContent]);
+  }, [imageContent, article]);
   const [status, dispatch] = useReducer<typeof reducer, ExecutionStatus>(
     reducer,
     { result: {}, action: "none", completed: false },

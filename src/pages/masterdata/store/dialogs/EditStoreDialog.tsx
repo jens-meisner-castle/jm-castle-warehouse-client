@@ -6,6 +6,8 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
+import { ImageRefsEditor } from "../../../../components/ImageRefsEditor";
+import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
 import { StoreRow } from "../../../../types/RowTypes";
 
 export interface EditStoreDialogProps {
@@ -23,6 +25,7 @@ export const EditStoreDialog = (props: EditStoreDialogProps) => {
   const updateData = (updates: Partial<StoreRow>) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
+  const { storeId, name, imageRefs } = data;
 
   return (
     <Dialog open={open} onClose={handleCancel}>
@@ -36,22 +39,27 @@ export const EditStoreDialog = (props: EditStoreDialogProps) => {
           margin="dense"
           id="storeId"
           label="Lager"
-          value={data.storeId}
+          value={storeId}
           onChange={() => neverUpdate()}
           type="text"
           fullWidth
           variant="standard"
         />
-        <TextField
+        <TextFieldWithSpeech
           autoFocus
           margin="dense"
           id="name"
           label="Name"
-          value={data.name}
-          onChange={(event) => updateData({ name: event.target.value })}
-          type="text"
+          value={name}
+          onChange={(s) => updateData({ name: s })}
           fullWidth
           variant="standard"
+        />
+        <ImageRefsEditor
+          imageRefs={imageRefs}
+          onChange={(imageRefs) =>
+            setData((previous) => ({ ...previous, imageRefs }))
+          }
         />
       </DialogContent>
       <DialogActions>

@@ -35,7 +35,7 @@ export const InsertTestArticle = () => {
         createdAt: new Date(),
         editedAt: new Date(),
       }),
-      article_img_ref: null,
+      image_refs: null,
     });
   }, []);
   const actions = useMemo(() => {

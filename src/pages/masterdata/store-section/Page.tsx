@@ -1,15 +1,9 @@
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import {
-  Alert,
-  Grid,
-  Paper,
-  Snackbar,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
 import { StoreSectionsTable } from "../../../components/StoreSectionsTable";
 import { backendApiUrl } from "../../../configuration/Urls";
@@ -109,6 +103,7 @@ export const Page = () => {
               sectionId: "",
               storeId: "",
               name: "",
+              imageRefs: undefined,
               datasetVersion: 1,
               createdAt: new Date(),
               editedAt: new Date(),
@@ -244,46 +239,12 @@ export const Page = () => {
 
   return (
     <>
-      {actionState.action === "error-new" && (
-        <Snackbar
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
-          open={isAnySnackbarOpen}
-          autoHideDuration={6000}
-          onClose={() => setIsAnySnackbarOpen(false)}
-        >
-          <Alert severity="error">{`Fehler beim Speichern von Lagerbereich <${actionState.data.sectionId}>. ${actionState.error}`}</Alert>
-        </Snackbar>
-      )}
-      {actionState.action === "success-new" && (
-        <Snackbar
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
-          open={isAnySnackbarOpen}
-          autoHideDuration={6000}
-          onClose={() => setIsAnySnackbarOpen(false)}
-        >
-          <Alert severity="success">{`Lagerbereich <${actionState.data.sectionId}> wurde gespeichert.`}</Alert>
-        </Snackbar>
-      )}
-      {actionState.action === "error-edit" && (
-        <Snackbar
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
-          open={isAnySnackbarOpen}
-          autoHideDuration={6000}
-          onClose={() => setIsAnySnackbarOpen(false)}
-        >
-          <Alert severity="error">{`Fehler beim Ändern von Lagerbereich <${actionState.data.sectionId}>. ${actionState.error}`}</Alert>
-        </Snackbar>
-      )}
-      {actionState.action === "success-edit" && (
-        <Snackbar
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
-          open={isAnySnackbarOpen}
-          autoHideDuration={6000}
-          onClose={() => setIsAnySnackbarOpen(false)}
-        >
-          <Alert severity="success">{`Lagerbereich <${actionState.data.sectionId}> wurde gespeichert.`}</Alert>
-        </Snackbar>
-      )}
+      <ActionStateSnackbars
+        actionState={actionState}
+        displayPayload={`Lagerbereich <${actionState.previous?.data.sectionId}>`}
+        isAnySnackbarOpen={isAnySnackbarOpen}
+        closeSnackbar={() => setIsAnySnackbarOpen(false)}
+      />
       {actionState.action === "new" && actionState.data && storeRows && (
         <CreateStoreSectionDialog
           section={actionState.data}
@@ -334,6 +295,7 @@ export const Page = () => {
                   data={rows || []}
                   onEdit={handleEdit}
                   cellSize="medium"
+                  displayImage="small"
                 />
               </Paper>
             </Grid>

@@ -6,25 +6,25 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { useState } from "react";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
-import { StoreRow } from "../../../../types/RowTypes";
+import { HashtagRow } from "../../../../types/RowTypes";
 
-export interface CreateStoreDialogProps {
-  store: StoreRow;
+export interface CreateHashtagDialogProps {
+  hashtag: HashtagRow;
   open: boolean;
   handleCancel: () => void;
-  handleAccept: (store: StoreRow) => void;
+  handleAccept: (hashtag: HashtagRow) => void;
 }
 
-export const CreateStoreDialog = (props: CreateStoreDialogProps) => {
-  const { store, handleAccept, handleCancel, open } = props;
-  const [data, setData] = useState(store);
-  const updateData = (updates: Partial<StoreRow>) => {
+export const CreateHashtagDialog = (props: CreateHashtagDialogProps) => {
+  const { hashtag, handleAccept, handleCancel, open } = props;
+  const [data, setData] = useState(hashtag);
+  const updateData = (updates: Partial<HashtagRow>) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
 
   return (
     <Dialog open={open} onClose={handleCancel}>
-      <DialogTitle>Neues Lager</DialogTitle>
+      <DialogTitle>{"Neuer Hashtag"}</DialogTitle>
       <DialogContent>
         <DialogContentText>
           {
@@ -34,10 +34,10 @@ export const CreateStoreDialog = (props: CreateStoreDialogProps) => {
         <TextFieldWithSpeech
           autoFocus
           margin="dense"
-          id="storeId"
-          label="Lager"
-          value={data.storeId}
-          onChange={(s) => updateData({ storeId: s })}
+          id="tagId"
+          label="Hashtag"
+          value={data.tagId}
+          onChange={(s) => updateData({ tagId: s })}
           fullWidth
           variant="standard"
         />

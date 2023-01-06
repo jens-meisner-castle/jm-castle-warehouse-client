@@ -1,5 +1,5 @@
-const version = "0.6.3";
-/** die erste Zeile wird im prebuild ersetzt (siehe src/WriteServiceWorker.js) */
+const version = "0.8.0";
+
 console.log(`execute service-worker.js (version: ${version})`);
 /* eslint-disable */
 const cacheName = "jm-castle-warehouse";
@@ -21,13 +21,13 @@ const addToken = (request) => {
 };
 
 self.addEventListener("install", (event) => {
-  console.log("👷", "install + delete old cache", event);
+  console.log("install + delete old cache", event);
   caches.delete(cacheName);
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  console.log("👷", "activate", event);
+  console.log("activate", event);
   return self.clients.claim();
 });
 
@@ -55,7 +55,6 @@ const fetchCached = async (request) => {
   }
   const response = await fetch(request);
   const cache = await caches.open(cacheName);
-  // console.log(`[Service Worker] Caching new resource: ${request.url}`);
   cache.put(request, response.clone());
   return response;
 };
@@ -68,7 +67,6 @@ self.addEventListener("fetch", function (event) {
     );
     return event.respondWith(response);
   }
-  // token && token.length && console.log("I have a token: xxx");
   const preparedRequest = addToken(event.request);
   return shouldUseCache(url.pathname)
     ? event.respondWith(fetchCached(preparedRequest))

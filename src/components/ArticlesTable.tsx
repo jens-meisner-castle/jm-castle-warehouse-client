@@ -127,7 +127,7 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
               {"Version"}
             </TableCell>
             {displayImage === "small" && (
-              <TableCell style={cellStyle}>{"Artikelbild"}</TableCell>
+              <TableCell style={cellStyle}>{"Bilder"}</TableCell>
             )}
           </TableRow>
         </TableHead>
@@ -135,14 +135,17 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
           {visibleRows.map((d, i) => {
             const {
               articleId,
-              articleImgRef,
+              imageRefs,
               name,
               countUnit,
               datasetVersion,
               createdAt,
               editedAt,
             } = d;
-            const imageUrl = getImageDisplayUrl(backendApiUrl, articleImgRef);
+            const imageUrl = getImageDisplayUrl(
+              backendApiUrl,
+              imageRefs ? imageRefs[0] : undefined
+            );
 
             return (
               <TableRow key={i}>
@@ -184,17 +187,19 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
                 <TableCell align="right" style={cellStyle} size={cellSize}>
                   {datasetVersion}
                 </TableCell>
-                <TableCell align="right" style={cellStyle} size={cellSize}>
-                  {displayImage === "small" && imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      width={displayImage === "small" ? 50 : 0}
-                      height="auto"
-                    />
-                  ) : (
-                    "-"
-                  )}
-                </TableCell>
+                {displayImage === "small" && (
+                  <TableCell align="right" style={cellStyle} size={cellSize}>
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        width={displayImage === "small" ? 50 : 0}
+                        height="auto"
+                      />
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+                )}
               </TableRow>
             );
           })}

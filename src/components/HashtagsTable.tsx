@@ -1,3 +1,4 @@
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import EditIcon from "@mui/icons-material/Edit";
 import { IconButton } from "@mui/material";
 import Paper from "@mui/material/Paper";
@@ -11,8 +12,7 @@ import TablePagination, {
 } from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import { CSSProperties, useEffect, useMemo, useState } from "react";
-import { backendApiUrl, getImageDisplayUrl } from "../configuration/Urls";
-import { StoreRow } from "../types/RowTypes";
+import { HashtagRow } from "../types/RowTypes";
 import { getDateFormat, getDateFormatter } from "../utils/Format";
 import { TablePaginationActions } from "./TablePaginationActions";
 
@@ -20,17 +20,17 @@ interface TableSettings {
   rowsPerPage: number;
 }
 
-export interface StoresTableProps {
-  data: StoreRow[];
+export interface HashtagsTableProps {
+  data: HashtagRow[];
   editable?: boolean;
-  displayImage?: "small" | "none";
   cellSize?: "small" | "medium";
   containerStyle?: CSSProperties;
-  onEdit?: (row: StoreRow) => void;
+  onEdit?: (row: HashtagRow) => void;
+  onDuplicate?: (row: HashtagRow) => void;
 }
 
-export const StoresTable = (props: StoresTableProps) => {
-  const { data, cellSize, containerStyle, editable, onEdit, displayImage } =
+export const HashtagsTable = (props: HashtagsTableProps) => {
+  const { data, cellSize, containerStyle, editable, onEdit, onDuplicate } =
     props;
   const [tableSettings, setTableSettings] = useState<TableSettings>({
     rowsPerPage: 20,
@@ -101,38 +101,38 @@ export const StoresTable = (props: StoresTableProps) => {
           <TableRow>
             {editable && (
               <TableCell style={cellStyle} align="center">
-                {"Bearbeiten"}
+                {""}
               </TableCell>
             )}
-            <TableCell style={cellStyle}>{"Lager"}</TableCell>
+            {editable && (
+              <TableCell style={cellStyle} align="center">
+                {""}
+              </TableCell>
+            )}
+            <TableCell style={cellStyle}>{"Artikel"}</TableCell>
             <TableCell style={cellStyle}>{"Name"}</TableCell>
             <TableCell style={cellStyle}>{"erzeugt"}</TableCell>
             <TableCell style={cellStyle}>{"bearbeitet"}</TableCell>
             <TableCell style={cellStyle} align="right">
               {"Version"}
             </TableCell>
-            {displayImage === "small" && (
-              <TableCell style={cellStyle}>{"Bilder"}</TableCell>
-            )}
           </TableRow>
         </TableHead>
         <TableBody>
           {visibleRows.map((d, i) => {
-            const {
-              storeId,
-              name,
-              datasetVersion,
-              createdAt,
-              editedAt,
-              imageRefs,
-            } = d;
-            const imageUrl = getImageDisplayUrl(
-              backendApiUrl,
-              imageRefs ? imageRefs[0] : undefined
-            );
+            const { tagId, name, datasetVersion, createdAt, editedAt } = d;
 
             return (
               <TableRow key={i}>
+                {editable && (
+                  <TableCell align="center" style={cellStyle}>
+                    {
+                      <IconButton onClick={() => onDuplicate && onDuplicate(d)}>
+                        <ContentCopyIcon />
+                      </IconButton>
+                    }
+                  </TableCell>
+                )}
                 {editable && (
                   <TableCell align="center" style={cellStyle}>
                     {
@@ -143,7 +143,7 @@ export const StoresTable = (props: StoresTableProps) => {
                   </TableCell>
                 )}
                 <TableCell style={cellStyle} size={cellSize}>
-                  {storeId}
+                  {tagId}
                 </TableCell>
                 <TableCell style={cellStyle} size={cellSize}>
                   {name}
@@ -159,19 +159,6 @@ export const StoresTable = (props: StoresTableProps) => {
                 <TableCell align="right" style={cellStyle} size={cellSize}>
                   {datasetVersion}
                 </TableCell>
-                {displayImage === "small" && (
-                  <TableCell align="right" style={cellStyle} size={cellSize}>
-                    {imageUrl ? (
-                      <img
-                        src={imageUrl}
-                        width={displayImage === "small" ? 50 : 0}
-                        height="auto"
-                      />
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                )}
               </TableRow>
             );
           })}

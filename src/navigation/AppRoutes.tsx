@@ -8,6 +8,8 @@ import { Page as HelpPage } from "../pages/help/Page";
 import { Page as HistoryPage } from "../pages/history/Page";
 import { Page as LoginPage } from "../pages/login/Page";
 import { Page as ArticlePage } from "../pages/masterdata/article/Page";
+import { Page as HashtagPage } from "../pages/masterdata/hashtag/Page";
+import { Page as ImageContentPage } from "../pages/masterdata/image/Page";
 import { Page as MasterdataPage } from "../pages/masterdata/main/Page";
 import { Page as StoreSectionPage } from "../pages/masterdata/store-section/Page";
 import { Page as StorePage } from "../pages/masterdata/store/Page";
@@ -70,6 +72,16 @@ const allRoutes: Record<string, AppRoute> = {
     neededRole: "internal",
     path: "/masterdata/store-section",
     element: StoreSectionPage,
+  },
+  masterdataImageContent: {
+    neededRole: "internal",
+    path: "/masterdata/image",
+    element: ImageContentPage,
+  },
+  masterdataHashtag: {
+    neededRole: "internal",
+    path: "/masterdata/hashtag",
+    element: HashtagPage,
   },
 };
 

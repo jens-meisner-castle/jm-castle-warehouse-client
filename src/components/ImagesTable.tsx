@@ -1,3 +1,4 @@
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import EditIcon from "@mui/icons-material/Edit";
 import { IconButton } from "@mui/material";
 import Paper from "@mui/material/Paper";
@@ -12,7 +13,7 @@ import TablePagination, {
 import TableRow from "@mui/material/TableRow";
 import { CSSProperties, useEffect, useMemo, useState } from "react";
 import { backendApiUrl, getImageDisplayUrl } from "../configuration/Urls";
-import { StoreRow } from "../types/RowTypes";
+import { ImageContentRow } from "../types/RowTypes";
 import { getDateFormat, getDateFormatter } from "../utils/Format";
 import { TablePaginationActions } from "./TablePaginationActions";
 
@@ -20,18 +21,26 @@ interface TableSettings {
   rowsPerPage: number;
 }
 
-export interface StoresTableProps {
-  data: StoreRow[];
+export interface ImagesTableProps {
+  data: ImageContentRow[];
   editable?: boolean;
   displayImage?: "small" | "none";
   cellSize?: "small" | "medium";
   containerStyle?: CSSProperties;
-  onEdit?: (row: StoreRow) => void;
+  onEdit?: (row: ImageContentRow) => void;
+  onDuplicate?: (row: ImageContentRow) => void;
 }
 
-export const StoresTable = (props: StoresTableProps) => {
-  const { data, cellSize, containerStyle, editable, onEdit, displayImage } =
-    props;
+export const ImagesTable = (props: ImagesTableProps) => {
+  const {
+    data,
+    cellSize,
+    containerStyle,
+    editable,
+    onEdit,
+    onDuplicate,
+    displayImage,
+  } = props;
   const [tableSettings, setTableSettings] = useState<TableSettings>({
     rowsPerPage: 20,
   });
@@ -101,38 +110,58 @@ export const StoresTable = (props: StoresTableProps) => {
           <TableRow>
             {editable && (
               <TableCell style={cellStyle} align="center">
-                {"Bearbeiten"}
+                {""}
               </TableCell>
             )}
-            <TableCell style={cellStyle}>{"Lager"}</TableCell>
-            <TableCell style={cellStyle}>{"Name"}</TableCell>
+            {editable && (
+              <TableCell style={cellStyle} align="center">
+                {""}
+              </TableCell>
+            )}
+            <TableCell style={cellStyle}>{"Bild ID"}</TableCell>
+            <TableCell style={cellStyle}>{"Dateiendung"}</TableCell>
+            <TableCell style={cellStyle}>{"Dateigröße (bytes)"}</TableCell>
+            <TableCell style={cellStyle}>{"Breite"}</TableCell>
+            <TableCell style={cellStyle}>{"Höhe"}</TableCell>
             <TableCell style={cellStyle}>{"erzeugt"}</TableCell>
             <TableCell style={cellStyle}>{"bearbeitet"}</TableCell>
             <TableCell style={cellStyle} align="right">
               {"Version"}
             </TableCell>
             {displayImage === "small" && (
-              <TableCell style={cellStyle}>{"Bilder"}</TableCell>
+              <TableCell style={cellStyle}>{"Bild"}</TableCell>
             )}
           </TableRow>
         </TableHead>
         <TableBody>
           {visibleRows.map((d, i) => {
             const {
-              storeId,
-              name,
+              imageId,
+              imageExtension,
+              sizeInBytes,
+              width,
+              height,
               datasetVersion,
               createdAt,
               editedAt,
-              imageRefs,
             } = d;
             const imageUrl = getImageDisplayUrl(
               backendApiUrl,
-              imageRefs ? imageRefs[0] : undefined
+              imageId,
+              datasetVersion
             );
 
             return (
               <TableRow key={i}>
+                {editable && (
+                  <TableCell align="center" style={cellStyle}>
+                    {
+                      <IconButton onClick={() => onDuplicate && onDuplicate(d)}>
+                        <ContentCopyIcon />
+                      </IconButton>
+                    }
+                  </TableCell>
+                )}
                 {editable && (
                   <TableCell align="center" style={cellStyle}>
                     {
@@ -143,10 +172,19 @@ export const StoresTable = (props: StoresTableProps) => {
                   </TableCell>
                 )}
                 <TableCell style={cellStyle} size={cellSize}>
-                  {storeId}
+                  {imageId}
                 </TableCell>
                 <TableCell style={cellStyle} size={cellSize}>
-                  {name}
+                  {imageExtension}
+                </TableCell>
+                <TableCell style={cellStyle} size={cellSize}>
+                  {sizeInBytes}
+                </TableCell>
+                <TableCell style={cellStyle} size={cellSize}>
+                  {width}
+                </TableCell>
+                <TableCell style={cellStyle} size={cellSize}>
+                  {height}
                 </TableCell>
                 <TableCell style={cellStyle} size={cellSize}>
                   {atFormatFunction(createdAt)}
@@ -159,19 +197,17 @@ export const StoresTable = (props: StoresTableProps) => {
                 <TableCell align="right" style={cellStyle} size={cellSize}>
                   {datasetVersion}
                 </TableCell>
-                {displayImage === "small" && (
-                  <TableCell align="right" style={cellStyle} size={cellSize}>
-                    {imageUrl ? (
-                      <img
-                        src={imageUrl}
-                        width={displayImage === "small" ? 50 : 0}
-                        height="auto"
-                      />
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                )}
+                <TableCell align="right" style={cellStyle} size={cellSize}>
+                  {displayImage === "small" && imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      width={displayImage === "small" ? 50 : 0}
+                      height="auto"
+                    />
+                  ) : (
+                    "-"
+                  )}
+                </TableCell>
               </TableRow>
             );
           })}
