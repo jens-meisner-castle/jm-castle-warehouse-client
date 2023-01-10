@@ -9,14 +9,6 @@ import { useEffect, useState } from "react";
 import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
-/**
- *
- * @param apiUrl backend api
- * @param imageId equal to the filename
- * @param content the bytes of the image
- * @param updateIndicator change to re-execute (0 => no execution)
- * @returns
- */
 export const useImageContentInsert = (
   apiUrl: string,
   imageId: string | undefined,

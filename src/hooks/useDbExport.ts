@@ -8,13 +8,6 @@ import { useEffect, useState } from "react";
 import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
-/**
- *
- * @param apiUrl backend api
- * @param name Filter from (seconds of a date)
- * @param updateIndicator change to re-select (0 => no fetch)
- * @returns
- */
 export const useDbExport = (
   apiUrl: string,
   updateIndicator: number,

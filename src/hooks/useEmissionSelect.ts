@@ -10,14 +10,6 @@ import { useEffect, useState } from "react";
 import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
-/**
- *
- * @param apiUrl backend api
- * @param logged_at_from Filter from (seconds of a date)
- * @param logged_at_to Filter to (seconds of a date)
- * @param updateIndicator change to re-select (0 => no fetch)
- * @returns
- */
 export const useEmissionSelect = (
   apiUrl: string,
   from: DateTime,

@@ -3,7 +3,7 @@ import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { ExecuteSetupResponse } from "jm-castle-warehouse-types/build";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppAction, AppActions } from "../../components/AppActions";
-import { ErrorDisplay } from "../../components/ErrorDisplay";
+import { ErrorData, ErrorDisplays } from "../../components/ErrorDisplays";
 import { SystemSetupResultComponent } from "../../components/SystemSetupResultComponent";
 import { SystemSetupStatusComponent } from "../../components/SystemSetupStatusComponent";
 import { backendApiUrl } from "../../configuration/Urls";
@@ -15,25 +15,34 @@ import { useSystemSetupStatus } from "../../hooks/useSystemSetupStatus";
 
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
-  const {
-    response: status,
-    error: statusError,
-    errorCode: statusErrorCode,
-  } = useSystemSetupStatus(backendApiUrl, updateIndicator);
+  const setupStatusApiResponse = useSystemSetupStatus(
+    backendApiUrl,
+    updateIndicator
+  );
+
+  const { response: status } = setupStatusApiResponse;
+
   const [execution, setExecution] = useState<{
     setupResult: ExecuteSetupResponse["setup"] | undefined;
     state: ExecuteState;
   }>({ setupResult: undefined, state: "not started" });
 
-  const {
-    response: setupResponse,
-    error: setupError,
-    errorCode: setupErrorCode,
-  } = useExecuteSystemSetup(backendApiUrl, execution.state);
+  const setupExecutionApiResponse = useExecuteSystemSetup(
+    backendApiUrl,
+    execution.state
+  );
+  const { response: setupExecutionResponse } = setupExecutionApiResponse;
+
+  const errorData = useMemo(() => {
+    const newData: Record<string, ErrorData> = {};
+    newData.setupStatus = setupStatusApiResponse;
+    newData.setupExecution = setupExecutionApiResponse;
+    return newData;
+  }, [setupStatusApiResponse, setupExecutionApiResponse]);
 
   useEffect(() => {
-    setExecution({ setupResult: setupResponse, state: "not started" });
-  }, [setupResponse]);
+    setExecution({ setupResult: setupExecutionResponse, state: "not started" });
+  }, [setupExecutionResponse]);
 
   const startSetup = useCallback(() => {
     setExecution({ setupResult: undefined, state: "start" });
@@ -70,30 +79,19 @@ export const Page = () => {
         </Paper>
       </Grid>
       <Grid item>
-        <Grid container direction="column">
-          <Grid item>
-            <Paper>
-              <ErrorDisplay error={setupError} errorCode={setupErrorCode} />
-            </Paper>
-          </Grid>
-          <Grid item>
-            <Paper>
-              <ErrorDisplay error={statusError} errorCode={statusErrorCode} />
-            </Paper>
-          </Grid>
-          {setupResult && (
-            <Grid item>
-              <Paper>
-                <SystemSetupResultComponent setupResult={setupResult} />
-              </Paper>
-            </Grid>
-          )}
-          <Grid item>
-            <Paper>
-              <SystemSetupStatusComponent status={status} />
-            </Paper>
-          </Grid>
+        <ErrorDisplays results={errorData} />
+      </Grid>
+      {setupResult && (
+        <Grid item>
+          <Paper>
+            <SystemSetupResultComponent setupResult={setupResult} />
+          </Paper>
         </Grid>
+      )}
+      <Grid item>
+        <Paper>
+          <SystemSetupStatusComponent status={status} />
+        </Paper>
       </Grid>
     </Grid>
   );

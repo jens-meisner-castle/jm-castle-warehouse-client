@@ -4,20 +4,12 @@ import {
   InsertResponse,
   Row_ImageContent,
   UnknownErrorCode,
-  UpdateResponse
+  UpdateResponse,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
 import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
-/**
- *
- * @param apiUrl backend api
- * @param imageId equal to the filename
- * @param content the bytes of the image
- * @param updateIndicator change to re-execute (0 => no execution)
- * @returns
- */
 export const useImageContentUpdate = (
   apiUrl: string,
   imageId: string | undefined,
@@ -37,7 +29,12 @@ export const useImageContentUpdate = (
 
   useEffect(() => {
     if (updateIndicator) {
-      if (imageId && imageExtension && content && typeof datasetVersion === "number") {
+      if (
+        imageId &&
+        imageExtension &&
+        content &&
+        typeof datasetVersion === "number"
+      ) {
         const options = defaultFetchOptions(token);
         const formData = new FormData();
         formData.append("image_id", imageId);

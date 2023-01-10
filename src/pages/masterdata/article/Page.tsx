@@ -2,7 +2,7 @@ import AddBoxIcon from "@mui/icons-material/AddBox";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
@@ -11,6 +11,7 @@ import { backendApiUrl } from "../../../configuration/Urls";
 import { useArticleInsert } from "../../../hooks/useArticleInsert";
 import { useArticleSelect } from "../../../hooks/useArticleSelect";
 import { useArticleUpdate } from "../../../hooks/useArticleUpdate";
+import { useUrlAction } from "../../../hooks/useUrlAction";
 import {
   ArticleRow,
   fromRawArticle,
@@ -31,9 +32,8 @@ export const Page = () => {
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
   const handleExpiredToken = useHandleExpiredToken();
   const navigate = useNavigate();
-  const { search } = useLocation();
-  const params = useMemo(() => new URLSearchParams(search), [search]);
-  const initialAction = getValidInitialAction(params.get("action"));
+  const { action, params } = useUrlAction() || {};
+  const initialAction = getValidInitialAction(action);
   const resetInitialAction = useCallback(
     () => initialAction !== "none" && navigate(pageUrl),
     [initialAction, navigate]
@@ -84,6 +84,8 @@ export const Page = () => {
               name: "",
               countUnit: "piece",
               imageRefs: undefined,
+              hashtags: undefined,
+              wwwLink: undefined,
               datasetVersion: 1,
               createdAt: new Date(),
               editedAt: new Date(),
@@ -91,7 +93,7 @@ export const Page = () => {
           });
           break;
         case "edit": {
-          const articleId = params.get("articleId");
+          const articleId = params?.articleId;
           const row = articleId
             ? rows.find((row) => row.articleId === articleId)
             : undefined;
@@ -104,7 +106,7 @@ export const Page = () => {
         }
         case "duplicate":
           {
-            const articleId = params.get("articleId");
+            const articleId = params?.articleId;
             const data = articleId
               ? rows.find((row) => row.articleId === articleId)
               : undefined;
@@ -310,7 +312,7 @@ export const Page = () => {
                   data={rows || []}
                   onEdit={handleEdit}
                   onDuplicate={handleDuplicate}
-                  cellSize="small"
+                  cellSize="medium"
                 />
               </Paper>
             </Grid>

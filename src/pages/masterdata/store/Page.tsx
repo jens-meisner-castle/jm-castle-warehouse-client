@@ -2,7 +2,7 @@ import AddBoxIcon from "@mui/icons-material/AddBox";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
 import { StoresTable } from "../../../components/StoresTable";
@@ -10,6 +10,7 @@ import { backendApiUrl } from "../../../configuration/Urls";
 import { useStoreInsert } from "../../../hooks/useStoreInsert";
 import { useStoreSelect } from "../../../hooks/useStoreSelect";
 import { useStoreUpdate } from "../../../hooks/useStoreUpdate";
+import { useUrlAction } from "../../../hooks/useUrlAction";
 import { fromRawStore, StoreRow, toRawStore } from "../../../types/RowTypes";
 import {
   ActionStateReducer,
@@ -25,9 +26,8 @@ export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
   const navigate = useNavigate();
-  const { search } = useLocation();
-  const params = useMemo(() => new URLSearchParams(search), [search]);
-  const initialAction = getValidInitialAction(params.get("action"));
+  const { action, params } = useUrlAction() || {};
+  const initialAction = getValidInitialAction(action);
 
   const resetInitialAction = useCallback(
     () => initialAction !== "none" && navigate(pageUrl),
@@ -83,7 +83,7 @@ export const Page = () => {
           });
           break;
         case "edit": {
-          const storeId = params.get("storeId");
+          const storeId = params?.storeId;
           const data = storeId
             ? rows.find((row) => row.storeId === storeId)
             : undefined;
@@ -94,6 +94,25 @@ export const Page = () => {
             });
           break;
         }
+        case "duplicate":
+          {
+            const storeId = params?.storeId;
+            const data = storeId
+              ? rows.find((row) => row.storeId === storeId)
+              : undefined;
+            data &&
+              dispatch({
+                type: "new",
+                data: {
+                  ...data,
+                  storeId: `${data.storeId}-copy`,
+                  datasetVersion: 1,
+                  createdAt: new Date(),
+                  editedAt: new Date(),
+                },
+              });
+          }
+          break;
       }
     }
   }, [initialAction, params, rows]);

@@ -55,8 +55,13 @@ export const EditHashtagDialog = (props: EditHashtagDialogProps) => {
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => handleAccept(data)}>Speichern</Button>
-        <Button onClick={handleCancel}>Abbrechen</Button>
+        <Button
+          disabled={!tagId.length || !name.length}
+          onClick={() => handleAccept(data)}
+        >
+          {"Speichern"}
+        </Button>
+        <Button onClick={handleCancel}>{"Abbrechen"}</Button>
       </DialogActions>
     </Dialog>
   );

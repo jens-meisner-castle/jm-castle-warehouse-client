@@ -1,8 +1,8 @@
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { Grid, IconButton, Paper, Tooltip, Typography } from "@mui/material";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
-import { ErrorDisplay } from "../../../components/ErrorDisplay";
+import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
 import { FileInputField } from "../../../components/FileInputField";
 import { TextareaComponent } from "../../../components/TextareaComponent";
 import { backendApiUrl } from "../../../configuration/Urls";
@@ -13,18 +13,25 @@ export const DbImportPart = () => {
   const [file, setFile] = useState<File | undefined>(undefined);
   const handleExpiredToken = useHandleExpiredToken();
 
-  const { error, response, errorCode, errorDetails } = useDbImportFile(
+  const importFileApiResponse = useDbImportFile(
     backendApiUrl,
     file,
     updateIndicator,
     handleExpiredToken
   );
+  const { response } = importFileApiResponse;
+
+  const errorData = useMemo(() => {
+    const newData: Record<string, ErrorData> = {};
+    newData.importFile = importFileApiResponse;
+    return newData;
+  }, [importFileApiResponse]);
 
   const executeImport = useCallback(() => {
     file && setUpdateIndicator((previous) => previous + 1);
   }, [file]);
 
-  const isButtonDisabled = !file || (!!updateIndicator && !response && !error);
+  const isButtonDisabled = !file || (!!updateIndicator && !response);
 
   return (
     <Grid container direction="column">
@@ -48,13 +55,7 @@ export const DbImportPart = () => {
         </Paper>
       </Grid>
       <Grid item>
-        <Paper>
-          <ErrorDisplay
-            error={error}
-            errorCode={errorCode}
-            errorDetails={errorDetails}
-          />
-        </Paper>
+        <ErrorDisplays results={errorData} />
       </Grid>
       <Grid item>
         <Paper>

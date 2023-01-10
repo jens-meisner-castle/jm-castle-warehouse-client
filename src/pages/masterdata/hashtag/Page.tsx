@@ -2,7 +2,7 @@ import AddBoxIcon from "@mui/icons-material/AddBox";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
@@ -11,6 +11,7 @@ import { backendApiUrl } from "../../../configuration/Urls";
 import { useHashtagInsert } from "../../../hooks/useHashtagInsert";
 import { useHashtagSelect } from "../../../hooks/useHashtagSelect";
 import { useHashtagUpdate } from "../../../hooks/useHashtagUpdate";
+import { useUrlAction } from "../../../hooks/useUrlAction";
 import {
   fromRawHashtag,
   HashtagRow,
@@ -31,9 +32,8 @@ export const Page = () => {
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
   const handleExpiredToken = useHandleExpiredToken();
   const navigate = useNavigate();
-  const { search } = useLocation();
-  const params = useMemo(() => new URLSearchParams(search), [search]);
-  const initialAction = getValidInitialAction(params.get("action"));
+  const { action, params } = useUrlAction() || {};
+  const initialAction = getValidInitialAction(action);
   const resetInitialAction = useCallback(
     () => initialAction !== "none" && navigate(pageUrl),
     [initialAction, navigate]
@@ -89,7 +89,7 @@ export const Page = () => {
           });
           break;
         case "edit": {
-          const tagId = params.get("tagId");
+          const tagId = params?.tagId;
           const row = tagId
             ? rows.find((row) => row.tagId === tagId)
             : undefined;
@@ -102,7 +102,7 @@ export const Page = () => {
         }
         case "duplicate":
           {
-            const tagId = params.get("tagId");
+            const tagId = params?.tagId;
             const data = tagId
               ? rows.find((row) => row.tagId === tagId)
               : undefined;

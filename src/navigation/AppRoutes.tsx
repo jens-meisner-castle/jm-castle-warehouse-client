@@ -14,6 +14,9 @@ import { Page as MasterdataPage } from "../pages/masterdata/main/Page";
 import { Page as StoreSectionPage } from "../pages/masterdata/store-section/Page";
 import { Page as StorePage } from "../pages/masterdata/store/Page";
 import { Page as StartPage } from "../pages/start/Page";
+import { Page as EmissionPage } from "../pages/stock/emission/Page";
+import { Page as StockPage } from "../pages/stock/main/Page";
+import { Page as ReceiptPage } from "../pages/stock/receipt/Page";
 import { Page as SystemSetupPage } from "../pages/system-setup/Page";
 import { Page as SystemStatusPage } from "../pages/system-status/Page";
 import { allPages } from "./Pages";
@@ -34,6 +37,11 @@ const allRoutes: Record<string, AppRoute> = {
   history: {
     path: allPages.history.to,
     element: HistoryPage,
+    neededRole: "internal",
+  },
+  stock: {
+    path: allPages.stock.to,
+    element: StockPage,
     neededRole: "internal",
   },
   masterdata: {
@@ -58,6 +66,16 @@ const allRoutes: Record<string, AppRoute> = {
   },
   help: { path: allPages.help.to, element: HelpPage, neededRole: "external" },
   login: { path: allPages.login.to, element: LoginPage, neededRole: "none" },
+  stockReceipt: {
+    path: "/stock/receipt",
+    element: ReceiptPage,
+    neededRole: "internal",
+  },
+  stockEmission: {
+    path: "/stock/emission",
+    element: EmissionPage,
+    neededRole: "internal",
+  },
   masterdataArticle: {
     path: "/masterdata/article",
     element: ArticlePage,

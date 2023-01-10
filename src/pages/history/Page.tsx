@@ -1,17 +1,21 @@
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
 import { Grid, Paper, Tooltip, Typography } from "@mui/material";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Tuple } from "victory";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../components/AppActions";
+import { ErrorData, ErrorDisplays } from "../../components/ErrorDisplays";
 import { StockChangeTable } from "../../components/StockChangeTable";
 import { backendApiUrl } from "../../configuration/Urls";
 import { FilterComponent } from "../../filter/FilterComponent";
 import { TimeintervalFilter } from "../../filter/Types";
 import { useEmissionSelect } from "../../hooks/useEmissionSelect";
 import { useReceiptSelect } from "../../hooks/useReceiptSelect";
-import { StockChangingRow } from "../../types/RowTypes";
+import {
+  StockChangingRow,
+  stockChangingRowFromRawEmission,
+  stockChangingRowFromRawReceipt,
+} from "../../types/RowTypes";
 import { getNewFilter } from "../../utils/Filter";
 import {
   loadFilterForPage,
@@ -40,7 +44,6 @@ export const Page = () => {
   const [isOptionsVisible, setIsOptionsVisible] = useState(false);
   const optionsSelectionRef = useRef<HTMLButtonElement | null>(null);
 
-  const { chartWidthFactor, isTableVisible } = pageOptions;
   const initialFilter = useMemo(
     () => getNewFilter(loadFilterForPage(pageUrl)),
     []
@@ -50,102 +53,43 @@ export const Page = () => {
     storeFilterForPage(newFilter, pageUrl);
     setFilter(newFilter);
   }, []);
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [indicatorSelect, setIndicatorSelect] = useState(1);
 
-  const [width, setWidth] = useState<number | undefined>(undefined);
-  useEffect(() => {
-    const newWidth = ref.current ? ref.current.offsetWidth : undefined;
-    newWidth && setWidth(newWidth);
-  }, [indicatorSelect]);
-  const chartsPerRow = width
-    ? width > 1800
-      ? 4
-      : width > 1400
-      ? 3
-      : width > 900
-      ? 2
-      : 1
-    : 1;
-  const usedWidth = width ? width - 20 : undefined;
-  const calculatedChartWidth = usedWidth
-    ? Math.floor(usedWidth / chartsPerRow)
-    : undefined;
-  const chartHeight =
-    calculatedChartWidth && Math.min(Math.round(calculatedChartWidth / 2), 500);
-  const chartWidth = calculatedChartWidth
-    ? calculatedChartWidth * chartWidthFactor
-    : undefined;
-  const maxTableWidth =
-    usedWidth && calculatedChartWidth && isTableVisible
-      ? Math.min(usedWidth, calculatedChartWidth * 1.5)
-      : undefined;
-  const tableHeight = chartHeight ? 3 * chartHeight : 250;
-  const restWidthForAllCharts =
-    usedWidth && maxTableWidth ? usedWidth - maxTableWidth : undefined;
-  const usedWidthForAllCharts =
-    restWidthForAllCharts && chartWidth
-      ? restWidthForAllCharts > chartWidth
-        ? restWidthForAllCharts
-        : usedWidth
-      : undefined;
-  const xDomain = useMemo((): Tuple<Date> => {
-    return [filter.from.toJSDate(), filter.to.toJSDate()];
-  }, [filter]);
-  const { error: selectError1, response: selectResponseReceiptLog } =
-    useReceiptSelect(
-      backendApiUrl,
-      filter.from,
-      filter.to,
-      indicatorSelect,
-      handleExpiredToken
-    );
-  const { error: selectError2, response: selectResponseEmissionLog } =
-    useEmissionSelect(
-      backendApiUrl,
-      filter.from,
-      filter.to,
-      indicatorSelect,
-      handleExpiredToken
-    );
-  const { result: selectResultEmissionLog } = selectResponseEmissionLog || {};
-  const { result: selectResultReceiptLog } = selectResponseReceiptLog || {};
-  const { rowsPerStockChange, tableData } = useMemo(() => {
+  const [updateIndicator, setUpdateIndicator] = useState(1);
+
+  const receiptApiResponse = useReceiptSelect(
+    backendApiUrl,
+    filter.from,
+    filter.to,
+    updateIndicator,
+    handleExpiredToken
+  );
+  const { response: receiptResponse } = receiptApiResponse;
+
+  const emissionApiResponse = useEmissionSelect(
+    backendApiUrl,
+    filter.from,
+    filter.to,
+    updateIndicator,
+    handleExpiredToken
+  );
+  const { response: emissionResponse } = emissionApiResponse;
+  const { result: emissionResult } = emissionResponse || {};
+  const { result: receiptResult } = receiptResponse || {};
+  const { rows: receiptRows } = receiptResult || {};
+  const { rows: emissionRows } = emissionResult || {};
+  const errorData = useMemo(() => {
+    const newData: Record<string, ErrorData> = {};
+    newData.receipt = receiptApiResponse;
+    newData.emission = emissionApiResponse;
+    return newData;
+  }, [receiptApiResponse, emissionApiResponse]);
+  const { tableData } = useMemo(() => {
     const newTableData: StockChangingRow[] = [];
-    const newPerStockChange: {
-      in: {
-        rows: StockChangingRow[];
-      };
-      out: {
-        rows: StockChangingRow[];
-      };
-    } = { in: { rows: [] }, out: { rows: [] } };
-
-    selectResultReceiptLog?.rows?.forEach((row) => {
-      const newRow: StockChangingRow = {
-        type: "in",
-        datasetId: row.dataset_id,
-        sectionId: row.section_id,
-        articleId: row.article_id,
-        at: new Date(row.at_seconds * 1000),
-        count: row.article_count,
-        by: row.by_user,
-      };
-      newTableData.push(newRow);
-      newPerStockChange.in.rows.push(newRow);
+    receiptRows?.forEach((row) => {
+      newTableData.push(stockChangingRowFromRawReceipt(row));
     });
-    selectResultEmissionLog?.rows?.forEach((row) => {
-      const newRow: StockChangingRow = {
-        type: "out",
-        datasetId: row.dataset_id,
-        sectionId: row.section_id,
-        articleId: row.article_id,
-        at: new Date(row.at_seconds * 1000),
-        count: row.article_count,
-        by: row.by_user,
-      };
-      newTableData.push(newRow);
-      newPerStockChange.out.rows.push(newRow);
+    emissionRows?.forEach((row) => {
+      newTableData.push(stockChangingRowFromRawEmission(row));
     });
     newTableData.sort((a, b) =>
       a.at === b.at
@@ -153,14 +97,12 @@ export const Page = () => {
         : a.at.getTime() - b.at.getTime()
     );
     return {
-      rowsPerStockChange: newPerStockChange,
       tableData: newTableData,
     };
-  }, [selectResultEmissionLog, selectResultReceiptLog]);
+  }, [emissionRows, receiptRows]);
 
-  console.log(xDomain, rowsPerStockChange, usedWidthForAllCharts);
-  const executeSelect = useCallback(() => {
-    setIndicatorSelect((previous) => previous + 1);
+  const refresh = useCallback(() => {
+    setUpdateIndicator((previous) => previous + 1);
   }, []);
 
   const actions = useMemo(() => {
@@ -171,7 +113,7 @@ export const Page = () => {
           <RefreshIcon />
         </Tooltip>
       ),
-      onClick: executeSelect,
+      onClick: refresh,
     });
     newActions.push({
       label: <SettingsApplicationsIcon />,
@@ -179,7 +121,7 @@ export const Page = () => {
       elementRef: optionsSelectionRef,
     });
     return newActions;
-  }, [executeSelect]);
+  }, [refresh]);
 
   return (
     <>
@@ -191,48 +133,31 @@ export const Page = () => {
           anchorEl={optionsSelectionRef.current}
         />
       )}
-      <div ref={ref} style={{ width: "100%" }} />
-      {chartWidth && chartHeight && (
-        <Grid container direction="column">
-          <Grid item>
-            <Typography variant="h5">{"History"}</Typography>
-          </Grid>
-          <Grid item>
-            <Paper style={{ padding: 5, marginBottom: 5 }}>
-              <AppActions actions={actions} />
-            </Paper>
-          </Grid>
-          <Grid item>
-            <Paper>
-              <FilterComponent filter={filter} onChange={handleFilterChange} />
-            </Paper>
-          </Grid>
-          {selectError1 && (
-            <Grid item>
-              <Typography>{selectError1}</Typography>
-            </Grid>
-          )}
-          {selectError2 && (
-            <Grid item>
-              <Typography>{selectError2}</Typography>
-            </Grid>
-          )}
-          <Grid container direction="row">
-            {isTableVisible && (
-              <Grid item style={{ width: maxTableWidth }}>
-                <StockChangeTable
-                  data={tableData}
-                  cellSize="small"
-                  containerStyle={{
-                    maxWidth: maxTableWidth,
-                    height: tableHeight,
-                  }}
-                />
-              </Grid>
-            )}
-          </Grid>
+      <Grid container direction="column">
+        <Grid item>
+          <Typography variant="h5">{"History"}</Typography>
         </Grid>
-      )}
+        <Grid item>
+          <Paper style={{ padding: 5, marginBottom: 5 }}>
+            <AppActions actions={actions} />
+          </Paper>
+        </Grid>
+        <Grid item>
+          <Paper>
+            <FilterComponent filter={filter} onChange={handleFilterChange} />
+          </Paper>
+        </Grid>
+        <Grid item>
+          <ErrorDisplays results={errorData} />
+        </Grid>
+        <Grid item>
+          <StockChangeTable
+            data={tableData}
+            cellSize="small"
+            containerStyle={{ width: "100%", maxWidth: 1200 }}
+          />
+        </Grid>
+      </Grid>
     </>
   );
 };

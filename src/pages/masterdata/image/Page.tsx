@@ -2,7 +2,7 @@ import AddBoxIcon from "@mui/icons-material/AddBox";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
@@ -11,6 +11,7 @@ import { backendApiUrl } from "../../../configuration/Urls";
 import { useImageContentInsert } from "../../../hooks/useImageContentInsert";
 import { useImageContentRows } from "../../../hooks/useImageContentRows";
 import { useImageContentUpdate } from "../../../hooks/useImageContentUpdate";
+import { useUrlAction } from "../../../hooks/useUrlAction";
 import {
   fromRawImageContent,
   ImageContentRow,
@@ -32,9 +33,8 @@ export const Page = () => {
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
   const handleExpiredToken = useHandleExpiredToken();
   const navigate = useNavigate();
-  const { search } = useLocation();
-  const params = useMemo(() => new URLSearchParams(search), [search]);
-  const initialAction = getValidInitialAction(params.get("action"));
+  const { action, params } = useUrlAction() || {};
+  const initialAction = getValidInitialAction(action);
   const resetInitialAction = useCallback(
     () => initialAction !== "none" && navigate(pageUrl),
     [initialAction, navigate]
@@ -96,7 +96,7 @@ export const Page = () => {
           });
           break;
         case "edit": {
-          const imageId = params.get("imageId");
+          const imageId = params?.imageId;
           const row = imageId
             ? rows.find((row) => row.imageId === imageId)
             : undefined;
@@ -109,7 +109,7 @@ export const Page = () => {
         }
         case "duplicate":
           {
-            const imageId = params.get("imageId");
+            const imageId = params?.imageId;
             const data = imageId
               ? rows.find((row) => row.imageId === imageId)
               : undefined;
@@ -155,7 +155,6 @@ export const Page = () => {
     (data: ImageContentEditState) => dispatch({ type: "accept", data }),
     []
   );
-  console.log("actionState", actionState);
 
   const dataToInsert = useMemo(() => {
     if (actionState.action === "accept-new") {

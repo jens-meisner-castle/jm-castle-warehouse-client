@@ -3,6 +3,7 @@ import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../../components/AppActions";
+import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useArticleSelect } from "../../../hooks/useArticleSelect";
 import { useHashtagSelect } from "../../../hooks/useHashtagSelect";
@@ -23,43 +24,65 @@ export const Page = () => {
   const refreshStatus = useCallback(() => {
     setUpdateIndicator((previous) => previous + 1);
   }, []);
-  const { response: articleResponse, error: articleError } = useArticleSelect(
+  const articleApiResponse = useArticleSelect(
     backendApiUrl,
     "%",
     updateIndicator,
     handleExpiredToken
   );
+  const { response: articleResponse } = articleApiResponse;
   const { result: articleResult } = articleResponse || {};
-  const { response: storeResponse, error: storeError } = useStoreSelect(
+
+  const storeApiResponse = useStoreSelect(
     backendApiUrl,
     "%",
     updateIndicator,
     handleExpiredToken
   );
+  const { response: storeResponse } = storeApiResponse;
   const { result: storeResult } = storeResponse || {};
-  const { response: storeSectionResponse, error: storeSectionError } =
-    useStoreSectionSelect(
-      backendApiUrl,
-      "%",
-      updateIndicator,
-      handleExpiredToken
-    );
-  const { result: storeSectionResult } = storeSectionResponse || {};
-  const { response: imageContentResponse, error: imageContentError } =
-    useImageContentRows(
-      backendApiUrl,
-      "%",
-      updateIndicator,
-      handleExpiredToken
-    );
-  const { result: imageContentResult } = imageContentResponse || {};
-  const { response: hashtagResponse, error: hashtagError } = useHashtagSelect(
+  const storeSectionApiResponse = useStoreSectionSelect(
     backendApiUrl,
     "%",
     updateIndicator,
     handleExpiredToken
   );
+  const { response: storeSectionResponse } = storeSectionApiResponse;
+  const { result: storeSectionResult } = storeSectionResponse || {};
+  const imageContentApiResponse = useImageContentRows(
+    backendApiUrl,
+    "%",
+    updateIndicator,
+    handleExpiredToken
+  );
+  const { response: imageContentResponse } = imageContentApiResponse;
+  const { result: imageContentResult } = imageContentResponse || {};
+  const hashtagApiResponse = useHashtagSelect(
+    backendApiUrl,
+    "%",
+    updateIndicator,
+    handleExpiredToken
+  );
+  const { response: hashtagResponse } = hashtagApiResponse;
   const { result: hashtagResult } = hashtagResponse || {};
+
+  const errorData = useMemo(() => {
+    const newErrors: Record<string, ErrorData> = {};
+    newErrors.article = { ...articleApiResponse };
+    newErrors.store = { ...storeApiResponse };
+    newErrors.storeSection = { ...storeSectionApiResponse };
+    newErrors.imageContent = { ...imageContentApiResponse };
+    newErrors.hashtag = { ...hashtagApiResponse };
+
+    return newErrors;
+  }, [
+    articleApiResponse,
+    storeApiResponse,
+    storeSectionApiResponse,
+    imageContentApiResponse,
+    hashtagApiResponse,
+  ]);
+
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
@@ -83,41 +106,9 @@ export const Page = () => {
           <AppActions actions={actions} />
         </Paper>
       </Grid>
-      {articleError && (
-        <Grid item>
-          <Paper>
-            <Typography>{articleError}</Typography>
-          </Paper>
-        </Grid>
-      )}
-      {storeError && (
-        <Grid item>
-          <Paper>
-            <Typography>{storeError}</Typography>
-          </Paper>
-        </Grid>
-      )}
-      {storeSectionError && (
-        <Grid item>
-          <Paper>
-            <Typography>{storeSectionError}</Typography>
-          </Paper>
-        </Grid>
-      )}
-      {imageContentError && (
-        <Grid item>
-          <Paper>
-            <Typography>{imageContentError}</Typography>
-          </Paper>
-        </Grid>
-      )}
-      {hashtagError && (
-        <Grid item>
-          <Paper>
-            <Typography>{hashtagError}</Typography>
-          </Paper>
-        </Grid>
-      )}
+      <Grid item>
+        <ErrorDisplays results={errorData} />
+      </Grid>
       <Grid item>
         <Grid container direction="row">
           <Grid item>

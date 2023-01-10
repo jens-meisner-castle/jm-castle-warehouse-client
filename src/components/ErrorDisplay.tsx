@@ -4,16 +4,29 @@ import { TextareaComponent } from "./TextareaComponent";
 
 export interface ErrorDisplayProps {
   leftColumnWidth?: number | string;
+  dataLabel?: string;
   error?: string;
   errorCode?: ErrorCode;
   errorDetails?: Record<string, unknown>;
 }
 
 export const ErrorDisplay = (props: ErrorDisplayProps) => {
-  const { error, errorCode, errorDetails, leftColumnWidth } = props;
+  const { error, errorCode, errorDetails, leftColumnWidth, dataLabel } = props;
   const usedLeftColumnWidth = leftColumnWidth || 200;
   return (
     <Grid container direction="column">
+      {error && dataLabel && (
+        <Grid item>
+          <Grid container direction="row">
+            <Grid item style={{ width: usedLeftColumnWidth }}>
+              <Typography>{"Daten"}</Typography>
+            </Grid>
+            <Grid item flexGrow={1}>
+              <Typography>{dataLabel}</Typography>
+            </Grid>
+          </Grid>
+        </Grid>
+      )}
       {errorCode && (
         <Grid item>
           <Grid container direction="row">

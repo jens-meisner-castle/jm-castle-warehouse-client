@@ -24,7 +24,7 @@ export const OptionsMenu = (props: OptionsMenuProps) => {
     <Menu open={isMenuOpen} onClose={onClose} anchorEl={anchorEl}>
       <MenuItem>
         <FormControlLabel
-          label={"Stock changes"}
+          label={"Wareneingänge"}
           control={
             <Checkbox
               onChange={(event, checked) =>

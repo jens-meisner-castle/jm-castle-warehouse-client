@@ -8,6 +8,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import { CountUnits, isCountUnit } from "jm-castle-warehouse-types/build";
 import { useMemo, useState } from "react";
+import { HashtagsEditor } from "../../../../components/HashtagsEditor";
 import { ImageRefsEditor } from "../../../../components/ImageRefsEditor";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
 import { ArticleRow } from "../../../../types/RowTypes";
@@ -33,7 +34,7 @@ export const CreateArticleDialog = (props: CreateArticleDialogProps) => {
       })),
     []
   );
-  const { articleId, name, countUnit, imageRefs } = data;
+  const { articleId, name, countUnit, imageRefs, hashtags, wwwLink } = data;
 
   return (
     <Dialog open={open} onClose={handleCancel}>
@@ -65,6 +66,20 @@ export const CreateArticleDialog = (props: CreateArticleDialogProps) => {
           fullWidth
           variant="standard"
         />
+        <HashtagsEditor
+          hashtags={hashtags}
+          onChange={(hashtags) => updateData({ hashtags })}
+        />
+        <TextField
+          margin="dense"
+          id="wwwLink"
+          label="Link (www)"
+          value={wwwLink}
+          onChange={(event) => updateData({ wwwLink: event.target.value })}
+          type="text"
+          fullWidth
+          variant="standard"
+        />
         <TextField
           margin="dense"
           id="countUnit"
@@ -76,6 +91,7 @@ export const CreateArticleDialog = (props: CreateArticleDialogProps) => {
               updateData({ countUnit: event.target.value });
           }}
           helperText="Bitte wählen Sie eine Zähleinheit aus"
+          fullWidth
           variant="standard"
         >
           {countUnits.map((unit) => (
@@ -92,7 +108,12 @@ export const CreateArticleDialog = (props: CreateArticleDialogProps) => {
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => handleAccept(data)}>{"Speichern"}</Button>
+        <Button
+          disabled={!articleId.length || !name.length}
+          onClick={() => handleAccept(data)}
+        >
+          {"Speichern"}
+        </Button>
         <Button onClick={handleCancel}>{"Abbrechen"}</Button>
       </DialogActions>
     </Dialog>

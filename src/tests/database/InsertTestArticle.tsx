@@ -29,6 +29,7 @@ export const InsertTestArticle = () => {
     setArticle({
       article_id: `test-${nextArticleNumber}`,
       name: `test Artikel ${nextArticleNumber}`,
+      hashtags: null,
       count_unit: "piece",
       ...toRawMasterdataFields({
         datasetVersion: 1,
@@ -36,6 +37,7 @@ export const InsertTestArticle = () => {
         editedAt: new Date(),
       }),
       image_refs: null,
+      www_link: null,
     });
   }, []);
   const actions = useMemo(() => {

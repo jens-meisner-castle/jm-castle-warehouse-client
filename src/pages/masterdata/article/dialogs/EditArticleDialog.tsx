@@ -8,6 +8,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import { CountUnits, isCountUnit } from "jm-castle-warehouse-types/build";
 import { useMemo, useState } from "react";
+import { HashtagsEditor } from "../../../../components/HashtagsEditor";
 import { ImageRefsEditor } from "../../../../components/ImageRefsEditor";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
 
@@ -34,7 +35,7 @@ export const EditArticleDialog = (props: EditArticleDialogProps) => {
       })),
     []
   );
-  const { articleId, name, countUnit, imageRefs } = data;
+  const { articleId, name, countUnit, imageRefs, hashtags, wwwLink } = data;
 
   return (
     <>
@@ -68,6 +69,20 @@ export const EditArticleDialog = (props: EditArticleDialogProps) => {
             fullWidth
             variant="standard"
           />
+          <HashtagsEditor
+            hashtags={hashtags}
+            onChange={(hashtags) => updateData({ hashtags })}
+          />
+          <TextField
+            margin="dense"
+            id="wwwLink"
+            label="Link (www)"
+            value={wwwLink}
+            onChange={(event) => updateData({ wwwLink: event.target.value })}
+            type="text"
+            fullWidth
+            variant="standard"
+          />
           <TextField
             margin="dense"
             id="countUnit"
@@ -79,6 +94,7 @@ export const EditArticleDialog = (props: EditArticleDialogProps) => {
                 updateData({ countUnit: event.target.value });
             }}
             helperText="Bitte wählen Sie eine Zähleinheit aus"
+            fullWidth
             variant="standard"
           >
             {countUnits.map((unit) => (
@@ -89,9 +105,7 @@ export const EditArticleDialog = (props: EditArticleDialogProps) => {
           </TextField>
           <ImageRefsEditor
             imageRefs={imageRefs}
-            onChange={(imageRefs) =>
-              setData((previous) => ({ ...previous, imageRefs }))
-            }
+            onChange={(imageRefs) => updateData({ imageRefs })}
           />
         </DialogContent>
         <DialogActions>

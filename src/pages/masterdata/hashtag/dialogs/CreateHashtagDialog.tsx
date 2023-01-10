@@ -21,6 +21,7 @@ export const CreateHashtagDialog = (props: CreateHashtagDialogProps) => {
   const updateData = (updates: Partial<HashtagRow>) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
+  const { tagId, name } = data;
 
   return (
     <Dialog open={open} onClose={handleCancel}>
@@ -52,8 +53,13 @@ export const CreateHashtagDialog = (props: CreateHashtagDialogProps) => {
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => handleAccept(data)}>Speichern</Button>
-        <Button onClick={handleCancel}>Abbrechen</Button>
+        <Button
+          disabled={!tagId.length || !name.length}
+          onClick={() => handleAccept(data)}
+        >
+          {"Speichern"}
+        </Button>
+        <Button onClick={handleCancel}>{"Abbrechen"}</Button>
       </DialogActions>
     </Dialog>
   );

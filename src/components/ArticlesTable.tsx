@@ -13,6 +13,7 @@ import TablePagination, {
 import TableRow from "@mui/material/TableRow";
 import { CSSProperties, useEffect, useMemo, useState } from "react";
 import { backendApiUrl, getImageDisplayUrl } from "../configuration/Urls";
+import { WwwLink } from "../navigation/WwwLink";
 import { ArticleRow } from "../types/RowTypes";
 import { getDateFormat, getDateFormatter } from "../utils/Format";
 import { TablePaginationActions } from "./TablePaginationActions";
@@ -108,19 +109,21 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
             />
           </TableRow>
           <TableRow>
-            {editable && (
+            {editable && onDuplicate && (
               <TableCell style={cellStyle} align="center">
                 {""}
               </TableCell>
             )}
-            {editable && (
+            {editable && onEdit && (
               <TableCell style={cellStyle} align="center">
                 {""}
               </TableCell>
             )}
             <TableCell style={cellStyle}>{"Artikel"}</TableCell>
             <TableCell style={cellStyle}>{"Name"}</TableCell>
+            <TableCell style={cellStyle}>{"Link (www)"}</TableCell>
             <TableCell style={cellStyle}>{"Zähleinheit"}</TableCell>
+            <TableCell style={cellStyle}>{"Hashtags"}</TableCell>
             <TableCell style={cellStyle}>{"erzeugt"}</TableCell>
             <TableCell style={cellStyle}>{"bearbeitet"}</TableCell>
             <TableCell style={cellStyle} align="right">
@@ -138,10 +141,13 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
               imageRefs,
               name,
               countUnit,
+              hashtags,
+              wwwLink,
               datasetVersion,
               createdAt,
               editedAt,
             } = d;
+            const wwwLinkUrl = wwwLink ? new URL(wwwLink) : undefined;
             const imageUrl = getImageDisplayUrl(
               backendApiUrl,
               imageRefs ? imageRefs[0] : undefined
@@ -149,19 +155,19 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
 
             return (
               <TableRow key={i}>
-                {editable && (
+                {editable && onDuplicate && (
                   <TableCell align="center" style={cellStyle}>
                     {
-                      <IconButton onClick={() => onDuplicate && onDuplicate(d)}>
+                      <IconButton onClick={() => onDuplicate(d)}>
                         <ContentCopyIcon />
                       </IconButton>
                     }
                   </TableCell>
                 )}
-                {editable && (
+                {editable && onEdit && (
                   <TableCell align="center" style={cellStyle}>
                     {
-                      <IconButton onClick={() => onEdit && onEdit(d)}>
+                      <IconButton onClick={() => onEdit(d)}>
                         <EditIcon />
                       </IconButton>
                     }
@@ -174,7 +180,19 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
                   {name}
                 </TableCell>
                 <TableCell style={cellStyle} size={cellSize}>
+                  {wwwLinkUrl && wwwLink && (
+                    <WwwLink
+                      to={wwwLink}
+                      label={wwwLinkUrl.host}
+                      variant="body2"
+                    />
+                  )}
+                </TableCell>
+                <TableCell style={cellStyle} size={cellSize}>
                   {countUnit}
+                </TableCell>
+                <TableCell style={cellStyle} size={cellSize}>
+                  {hashtags ? hashtags.join(", ") : ""}
                 </TableCell>
                 <TableCell style={cellStyle} size={cellSize}>
                   {atFormatFunction(createdAt)}

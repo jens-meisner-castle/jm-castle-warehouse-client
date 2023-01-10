@@ -1,5 +1,3 @@
-import ImageIcon from "@mui/icons-material/Image";
-import { IconButton } from "@mui/material";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -7,12 +5,12 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { ImageInputField } from "../../../../components/ImageInputField";
 import {
   backendApiUrl,
   getImageDisplayUrl,
 } from "../../../../configuration/Urls";
-
 import { ImageContentRow } from "../../../../types/RowTypes";
 import { getExtension } from "../../../../utils/File";
 import { ImageContentEditState } from "../Types";
@@ -29,39 +27,29 @@ export const EditImageContentDialog = (props: EditImageContentDialogProps) => {
   const [data, setData] = useState<ImageContentEditState>({
     row: imageContent,
   });
-  const imageInputRef = useRef<HTMLInputElement>();
-  const [filePath, setFilePath] = useState<string | undefined>(undefined);
-  const file =
-    filePath && imageInputRef.current && imageInputRef.current.files
-      ? imageInputRef.current.files[0]
-      : undefined;
-  useEffect(() => {
-    if (file && filePath) {
-      const newExtension = getExtension(filePath);
-      const newSizeInBytes = file.size;
-      const newImage =
-        file && filePath ? { extension: newExtension, file } : null;
-      setData((previous) => ({
-        row: {
-          ...previous.row,
-          imageExtension: newExtension,
-          sizeInBytes: newSizeInBytes,
-        },
-        newImage,
-      }));
-    }
-  }, [file, filePath]);
 
-  const clickOnInvisibleImageInput = useCallback(() => {
-    imageInputRef.current && imageInputRef.current.click();
-  }, [imageInputRef]);
-  const { imageId, imageExtension, sizeInBytes } = data.row;
+  const handleImageChange = useCallback(
+    (file: File | undefined, filePath: string | undefined) => {
+      if (file && filePath) {
+        const imageExtension = getExtension(filePath);
+        const sizeInBytes = file.size;
+        setData((previous) => ({
+          row: { ...previous.row, imageExtension, sizeInBytes },
+          newImage: { file, extension: imageExtension },
+        }));
+      }
+    },
+    []
+  );
+  const { row, newImage } = data;
+  const { imageId, imageExtension, sizeInBytes, datasetVersion } = row;
+  const { file } = newImage || {};
   const imageUrl = useMemo(
     () =>
       file
         ? URL.createObjectURL(file)
-        : getImageDisplayUrl(backendApiUrl, imageId),
-    [file, imageId]
+        : getImageDisplayUrl(backendApiUrl, imageId, datasetVersion),
+    [file, imageId, datasetVersion]
   );
 
   return (
@@ -83,6 +71,7 @@ export const EditImageContentDialog = (props: EditImageContentDialogProps) => {
           fullWidth
           variant="standard"
         />
+        <ImageInputField label="Bild" onChange={handleImageChange} />
         <TextField
           disabled
           margin="dense"
@@ -103,52 +92,24 @@ export const EditImageContentDialog = (props: EditImageContentDialogProps) => {
           fullWidth
           variant="standard"
         />
-        <TextField
-          margin="dense"
-          id="image"
-          label="Bild"
-          disabled
-          value={filePath || ""}
-          type="text"
-          fullWidth
-          variant="standard"
-          InputProps={{
-            endAdornment: (
-              <IconButton onClick={clickOnInvisibleImageInput}>
-                <ImageIcon />
-              </IconButton>
-            ),
-          }}
-        />
-        <TextField
-          inputRef={imageInputRef}
-          style={{ display: "none" }}
-          margin="dense"
-          id="articleImageInput"
-          label="Bild"
-          value={filePath || ""}
-          onChange={(event) => setFilePath(event.target.value)}
-          type="file"
-          inputProps={{ accept: "image/*" }}
-          fullWidth
-          variant="standard"
-        />
-        <TextField
-          id="articleImageDisplay"
-          margin="normal"
-          variant="standard"
-          disabled
-          fullWidth
-          InputProps={{
-            startAdornment: imageUrl && (
-              <img
-                src={imageUrl}
-                alt={filePath || imageId}
-                style={{ maxWidth: "30vw" }}
-              />
-            ),
-          }}
-        />
+        {imageUrl && (
+          <TextField
+            id="imageDisplay"
+            margin="normal"
+            variant="standard"
+            disabled
+            fullWidth
+            InputProps={{
+              startAdornment: imageUrl && (
+                <img
+                  src={imageUrl}
+                  alt={imageId}
+                  style={{ maxWidth: "30vw" }}
+                />
+              ),
+            }}
+          />
+        )}
       </DialogContent>
       <DialogActions>
         <Button disabled={!file} onClick={() => handleAccept(data)}>

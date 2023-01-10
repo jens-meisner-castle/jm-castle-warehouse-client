@@ -136,14 +136,7 @@ const reducer = (
       return previous;
   }
 };
-/**
- *
- * @param apiUrl backend api
- * @param article article to update
- * @param imageContent the used article image content
- * @param updateIndicator change to re-execute (0 => no execute)
- * @returns
- */
+
 export const useArticleUpdateWithImage = (
   apiUrl: string,
   article: Row_Article | undefined,

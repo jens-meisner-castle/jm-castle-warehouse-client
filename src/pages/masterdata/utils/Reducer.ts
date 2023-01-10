@@ -4,7 +4,7 @@ export type FinalActionState<T> =
   | { action: "success-new"; data: T; error?: never }
   | { action: "success-edit"; data: T; error?: never };
 
-export const getFinalActionState = <T>(
+const getFinalActionState = <T>(
   state: ReducerState<T>
 ): FinalActionState<T> | undefined => {
   switch (state.action) {
