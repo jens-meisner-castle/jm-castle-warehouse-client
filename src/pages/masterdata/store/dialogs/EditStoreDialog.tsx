@@ -26,10 +26,11 @@ export const EditStoreDialog = (props: EditStoreDialogProps) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
   const { storeId, name, imageRefs } = data;
+  const isSavingAllowed = !!storeId && !!name;
 
   return (
     <Dialog open={open} onClose={handleCancel}>
-      <DialogTitle>Lager bearbeiten</DialogTitle>
+      <DialogTitle>{"Lager bearbeiten"}</DialogTitle>
       <DialogContent>
         <DialogContentText>
           {"Führen Sie Ihre Änderungen durch und drücken am Ende 'Speichern'."}
@@ -63,8 +64,10 @@ export const EditStoreDialog = (props: EditStoreDialogProps) => {
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => handleAccept(data)}>Speichern</Button>
-        <Button onClick={handleCancel}>Abbrechen</Button>
+        <Button disabled={!isSavingAllowed} onClick={() => handleAccept(data)}>
+          {"Speichern"}
+        </Button>
+        <Button onClick={handleCancel}>{"Abbrechen"}</Button>
       </DialogActions>
     </Dialog>
   );

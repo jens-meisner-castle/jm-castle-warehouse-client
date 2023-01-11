@@ -5,13 +5,17 @@ import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
-import { StoreSectionsTable } from "../../../components/StoreSectionsTable";
+import {
+  sizeVariantForWidth,
+  StoreSectionsTable,
+} from "../../../components/StoreSectionsTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useStoreSectionInsert } from "../../../hooks/useStoreSectionInsert";
 import { useStoreSectionSelect } from "../../../hooks/useStoreSectionSelect";
 import { useStoreSectionUpdate } from "../../../hooks/useStoreSectionUpdate";
 import { useStoreSelect } from "../../../hooks/useStoreSelect";
 import { useUrlAction } from "../../../hooks/useUrlAction";
+import { useWindowSize } from "../../../hooks/useWindowSize";
 import {
   fromRawStore,
   fromRawStoreSection,
@@ -35,6 +39,8 @@ export const Page = () => {
   const navigate = useNavigate();
   const { action, params } = useUrlAction() || {};
   const initialAction = getValidInitialAction(action);
+  const { width } = useWindowSize() || {};
+  const tableSize = width ? sizeVariantForWidth(width) : "tiny";
 
   const resetInitialAction = useCallback(
     () => initialAction !== "none" && navigate(pageUrl),
@@ -144,6 +150,12 @@ export const Page = () => {
       }
     }
   }, [initialAction, params, rows]);
+  const handleDuplicate = useCallback(
+    (row: StoreSectionRow) => {
+      navigate(`${pageUrl}?action=new&sectionId=${row.sectionId}`);
+    },
+    [navigate]
+  );
   const handleEdit = useCallback(
     (row: StoreSectionRow) => {
       navigate(`${pageUrl}?action=edit&sectionId=${row.sectionId}`);
@@ -313,7 +325,8 @@ export const Page = () => {
                   editable
                   data={rows || []}
                   onEdit={handleEdit}
-                  cellSize="medium"
+                  onDuplicate={handleDuplicate}
+                  sizeVariant={tableSize}
                   displayImage="small"
                 />
               </Paper>

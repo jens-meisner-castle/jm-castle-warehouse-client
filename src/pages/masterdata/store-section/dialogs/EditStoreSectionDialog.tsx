@@ -27,6 +27,7 @@ export const EditStoreSectionDialog = (props: EditStoreSectionDialogProps) => {
   const updateData = (updates: Partial<StoreSectionRow>) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
+  const isSavingAllowed = !!sectionId && !!storeId && !!name;
 
   return (
     <>
@@ -84,7 +85,12 @@ export const EditStoreSectionDialog = (props: EditStoreSectionDialogProps) => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => handleAccept(data)}>{"Speichern"}</Button>
+          <Button
+            disabled={!isSavingAllowed}
+            onClick={() => handleAccept(data)}
+          >
+            {"Speichern"}
+          </Button>
           <Button onClick={handleCancel}>{"Abbrechen"}</Button>
         </DialogActions>
       </Dialog>

@@ -194,7 +194,7 @@ export const ImageRefsEditor = (props: ImageRefsEditorProps) => {
           <Grid item>
             <Grid container direction="row" alignItems="center">
               <Grid item>
-                <Typography>{"Bild verschieben:"}</Typography>
+                <Typography>{"Verschieben:"}</Typography>
               </Grid>
               <Grid item>
                 <Tooltip title="Bild an den Anfang schieben.">

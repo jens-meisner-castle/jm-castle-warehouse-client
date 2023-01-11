@@ -1,3 +1,4 @@
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import EditIcon from "@mui/icons-material/Edit";
 import { IconButton } from "@mui/material";
 import Paper from "@mui/material/Paper";
@@ -14,24 +15,50 @@ import { CSSProperties, useEffect, useMemo, useState } from "react";
 import { backendApiUrl, getImageDisplayUrl } from "../configuration/Urls";
 import { StoreSectionRow } from "../types/RowTypes";
 import { getDateFormat, getDateFormatter } from "../utils/Format";
+import { SizeVariant } from "./SizeVariant";
 import { TablePaginationActions } from "./TablePaginationActions";
 
 interface TableSettings {
   rowsPerPage: number;
 }
 
+export const sizeVariantForWidth = (width: number): SizeVariant => {
+  if (width < 600) return "tiny";
+  if (width < 800) return "small";
+  if (width < 1100) return "medium";
+  return "large";
+};
+
 export interface StoreSectionsTableProps {
   data: StoreSectionRow[];
   editable?: boolean;
   displayImage?: "small" | "none";
-  cellSize?: "small" | "medium";
+  sizeVariant: SizeVariant;
   containerStyle?: CSSProperties;
   onEdit?: (row: StoreSectionRow) => void;
+  onDuplicate?: (row: StoreSectionRow) => void;
 }
 
 export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
-  const { data, cellSize, containerStyle, editable, onEdit, displayImage } =
-    props;
+  const {
+    data,
+    sizeVariant,
+    containerStyle,
+    editable,
+    onEdit,
+    onDuplicate,
+    displayImage,
+  } = props;
+  // 0 = alle Spalten; 1 = einige Spalten weglassen; 2 = alle nicht unbedingt notwendigen Spalten weglassen
+  const reduceColumns: 0 | 1 | 2 =
+    sizeVariant === "tiny" ? 2 : sizeVariant === "small" ? 1 : 0;
+  const labelRowsPerPage =
+    sizeVariant === "tiny"
+      ? ""
+      : sizeVariant === "small"
+      ? "Zeilen"
+      : "Zeilen pro Seite";
+  const cellSize = sizeVariant === "large" ? "medium" : "small";
   const [tableSettings, setTableSettings] = useState<TableSettings>({
     rowsPerPage: 20,
   });
@@ -76,6 +103,7 @@ export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
         <TableHead>
           <TableRow>
             <TablePagination
+              labelRowsPerPage={labelRowsPerPage}
               rowsPerPageOptions={[
                 10,
                 20,
@@ -99,19 +127,32 @@ export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
             />
           </TableRow>
           <TableRow>
-            {editable && (
+            {editable && onDuplicate && (
               <TableCell style={cellStyle} align="center">
-                {"Bearbeiten"}
+                {""}
+              </TableCell>
+            )}
+            {editable && onEdit && (
+              <TableCell style={cellStyle} align="center">
+                {""}
               </TableCell>
             )}
             <TableCell style={cellStyle}>{"Bereich"}</TableCell>
-            <TableCell style={cellStyle}>{"Name"}</TableCell>
+            {reduceColumns < 2 && (
+              <TableCell style={cellStyle}>{"Name"}</TableCell>
+            )}
             <TableCell style={cellStyle}>{"Lager"}</TableCell>
-            <TableCell style={cellStyle}>{"erzeugt"}</TableCell>
-            <TableCell style={cellStyle}>{"bearbeitet"}</TableCell>
-            <TableCell style={cellStyle} align="right">
-              {"Version"}
-            </TableCell>
+            {reduceColumns < 1 && (
+              <TableCell style={cellStyle}>{"erzeugt"}</TableCell>
+            )}
+            {reduceColumns < 1 && (
+              <TableCell style={cellStyle}>{"bearbeitet"}</TableCell>
+            )}
+            {reduceColumns < 2 && (
+              <TableCell style={cellStyle} align="right">
+                {"Version"}
+              </TableCell>
+            )}
             {displayImage === "small" && (
               <TableCell style={cellStyle}>{"Bilder"}</TableCell>
             )}
@@ -135,6 +176,15 @@ export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
 
             return (
               <TableRow key={i}>
+                {editable && onDuplicate && (
+                  <TableCell align="center" style={cellStyle}>
+                    {
+                      <IconButton onClick={() => onDuplicate(d)}>
+                        <ContentCopyIcon />
+                      </IconButton>
+                    }
+                  </TableCell>
+                )}
                 {editable && (
                   <TableCell align="center" style={cellStyle}>
                     {
@@ -147,23 +197,31 @@ export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
                 <TableCell style={cellStyle} size={cellSize}>
                   {sectionId}
                 </TableCell>
-                <TableCell style={cellStyle} size={cellSize}>
-                  {name}
-                </TableCell>
+                {reduceColumns < 2 && (
+                  <TableCell style={cellStyle} size={cellSize}>
+                    {name}
+                  </TableCell>
+                )}
                 <TableCell style={cellStyle} size={cellSize}>
                   {storeId}
                 </TableCell>
-                <TableCell style={cellStyle} size={cellSize}>
-                  {atFormatFunction(createdAt)}
-                </TableCell>
-                <TableCell align="center" style={cellStyle} size={cellSize}>
-                  {createdAt.getTime() === editedAt.getTime()
-                    ? "-"
-                    : atFormatFunction(editedAt)}
-                </TableCell>
-                <TableCell align="right" style={cellStyle} size={cellSize}>
-                  {datasetVersion}
-                </TableCell>
+                {reduceColumns < 1 && (
+                  <TableCell style={cellStyle} size={cellSize}>
+                    {atFormatFunction(createdAt)}
+                  </TableCell>
+                )}
+                {reduceColumns < 1 && (
+                  <TableCell align="center" style={cellStyle} size={cellSize}>
+                    {createdAt.getTime() === editedAt.getTime()
+                      ? "-"
+                      : atFormatFunction(editedAt)}
+                  </TableCell>
+                )}
+                {reduceColumns < 2 && (
+                  <TableCell align="right" style={cellStyle} size={cellSize}>
+                    {datasetVersion}
+                  </TableCell>
+                )}
                 {displayImage === "small" && (
                   <TableCell align="right" style={cellStyle} size={cellSize}>
                     {imageUrl ? (

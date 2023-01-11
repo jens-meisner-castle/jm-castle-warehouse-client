@@ -23,6 +23,7 @@ export const EditHashtagDialog = (props: EditHashtagDialogProps) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
   const { tagId, name } = data;
+  const isSavingAllowed = !!tagId && !!name;
 
   return (
     <Dialog open={open} onClose={handleCancel}>
@@ -55,10 +56,7 @@ export const EditHashtagDialog = (props: EditHashtagDialogProps) => {
         />
       </DialogContent>
       <DialogActions>
-        <Button
-          disabled={!tagId.length || !name.length}
-          onClick={() => handleAccept(data)}
-        >
+        <Button disabled={!isSavingAllowed} onClick={() => handleAccept(data)}>
           {"Speichern"}
         </Button>
         <Button onClick={handleCancel}>{"Abbrechen"}</Button>

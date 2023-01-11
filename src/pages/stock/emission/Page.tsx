@@ -10,17 +10,24 @@ import {
 } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
-import { EmissionsTable } from "../../../components/EmissionsTable";
+import {
+  EmissionsTable,
+  sizeVariantForWidth,
+} from "../../../components/EmissionsTable";
 import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { FilterComponent } from "../../../filter/FilterComponent";
 import { TimeintervalFilter } from "../../../filter/Types";
+import { useArticleSelect } from "../../../hooks/useArticleSelect";
 import { useEmissionInsert } from "../../../hooks/useEmissionInsert";
 import { useEmissionSelect } from "../../../hooks/useEmissionSelect";
 import { useStoreSectionSelect } from "../../../hooks/useStoreSectionSelect";
 import { useUrlAction } from "../../../hooks/useUrlAction";
+import { useWindowSize } from "../../../hooks/useWindowSize";
 import {
+  ArticleRow,
   EmissionRow,
+  fromRawArticle,
   fromRawEmission,
   fromRawStoreSection,
   StoreSectionRow,
@@ -52,6 +59,8 @@ export const Page = () => {
   const { username } = useVerifiedUser() || {};
   const navigate = useNavigate();
   const { action, params } = useUrlAction() || {};
+  const { width } = useWindowSize() || {};
+  const tableSize = width ? sizeVariantForWidth(width) : "tiny";
   const initialAction = getValidInitialAction(action);
   const resetInitialAction = useCallback(
     () => initialAction !== "none" && navigate(pageUrl),
@@ -88,6 +97,21 @@ export const Page = () => {
     { action: "none", data: undefined },
     () => ({ action: "none", data: undefined })
   );
+
+  const articleApiResponse = useArticleSelect(
+    backendApiUrl,
+    "%",
+    1,
+    handleExpiredToken
+  );
+  const { response: articleResponse } = articleApiResponse;
+  const { result: articleResult } = articleResponse || {};
+  const articleRows = useMemo(() => {
+    const newRows: ArticleRow[] = [];
+    const { rows } = articleResult || {};
+    rows?.forEach((raw) => newRows.push(fromRawArticle(raw)));
+    return newRows.length ? newRows : undefined;
+  }, [articleResult]);
 
   const sectionsApiResponse = useStoreSectionSelect(
     backendApiUrl,
@@ -251,15 +275,19 @@ export const Page = () => {
         isAnySnackbarOpen={isAnySnackbarOpen}
         closeSnackbar={() => setIsAnySnackbarOpen(false)}
       />
-      {actionState.action === "new" && actionState.data && sectionRows && (
-        <CreateEmissionDialog
-          receipt={actionState.data}
-          storeSections={sectionRows}
-          open={true}
-          handleCancel={handleCancel}
-          handleAccept={handleAccept}
-        />
-      )}
+      {actionState.action === "new" &&
+        actionState.data &&
+        sectionRows &&
+        articleRows && (
+          <CreateEmissionDialog
+            receipt={actionState.data}
+            articles={articleRows}
+            storeSections={sectionRows}
+            open={true}
+            handleCancel={handleCancel}
+            handleAccept={handleAccept}
+          />
+        )}
       <Grid container direction="column">
         <Grid item>
           <Typography variant="h5">{"Warenausgang"}</Typography>
@@ -286,7 +314,7 @@ export const Page = () => {
                   editable
                   data={rows || []}
                   onDuplicate={handleDuplicate}
-                  cellSize="medium"
+                  sizeVariant={tableSize}
                 />
               </Paper>
             </Grid>

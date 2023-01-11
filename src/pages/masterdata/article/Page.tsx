@@ -6,12 +6,16 @@ import { useNavigate } from "react-router-dom";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
-import { ArticlesTable } from "../../../components/ArticlesTable";
+import {
+  ArticlesTable,
+  sizeVariantForWidth,
+} from "../../../components/ArticlesTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useArticleInsert } from "../../../hooks/useArticleInsert";
 import { useArticleSelect } from "../../../hooks/useArticleSelect";
 import { useArticleUpdate } from "../../../hooks/useArticleUpdate";
 import { useUrlAction } from "../../../hooks/useUrlAction";
+import { useWindowSize } from "../../../hooks/useWindowSize";
 import {
   ArticleRow,
   fromRawArticle,
@@ -31,6 +35,8 @@ export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
   const handleExpiredToken = useHandleExpiredToken();
+  const { width } = useWindowSize() || {};
+  const tableSize = width ? sizeVariantForWidth(width) : "tiny";
   const navigate = useNavigate();
   const { action, params } = useUrlAction() || {};
   const initialAction = getValidInitialAction(action);
@@ -309,10 +315,10 @@ export const Page = () => {
                   containerStyle={{ width: "100%", maxWidth: 1200 }}
                   editable
                   displayImage="small"
+                  sizeVariant={tableSize}
                   data={rows || []}
                   onEdit={handleEdit}
                   onDuplicate={handleDuplicate}
-                  cellSize="medium"
                 />
               </Paper>
             </Grid>

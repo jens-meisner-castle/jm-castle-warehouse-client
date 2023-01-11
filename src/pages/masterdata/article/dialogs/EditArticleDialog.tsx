@@ -36,6 +36,7 @@ export const EditArticleDialog = (props: EditArticleDialogProps) => {
     []
   );
   const { articleId, name, countUnit, imageRefs, hashtags, wwwLink } = data;
+  const isSavingAllowed = !!articleId && !!name && !!countUnit;
 
   return (
     <>
@@ -109,8 +110,13 @@ export const EditArticleDialog = (props: EditArticleDialogProps) => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => handleAccept(data)}>Speichern</Button>
-          <Button onClick={handleCancel}>Abbrechen</Button>
+          <Button
+            disabled={!isSavingAllowed}
+            onClick={() => handleAccept(data)}
+          >
+            {"Speichern"}
+          </Button>
+          <Button onClick={handleCancel}>{"Abbrechen"}</Button>
         </DialogActions>
       </Dialog>
     </>

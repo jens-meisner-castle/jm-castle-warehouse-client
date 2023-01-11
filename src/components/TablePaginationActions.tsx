@@ -7,13 +7,6 @@ import IconButton from "@mui/material/IconButton";
 import { TablePaginationActionsProps } from "@mui/material/TablePagination/TablePaginationActions";
 import { MouseEventHandler } from "react";
 
-export interface TablePaginationActionsPropsxxx {
-  count: number;
-  page: number;
-  rowsPerPage: number;
-  onPageChange: (newPage: number) => void;
-}
-
 export const TablePaginationActions = (props: TablePaginationActionsProps) => {
   const { count, page, rowsPerPage, onPageChange } = props;
   const maxPage = Math.max(0, Math.ceil(count / rowsPerPage) - 1);

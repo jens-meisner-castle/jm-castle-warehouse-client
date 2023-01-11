@@ -5,12 +5,16 @@ import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
-import { StoresTable } from "../../../components/StoresTable";
+import {
+  sizeVariantForWidth,
+  StoresTable,
+} from "../../../components/StoresTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useStoreInsert } from "../../../hooks/useStoreInsert";
 import { useStoreSelect } from "../../../hooks/useStoreSelect";
 import { useStoreUpdate } from "../../../hooks/useStoreUpdate";
 import { useUrlAction } from "../../../hooks/useUrlAction";
+import { useWindowSize } from "../../../hooks/useWindowSize";
 import { fromRawStore, StoreRow, toRawStore } from "../../../types/RowTypes";
 import {
   ActionStateReducer,
@@ -28,6 +32,8 @@ export const Page = () => {
   const navigate = useNavigate();
   const { action, params } = useUrlAction() || {};
   const initialAction = getValidInitialAction(action);
+  const { width } = useWindowSize() || {};
+  const tableSize = width ? sizeVariantForWidth(width) : "tiny";
 
   const resetInitialAction = useCallback(
     () => initialAction !== "none" && navigate(pageUrl),
@@ -116,6 +122,12 @@ export const Page = () => {
       }
     }
   }, [initialAction, params, rows]);
+  const handleDuplicate = useCallback(
+    (row: StoreRow) => {
+      navigate(`${pageUrl}?action=duplicate&storeId=${row.storeId}`);
+    },
+    [navigate]
+  );
   const handleEdit = useCallback(
     (row: StoreRow) => {
       navigate(`${pageUrl}?action=edit&storeId=${row.storeId}`);
@@ -281,7 +293,8 @@ export const Page = () => {
                   editable
                   data={rows || []}
                   onEdit={handleEdit}
-                  cellSize="medium"
+                  onDuplicate={handleDuplicate}
+                  sizeVariant={tableSize}
                   displayImage="small"
                 />
               </Paper>

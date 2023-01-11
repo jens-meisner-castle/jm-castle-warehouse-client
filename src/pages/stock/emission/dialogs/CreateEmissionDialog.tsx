@@ -6,12 +6,22 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
-import { useState } from "react";
-import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
-import { EmissionRow, StoreSectionRow } from "../../../../types/RowTypes";
+import { CountUnits } from "jm-castle-warehouse-types/build";
+import { useMemo, useState } from "react";
+import { useHandleExpiredToken } from "../../../../auth/AuthorizationProvider";
+import { ArticleRefEditor } from "../../../../components/ArticleRefEditor";
+import { ErrorData, ErrorDisplays } from "../../../../components/ErrorDisplays";
+import { backendApiUrl } from "../../../../configuration/Urls";
+import { useStockArticleSelect } from "../../../../hooks/useStockArticleSelect";
+import {
+  ArticleRow,
+  EmissionRow,
+  StoreSectionRow,
+} from "../../../../types/RowTypes";
 
 export interface CreateEmissionDialogProps {
   receipt: EmissionRow;
+  articles: ArticleRow[];
   storeSections: StoreSectionRow[];
   open: boolean;
   handleCancel: () => void;
@@ -19,12 +29,53 @@ export interface CreateEmissionDialogProps {
 }
 
 export const CreateEmissionDialog = (props: CreateEmissionDialogProps) => {
-  const { receipt, handleAccept, handleCancel, open, storeSections } = props;
+  const { receipt, handleAccept, handleCancel, open, storeSections, articles } =
+    props;
   const [data, setData] = useState(receipt);
   const updateData = (updates: Partial<EmissionRow>) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
   const { articleId, articleCount, sectionId } = data;
+  const handleExpiredToken = useHandleExpiredToken();
+  const currentArticle = useMemo(() => {
+    return articles.find((row) => row.articleId === articleId);
+  }, [articles, articleId]);
+  const currentCountUnit = currentArticle
+    ? CountUnits[currentArticle.countUnit]
+    : undefined;
+  const countLabel = currentCountUnit
+    ? `Anzahl (${currentCountUnit.name})`
+    : "Anzahl";
+  const stockApiResponse = useStockArticleSelect(
+    backendApiUrl,
+    currentArticle?.articleId,
+    currentArticle ? 1 : 0,
+    handleExpiredToken
+  );
+  const { response: stockState } = stockApiResponse;
+  const availableCount = useMemo(() => {
+    if (!stockState) {
+      return undefined;
+    }
+    const total = stockState.states.reduce((sum, state) => {
+      return sum + state.articleCount;
+    }, 0);
+    const selectedSection = stockState.states.find(
+      (state) => state.section.section_id === sectionId
+    );
+    return { total, inSelectedSection: selectedSection?.articleCount || 0 };
+  }, [stockState, sectionId]);
+  const errorData = useMemo(() => {
+    const newData: Record<string, ErrorData> = {};
+    newData.stockState = stockApiResponse;
+    return newData;
+  }, [stockApiResponse]);
+  const availableCountLabel = availableCount
+    ? `Verfügbare Menge (ges: ${availableCount.total})`
+    : "";
+  const availableCountValue = availableCount
+    ? `${availableCount.inSelectedSection} im gewählten Lager`
+    : "";
 
   return (
     <Dialog open={open} onClose={handleCancel}>
@@ -35,20 +86,22 @@ export const CreateEmissionDialog = (props: CreateEmissionDialogProps) => {
             "Füllen Sie die notwendigen Felder aus und drücken Sie am Ende 'Speichern'."
           }
         </DialogContentText>
-        <TextFieldWithSpeech
+        <ErrorDisplays results={errorData} />
+        <ArticleRefEditor
           autoFocus
           margin="dense"
           id="articleId"
           label="Artikel"
-          value={articleId}
-          onChange={(s) => updateData({ articleId: s })}
+          articles={articles}
+          value={currentArticle}
+          onChange={(row) => updateData({ articleId: row?.articleId })}
           fullWidth
           variant="standard"
         />
         <TextField
           margin="dense"
           id="articleCount"
-          label="Anzahl"
+          label={countLabel}
           value={articleCount}
           onChange={(event) => {
             const articleCount = Number.parseInt(event.target.value);
@@ -75,11 +128,21 @@ export const CreateEmissionDialog = (props: CreateEmissionDialogProps) => {
             </MenuItem>
           ))}
         </TextField>
+        <TextField
+          disabled
+          margin="dense"
+          id="availableCount"
+          label={availableCountLabel}
+          value={availableCountValue}
+          type="text"
+          fullWidth
+          variant="standard"
+        />
       </DialogContent>
       <DialogActions>
         <Button
           disabled={
-            !articleId.length || articleCount === 0 || !sectionId.length
+            !articleId?.length || articleCount === 0 || !sectionId.length
           }
           onClick={() => handleAccept(data)}
         >

@@ -51,6 +51,8 @@ export const EditImageContentDialog = (props: EditImageContentDialogProps) => {
         : getImageDisplayUrl(backendApiUrl, imageId, datasetVersion),
     [file, imageId, datasetVersion]
   );
+  // Bild muss geändert worden sein
+  const isSavingAllowed = !!file;
 
   return (
     <Dialog open={open} onClose={handleCancel}>
@@ -112,7 +114,7 @@ export const EditImageContentDialog = (props: EditImageContentDialogProps) => {
         )}
       </DialogContent>
       <DialogActions>
-        <Button disabled={!file} onClick={() => handleAccept(data)}>
+        <Button disabled={!isSavingAllowed} onClick={() => handleAccept(data)}>
           {"Speichern"}
         </Button>
         <Button onClick={handleCancel}>{"Abbrechen"}</Button>

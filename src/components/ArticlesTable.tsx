@@ -16,17 +16,25 @@ import { backendApiUrl, getImageDisplayUrl } from "../configuration/Urls";
 import { WwwLink } from "../navigation/WwwLink";
 import { ArticleRow } from "../types/RowTypes";
 import { getDateFormat, getDateFormatter } from "../utils/Format";
+import { SizeVariant } from "./SizeVariant";
 import { TablePaginationActions } from "./TablePaginationActions";
 
 interface TableSettings {
   rowsPerPage: number;
 }
 
+export const sizeVariantForWidth = (width: number): SizeVariant => {
+  if (width < 600) return "tiny";
+  if (width < 800) return "small";
+  if (width < 1100) return "medium";
+  return "large";
+};
+
 export interface ArticlesTableProps {
   data: ArticleRow[];
   editable?: boolean;
   displayImage?: "small" | "none";
-  cellSize?: "small" | "medium";
+  sizeVariant: SizeVariant;
   containerStyle?: CSSProperties;
   onEdit?: (row: ArticleRow) => void;
   onDuplicate?: (row: ArticleRow) => void;
@@ -35,16 +43,27 @@ export interface ArticlesTableProps {
 export const ArticlesTable = (props: ArticlesTableProps) => {
   const {
     data,
-    cellSize,
     containerStyle,
     editable,
     onEdit,
     onDuplicate,
     displayImage,
+    sizeVariant,
   } = props;
   const [tableSettings, setTableSettings] = useState<TableSettings>({
     rowsPerPage: 20,
   });
+  // 0 = alle Spalten; 1 = einige Spalten weglassen; 2 = alle nicht unbedingt notwendigen Spalten weglassen
+  const reduceColumns: 0 | 1 | 2 =
+    sizeVariant === "tiny" ? 2 : sizeVariant === "small" ? 1 : 0;
+  const labelRowsPerPage =
+    sizeVariant === "tiny"
+      ? ""
+      : sizeVariant === "small"
+      ? "Zeilen"
+      : "Zeilen pro Seite";
+  const cellSize = sizeVariant === "large" ? "medium" : "small";
+
   const atFormatFunction = useMemo(() => {
     const atFormat = getDateFormat("minute");
     return getDateFormatter({ format: atFormat });
@@ -86,6 +105,8 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
         <TableHead>
           <TableRow>
             <TablePagination
+              labelRowsPerPage={labelRowsPerPage}
+              style={{ paddingLeft: sizeVariant === "tiny" ? 2 : undefined }}
               rowsPerPageOptions={[
                 10,
                 20,
@@ -121,14 +142,26 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
             )}
             <TableCell style={cellStyle}>{"Artikel"}</TableCell>
             <TableCell style={cellStyle}>{"Name"}</TableCell>
-            <TableCell style={cellStyle}>{"Link (www)"}</TableCell>
-            <TableCell style={cellStyle}>{"Zähleinheit"}</TableCell>
-            <TableCell style={cellStyle}>{"Hashtags"}</TableCell>
-            <TableCell style={cellStyle}>{"erzeugt"}</TableCell>
-            <TableCell style={cellStyle}>{"bearbeitet"}</TableCell>
-            <TableCell style={cellStyle} align="right">
-              {"Version"}
-            </TableCell>
+            {reduceColumns < 2 && (
+              <TableCell style={cellStyle}>{"Link (www)"}</TableCell>
+            )}
+            {reduceColumns < 2 && (
+              <TableCell style={cellStyle}>{"Zähleinheit"}</TableCell>
+            )}
+            {reduceColumns < 2 && (
+              <TableCell style={cellStyle}>{"Hashtags"}</TableCell>
+            )}
+            {reduceColumns < 1 && (
+              <TableCell style={cellStyle}>{"erzeugt"}</TableCell>
+            )}
+            {reduceColumns < 1 && (
+              <TableCell style={cellStyle}>{"bearbeitet"}</TableCell>
+            )}
+            {reduceColumns < 1 && (
+              <TableCell style={cellStyle} align="right">
+                {"Version"}
+              </TableCell>
+            )}
             {displayImage === "small" && (
               <TableCell style={cellStyle}>{"Bilder"}</TableCell>
             )}
@@ -179,32 +212,44 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
                 <TableCell style={cellStyle} size={cellSize}>
                   {name}
                 </TableCell>
-                <TableCell style={cellStyle} size={cellSize}>
-                  {wwwLinkUrl && wwwLink && (
-                    <WwwLink
-                      to={wwwLink}
-                      label={wwwLinkUrl.host}
-                      variant="body2"
-                    />
-                  )}
-                </TableCell>
-                <TableCell style={cellStyle} size={cellSize}>
-                  {countUnit}
-                </TableCell>
-                <TableCell style={cellStyle} size={cellSize}>
-                  {hashtags ? hashtags.join(", ") : ""}
-                </TableCell>
-                <TableCell style={cellStyle} size={cellSize}>
-                  {atFormatFunction(createdAt)}
-                </TableCell>
-                <TableCell align="center" style={cellStyle} size={cellSize}>
-                  {createdAt.getTime() === editedAt.getTime()
-                    ? "-"
-                    : atFormatFunction(editedAt)}
-                </TableCell>
-                <TableCell align="right" style={cellStyle} size={cellSize}>
-                  {datasetVersion}
-                </TableCell>
+                {reduceColumns < 2 && (
+                  <TableCell style={cellStyle} size={cellSize}>
+                    {wwwLinkUrl && wwwLink && (
+                      <WwwLink
+                        to={wwwLink}
+                        label={wwwLinkUrl.host}
+                        variant="body2"
+                      />
+                    )}
+                  </TableCell>
+                )}
+                {reduceColumns < 2 && (
+                  <TableCell style={cellStyle} size={cellSize}>
+                    {countUnit}
+                  </TableCell>
+                )}
+                {reduceColumns < 2 && (
+                  <TableCell style={cellStyle} size={cellSize}>
+                    {hashtags ? hashtags.join(", ") : ""}
+                  </TableCell>
+                )}
+                {reduceColumns < 1 && (
+                  <TableCell style={cellStyle} size={cellSize}>
+                    {atFormatFunction(createdAt)}
+                  </TableCell>
+                )}
+                {reduceColumns < 1 && (
+                  <TableCell align="center" style={cellStyle} size={cellSize}>
+                    {createdAt.getTime() === editedAt.getTime()
+                      ? "-"
+                      : atFormatFunction(editedAt)}
+                  </TableCell>
+                )}
+                {reduceColumns < 1 && (
+                  <TableCell align="right" style={cellStyle} size={cellSize}>
+                    {datasetVersion}
+                  </TableCell>
+                )}
                 {displayImage === "small" && (
                   <TableCell align="right" style={cellStyle} size={cellSize}>
                     {imageUrl ? (

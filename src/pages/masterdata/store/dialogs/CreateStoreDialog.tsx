@@ -5,6 +5,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { useState } from "react";
+import { ImageRefsEditor } from "../../../../components/ImageRefsEditor";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
 import { StoreRow } from "../../../../types/RowTypes";
 
@@ -21,10 +22,12 @@ export const CreateStoreDialog = (props: CreateStoreDialogProps) => {
   const updateData = (updates: Partial<StoreRow>) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
+  const { storeId, name, imageRefs } = data;
+  const isSavingAllowed = !!storeId && !!name;
 
   return (
     <Dialog open={open} onClose={handleCancel}>
-      <DialogTitle>Neues Lager</DialogTitle>
+      <DialogTitle>{"Neues Lager"}</DialogTitle>
       <DialogContent>
         <DialogContentText>
           {
@@ -36,7 +39,7 @@ export const CreateStoreDialog = (props: CreateStoreDialogProps) => {
           margin="dense"
           id="storeId"
           label="Lager"
-          value={data.storeId}
+          value={storeId}
           onChange={(s) => updateData({ storeId: s })}
           fullWidth
           variant="standard"
@@ -45,15 +48,23 @@ export const CreateStoreDialog = (props: CreateStoreDialogProps) => {
           margin="dense"
           id="name"
           label="Name"
-          value={data.name}
+          value={name}
           onChange={(s) => updateData({ name: s })}
           fullWidth
           variant="standard"
         />
+        <ImageRefsEditor
+          imageRefs={imageRefs}
+          onChange={(imageRefs) =>
+            setData((previous) => ({ ...previous, imageRefs }))
+          }
+        />
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => handleAccept(data)}>Speichern</Button>
-        <Button onClick={handleCancel}>Abbrechen</Button>
+        <Button disabled={!isSavingAllowed} onClick={() => handleAccept(data)}>
+          {"Speichern"}
+        </Button>
+        <Button onClick={handleCancel}>{"Abbrechen"}</Button>
       </DialogActions>
     </Dialog>
   );

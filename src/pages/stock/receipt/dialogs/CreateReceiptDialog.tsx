@@ -6,13 +6,19 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
-import { useState } from "react";
+import { CountUnits } from "jm-castle-warehouse-types/build";
+import { useMemo, useState } from "react";
+import { ArticleRefEditor } from "../../../../components/ArticleRefEditor";
 import { ImageRefsEditor } from "../../../../components/ImageRefsEditor";
-import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
-import { ReceiptRow, StoreSectionRow } from "../../../../types/RowTypes";
+import {
+  ArticleRow,
+  ReceiptRow,
+  StoreSectionRow,
+} from "../../../../types/RowTypes";
 
 export interface CreateReceiptDialogProps {
   receipt: ReceiptRow;
+  articles: ArticleRow[];
   storeSections: StoreSectionRow[];
   open: boolean;
   handleCancel: () => void;
@@ -20,12 +26,22 @@ export interface CreateReceiptDialogProps {
 }
 
 export const CreateReceiptDialog = (props: CreateReceiptDialogProps) => {
-  const { receipt, handleAccept, handleCancel, open, storeSections } = props;
+  const { receipt, handleAccept, handleCancel, open, storeSections, articles } =
+    props;
   const [data, setData] = useState(receipt);
   const updateData = (updates: Partial<ReceiptRow>) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
   const { articleId, articleCount, sectionId, imageRefs, wwwLink } = data;
+  const currentArticle = useMemo(() => {
+    return articles.find((row) => row.articleId === articleId);
+  }, [articles, articleId]);
+  const currentCountUnit = currentArticle
+    ? CountUnits[currentArticle.countUnit]
+    : undefined;
+  const countLabel = currentCountUnit
+    ? `Anzahl (${currentCountUnit.name})`
+    : "Anzahl";
 
   return (
     <Dialog open={open} onClose={handleCancel}>
@@ -36,20 +52,21 @@ export const CreateReceiptDialog = (props: CreateReceiptDialogProps) => {
             "Füllen Sie die notwendigen Felder aus und drücken Sie am Ende 'Speichern'."
           }
         </DialogContentText>
-        <TextFieldWithSpeech
+        <ArticleRefEditor
           autoFocus
           margin="dense"
           id="articleId"
           label="Artikel"
-          value={articleId}
-          onChange={(s) => updateData({ articleId: s })}
+          articles={articles}
+          value={currentArticle}
+          onChange={(row) => updateData({ articleId: row?.articleId })}
           fullWidth
           variant="standard"
         />
         <TextField
           margin="dense"
           id="articleCount"
-          label="Anzahl"
+          label={countLabel}
           value={articleCount}
           onChange={(event) => {
             const articleCount = Number.parseInt(event.target.value);
@@ -96,7 +113,7 @@ export const CreateReceiptDialog = (props: CreateReceiptDialogProps) => {
       <DialogActions>
         <Button
           disabled={
-            !articleId.length || articleCount === 0 || !sectionId.length
+            !articleId?.length || articleCount === 0 || !sectionId.length
           }
           onClick={() => handleAccept(data)}
         >

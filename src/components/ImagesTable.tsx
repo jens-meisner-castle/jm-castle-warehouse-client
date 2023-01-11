@@ -15,17 +15,25 @@ import { CSSProperties, useEffect, useMemo, useState } from "react";
 import { backendApiUrl, getImageDisplayUrl } from "../configuration/Urls";
 import { ImageContentRow } from "../types/RowTypes";
 import { getDateFormat, getDateFormatter } from "../utils/Format";
+import { SizeVariant } from "./SizeVariant";
 import { TablePaginationActions } from "./TablePaginationActions";
 
 interface TableSettings {
   rowsPerPage: number;
 }
 
+export const sizeVariantForWidth = (width: number): SizeVariant => {
+  if (width < 600) return "tiny";
+  if (width < 800) return "small";
+  if (width < 1100) return "medium";
+  return "large";
+};
+
 export interface ImagesTableProps {
   data: ImageContentRow[];
   editable?: boolean;
   displayImage?: "small" | "none";
-  cellSize?: "small" | "medium";
+  sizeVariant: SizeVariant;
   containerStyle?: CSSProperties;
   onEdit?: (row: ImageContentRow) => void;
   onDuplicate?: (row: ImageContentRow) => void;
@@ -34,13 +42,23 @@ export interface ImagesTableProps {
 export const ImagesTable = (props: ImagesTableProps) => {
   const {
     data,
-    cellSize,
+    sizeVariant,
     containerStyle,
     editable,
     onEdit,
     onDuplicate,
     displayImage,
   } = props;
+  // 0 = alle Spalten; 1 = einige Spalten weglassen; 2 = alle nicht unbedingt notwendigen Spalten weglassen
+  const reduceColumns: 0 | 1 | 2 =
+    sizeVariant === "tiny" ? 2 : sizeVariant === "small" ? 1 : 0;
+  const labelRowsPerPage =
+    sizeVariant === "tiny"
+      ? ""
+      : sizeVariant === "small"
+      ? "Zeilen"
+      : "Zeilen pro Seite";
+  const cellSize = sizeVariant === "large" ? "medium" : "small";
   const [tableSettings, setTableSettings] = useState<TableSettings>({
     rowsPerPage: 20,
   });
@@ -85,6 +103,7 @@ export const ImagesTable = (props: ImagesTableProps) => {
         <TableHead>
           <TableRow>
             <TablePagination
+              labelRowsPerPage={labelRowsPerPage}
               rowsPerPageOptions={[
                 10,
                 20,
@@ -119,15 +138,25 @@ export const ImagesTable = (props: ImagesTableProps) => {
               </TableCell>
             )}
             <TableCell style={cellStyle}>{"Bild ID"}</TableCell>
-            <TableCell style={cellStyle}>{"Dateiendung"}</TableCell>
-            <TableCell style={cellStyle}>{"Dateigröße (bytes)"}</TableCell>
+            {reduceColumns < 2 && (
+              <TableCell style={cellStyle}>{"Dateiendung"}</TableCell>
+            )}
+            {reduceColumns < 2 && (
+              <TableCell style={cellStyle}>{"Dateigröße (bytes)"}</TableCell>
+            )}
             <TableCell style={cellStyle}>{"Breite"}</TableCell>
             <TableCell style={cellStyle}>{"Höhe"}</TableCell>
-            <TableCell style={cellStyle}>{"erzeugt"}</TableCell>
-            <TableCell style={cellStyle}>{"bearbeitet"}</TableCell>
-            <TableCell style={cellStyle} align="right">
-              {"Version"}
-            </TableCell>
+            {reduceColumns < 1 && (
+              <TableCell style={cellStyle}>{"erzeugt"}</TableCell>
+            )}
+            {reduceColumns < 1 && (
+              <TableCell style={cellStyle}>{"bearbeitet"}</TableCell>
+            )}
+            {reduceColumns < 2 && (
+              <TableCell style={cellStyle} align="right">
+                {"Version"}
+              </TableCell>
+            )}
             {displayImage === "small" && (
               <TableCell style={cellStyle}>{"Bild"}</TableCell>
             )}
@@ -174,29 +203,39 @@ export const ImagesTable = (props: ImagesTableProps) => {
                 <TableCell style={cellStyle} size={cellSize}>
                   {imageId}
                 </TableCell>
-                <TableCell style={cellStyle} size={cellSize}>
-                  {imageExtension}
-                </TableCell>
-                <TableCell style={cellStyle} size={cellSize}>
-                  {sizeInBytes}
-                </TableCell>
+                {reduceColumns < 2 && (
+                  <TableCell style={cellStyle} size={cellSize}>
+                    {imageExtension}
+                  </TableCell>
+                )}
+                {reduceColumns < 2 && (
+                  <TableCell style={cellStyle} size={cellSize}>
+                    {sizeInBytes}
+                  </TableCell>
+                )}
                 <TableCell style={cellStyle} size={cellSize}>
                   {width}
                 </TableCell>
                 <TableCell style={cellStyle} size={cellSize}>
                   {height}
                 </TableCell>
-                <TableCell style={cellStyle} size={cellSize}>
-                  {atFormatFunction(createdAt)}
-                </TableCell>
-                <TableCell align="center" style={cellStyle} size={cellSize}>
-                  {createdAt.getTime() === editedAt.getTime()
-                    ? "-"
-                    : atFormatFunction(editedAt)}
-                </TableCell>
-                <TableCell align="right" style={cellStyle} size={cellSize}>
-                  {datasetVersion}
-                </TableCell>
+                {reduceColumns < 1 && (
+                  <TableCell style={cellStyle} size={cellSize}>
+                    {atFormatFunction(createdAt)}
+                  </TableCell>
+                )}
+                {reduceColumns < 1 && (
+                  <TableCell align="center" style={cellStyle} size={cellSize}>
+                    {createdAt.getTime() === editedAt.getTime()
+                      ? "-"
+                      : atFormatFunction(editedAt)}
+                  </TableCell>
+                )}
+                {reduceColumns < 2 && (
+                  <TableCell align="right" style={cellStyle} size={cellSize}>
+                    {datasetVersion}
+                  </TableCell>
+                )}
                 <TableCell align="right" style={cellStyle} size={cellSize}>
                   {displayImage === "small" && imageUrl ? (
                     <img

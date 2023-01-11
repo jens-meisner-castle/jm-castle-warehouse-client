@@ -11,15 +11,22 @@ import {
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
 import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
-import { ReceiptsTable } from "../../../components/ReceiptsTable";
+import {
+  ReceiptsTable,
+  sizeVariantForWidth,
+} from "../../../components/ReceiptsTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { FilterComponent } from "../../../filter/FilterComponent";
 import { TimeintervalFilter } from "../../../filter/Types";
+import { useArticleSelect } from "../../../hooks/useArticleSelect";
 import { useReceiptInsert } from "../../../hooks/useReceiptInsert";
 import { useReceiptSelect } from "../../../hooks/useReceiptSelect";
 import { useStoreSectionSelect } from "../../../hooks/useStoreSectionSelect";
 import { useUrlAction } from "../../../hooks/useUrlAction";
+import { useWindowSize } from "../../../hooks/useWindowSize";
 import {
+  ArticleRow,
+  fromRawArticle,
   fromRawReceipt,
   fromRawStoreSection,
   ReceiptRow,
@@ -45,6 +52,9 @@ export const Page = () => {
       to: DateTime.now().endOf("day"),
     })
   );
+  const { width } = useWindowSize() || {};
+  const tableSize = width ? sizeVariantForWidth(width) : "tiny";
+  const displayImage = tableSize === "tiny" ? "none" : "small";
   const handleFilterChange = useCallback((newFilter: TimeintervalFilter) => {
     setFilter(newFilter);
   }, []);
@@ -88,6 +98,21 @@ export const Page = () => {
     { action: "none", data: undefined },
     () => ({ action: "none", data: undefined })
   );
+
+  const articleApiResponse = useArticleSelect(
+    backendApiUrl,
+    "%",
+    1,
+    handleExpiredToken
+  );
+  const { response: articleResponse } = articleApiResponse;
+  const { result: articleResult } = articleResponse || {};
+  const articleRows = useMemo(() => {
+    const newRows: ArticleRow[] = [];
+    const { rows } = articleResult || {};
+    rows?.forEach((raw) => newRows.push(fromRawArticle(raw)));
+    return newRows.length ? newRows : undefined;
+  }, [articleResult]);
 
   const sectionsApiResponse = useStoreSectionSelect(
     backendApiUrl,
@@ -253,15 +278,19 @@ export const Page = () => {
         isAnySnackbarOpen={isAnySnackbarOpen}
         closeSnackbar={() => setIsAnySnackbarOpen(false)}
       />
-      {actionState.action === "new" && actionState.data && sectionRows && (
-        <CreateReceiptDialog
-          receipt={actionState.data}
-          storeSections={sectionRows}
-          open={true}
-          handleCancel={handleCancel}
-          handleAccept={handleAccept}
-        />
-      )}
+      {actionState.action === "new" &&
+        actionState.data &&
+        sectionRows &&
+        articleRows && (
+          <CreateReceiptDialog
+            receipt={actionState.data}
+            articles={articleRows}
+            storeSections={sectionRows}
+            open={true}
+            handleCancel={handleCancel}
+            handleAccept={handleAccept}
+          />
+        )}
       <Grid container direction="column">
         <Grid item>
           <Typography variant="h5">{"Wareneingang"}</Typography>
@@ -286,10 +315,10 @@ export const Page = () => {
                 <ReceiptsTable
                   containerStyle={{ width: "100%", maxWidth: 1200 }}
                   editable
-                  displayImage="small"
+                  displayImage={displayImage}
                   data={rows || []}
                   onDuplicate={handleDuplicate}
-                  cellSize="medium"
+                  sizeVariant={tableSize}
                 />
               </Paper>
             </Grid>

@@ -1,6 +1,7 @@
 import ImageIcon from "@mui/icons-material/Image";
 import { IconButton, TextField } from "@mui/material";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { getFilename } from "../utils/File";
 
 export const allowedImageTypes = ".JPEG,.PNG,.WebP,.GIF,.AVIF,.TIFF";
 
@@ -20,6 +21,10 @@ export const ImageInputField = (props: FileInputFieldProps) => {
     fileInputRef.current && fileInputRef.current.click();
   }, [fileInputRef]);
 
+  const filename = useMemo(() => {
+    return filePath ? getFilename(filePath) : undefined;
+  }, [filePath]);
+
   const file =
     filePath && fileInputRef.current && fileInputRef.current.files
       ? fileInputRef.current.files[0]
@@ -36,7 +41,7 @@ export const ImageInputField = (props: FileInputFieldProps) => {
         id="fileField"
         label={label}
         disabled
-        value={filePath || ""}
+        value={filename || ""}
         type="text"
         fullWidth
         variant="standard"

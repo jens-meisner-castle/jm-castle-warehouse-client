@@ -6,12 +6,16 @@ import { useNavigate } from "react-router-dom";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
-import { HashtagsTable } from "../../../components/HashtagsTable";
+import {
+  HashtagsTable,
+  sizeVariantForWidth,
+} from "../../../components/HashtagsTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useHashtagInsert } from "../../../hooks/useHashtagInsert";
 import { useHashtagSelect } from "../../../hooks/useHashtagSelect";
 import { useHashtagUpdate } from "../../../hooks/useHashtagUpdate";
 import { useUrlAction } from "../../../hooks/useUrlAction";
+import { useWindowSize } from "../../../hooks/useWindowSize";
 import {
   fromRawHashtag,
   HashtagRow,
@@ -33,6 +37,8 @@ export const Page = () => {
   const handleExpiredToken = useHandleExpiredToken();
   const navigate = useNavigate();
   const { action, params } = useUrlAction() || {};
+  const { width } = useWindowSize() || {};
+  const tableSize = width ? sizeVariantForWidth(width) : "tiny";
   const initialAction = getValidInitialAction(action);
   const resetInitialAction = useCallback(
     () => initialAction !== "none" && navigate(pageUrl),
@@ -307,7 +313,7 @@ export const Page = () => {
                   data={rows || []}
                   onEdit={handleEdit}
                   onDuplicate={handleDuplicate}
-                  cellSize="small"
+                  sizeVariant={tableSize}
                 />
               </Paper>
             </Grid>

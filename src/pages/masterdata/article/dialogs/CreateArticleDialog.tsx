@@ -35,6 +35,7 @@ export const CreateArticleDialog = (props: CreateArticleDialogProps) => {
     []
   );
   const { articleId, name, countUnit, imageRefs, hashtags, wwwLink } = data;
+  const isSavingAllowed = !!articleId && !!name && !!countUnit;
 
   return (
     <Dialog open={open} onClose={handleCancel}>
@@ -108,10 +109,7 @@ export const CreateArticleDialog = (props: CreateArticleDialogProps) => {
         />
       </DialogContent>
       <DialogActions>
-        <Button
-          disabled={!articleId.length || !name.length}
-          onClick={() => handleAccept(data)}
-        >
+        <Button disabled={!isSavingAllowed} onClick={() => handleAccept(data)}>
           {"Speichern"}
         </Button>
         <Button onClick={handleCancel}>{"Abbrechen"}</Button>

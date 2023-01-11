@@ -14,30 +14,50 @@ import { CSSProperties, useEffect, useMemo, useState } from "react";
 import { backendApiUrl, getImageDisplayUrl } from "../configuration/Urls";
 import { ReceiptRow } from "../types/RowTypes";
 import { getDateFormat, getDateFormatter } from "../utils/Format";
+import { SizeVariant } from "./SizeVariant";
 import { TablePaginationActions } from "./TablePaginationActions";
 
 interface TableSettings {
   rowsPerPage: number;
 }
 
+export const sizeVariantForWidth = (width: number): SizeVariant => {
+  if (width < 550) return "tiny";
+  if (width < 800) return "small";
+  if (width < 1100) return "medium";
+  return "large";
+};
+
 export interface ReceiptsTableProps {
   data: ReceiptRow[];
   editable?: boolean;
   onDuplicate?: (row: ReceiptRow) => void;
   displayImage?: "small" | "none";
-  cellSize?: "small" | "medium";
+  sizeVariant: SizeVariant;
   containerStyle?: CSSProperties;
 }
 
 export const ReceiptsTable = (props: ReceiptsTableProps) => {
   const {
     data,
-    cellSize,
     containerStyle,
     editable,
     onDuplicate,
     displayImage,
+    sizeVariant,
   } = props;
+
+  // 0 = alle Spalten; 1 = einige Spalten weglassen; 2 = alle nicht unbedingt notwendigen Spalten weglassen
+  const reduceColumns: 0 | 1 | 2 =
+    sizeVariant === "tiny" ? 2 : sizeVariant === "small" ? 1 : 0;
+  const labelRowsPerPage =
+    sizeVariant === "tiny"
+      ? ""
+      : sizeVariant === "small"
+      ? "Zeilen"
+      : "Zeilen pro Seite";
+  const cellSize = sizeVariant === "large" ? "medium" : "small";
+
   const [tableSettings, setTableSettings] = useState<TableSettings>({
     rowsPerPage: 20,
   });
@@ -79,6 +99,7 @@ export const ReceiptsTable = (props: ReceiptsTableProps) => {
         <TableHead>
           <TableRow>
             <TablePagination
+              labelRowsPerPage={labelRowsPerPage}
               rowsPerPageOptions={[
                 10,
                 20,
@@ -110,9 +131,15 @@ export const ReceiptsTable = (props: ReceiptsTableProps) => {
             <TableCell>{"Artikel"}</TableCell>
             <TableCell align="right">{"gebucht um"}</TableCell>
             <TableCell align="right">{"Anzahl"}</TableCell>
-            <TableCell align="center">{"gebucht von"}</TableCell>
-            <TableCell align="center">{"Lagerbereich"}</TableCell>
-            <TableCell align="center">{"Datensatz ID"}</TableCell>
+            {reduceColumns < 1 && (
+              <TableCell align="center">{"gebucht von"}</TableCell>
+            )}
+            {reduceColumns < 2 && (
+              <TableCell align="center">{"Lagerbereich"}</TableCell>
+            )}
+            {reduceColumns < 1 && (
+              <TableCell align="center">{"Datensatz ID"}</TableCell>
+            )}
             {displayImage === "small" && (
               <TableCell style={cellStyle}>{"Bilder"}</TableCell>
             )}
@@ -154,15 +181,21 @@ export const ReceiptsTable = (props: ReceiptsTableProps) => {
                 <TableCell style={cellStyle} size={cellSize} align="right">
                   {articleCount}
                 </TableCell>
-                <TableCell style={cellStyle} size={cellSize} align="center">
-                  {byUser}
-                </TableCell>
-                <TableCell style={cellStyle} size={cellSize} align="center">
-                  {sectionId}
-                </TableCell>
-                <TableCell style={cellStyle} size={cellSize} align="center">
-                  {datasetId}
-                </TableCell>
+                {reduceColumns < 1 && (
+                  <TableCell style={cellStyle} size={cellSize} align="center">
+                    {byUser}
+                  </TableCell>
+                )}
+                {reduceColumns < 2 && (
+                  <TableCell style={cellStyle} size={cellSize} align="center">
+                    {sectionId}
+                  </TableCell>
+                )}
+                {reduceColumns < 1 && (
+                  <TableCell style={cellStyle} size={cellSize} align="center">
+                    {datasetId}
+                  </TableCell>
+                )}
                 {displayImage === "small" && (
                   <TableCell align="right" style={cellStyle} size={cellSize}>
                     {imageUrl ? (

@@ -52,6 +52,7 @@ export const CreateImageContentDialog = (
     () => (file ? URL.createObjectURL(file) : undefined),
     [file]
   );
+  const isSavingAllowed = !!imageId && !!file;
 
   return (
     <Dialog open={open} onClose={handleCancel}>
@@ -103,7 +104,7 @@ export const CreateImageContentDialog = (
         )}
       </DialogContent>
       <DialogActions>
-        <Button disabled={!imageId || !file} onClick={() => handleAccept(data)}>
+        <Button disabled={!isSavingAllowed} onClick={() => handleAccept(data)}>
           {"Speichern"}
         </Button>
         <Button onClick={handleCancel}>{"Abbrechen"}</Button>

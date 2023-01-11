@@ -6,12 +6,16 @@ import { useNavigate } from "react-router-dom";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
-import { ImagesTable } from "../../../components/ImagesTable";
+import {
+  ImagesTable,
+  sizeVariantForWidth,
+} from "../../../components/ImagesTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useImageContentInsert } from "../../../hooks/useImageContentInsert";
 import { useImageContentRows } from "../../../hooks/useImageContentRows";
 import { useImageContentUpdate } from "../../../hooks/useImageContentUpdate";
 import { useUrlAction } from "../../../hooks/useUrlAction";
+import { useWindowSize } from "../../../hooks/useWindowSize";
 import {
   fromRawImageContent,
   ImageContentRow,
@@ -34,6 +38,8 @@ export const Page = () => {
   const handleExpiredToken = useHandleExpiredToken();
   const navigate = useNavigate();
   const { action, params } = useUrlAction() || {};
+  const { width } = useWindowSize() || {};
+  const tableSize = width ? sizeVariantForWidth(width) : "tiny";
   const initialAction = getValidInitialAction(action);
   const resetInitialAction = useCallback(
     () => initialAction !== "none" && navigate(pageUrl),
@@ -334,7 +340,7 @@ export const Page = () => {
                   data={rows || []}
                   onEdit={handleEdit}
                   onDuplicate={handleDuplicate}
-                  cellSize="small"
+                  sizeVariant={tableSize}
                 />
               </Paper>
             </Grid>
