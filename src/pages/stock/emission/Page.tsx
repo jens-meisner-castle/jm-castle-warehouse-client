@@ -1,3 +1,4 @@
+import { FilterAlt, FilterAltOff } from "@mui/icons-material";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Grid, Paper, Tooltip, Typography } from "@mui/material";
@@ -13,26 +14,37 @@ import { AppAction, AppActions } from "../../../components/AppActions";
 import {
   EmissionsTable,
   sizeVariantForWidth,
-} from "../../../components/EmissionsTable";
+} from "../../../components/table/EmissionsTable";
 import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
 import { backendApiUrl } from "../../../configuration/Urls";
-import { FilterComponent } from "../../../filter/FilterComponent";
+import { TimeFilterComponent } from "../../../filter/TimeFilterComponent";
 import { TimeintervalFilter } from "../../../filter/Types";
 import { useArticleSelect } from "../../../hooks/useArticleSelect";
 import { useEmissionInsert } from "../../../hooks/useEmissionInsert";
 import { useEmissionSelect } from "../../../hooks/useEmissionSelect";
+import { useReceiverSelect } from "../../../hooks/useReceiverSelect";
 import { useStoreSectionSelect } from "../../../hooks/useStoreSectionSelect";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
+import { allRoutes } from "../../../navigation/AppRoutes";
 import {
   ArticleRow,
+  compareEmissionRow,
   EmissionRow,
   fromRawArticle,
   fromRawEmission,
+  fromRawReceiver,
   fromRawStoreSection,
+  ReceiverRow,
   StoreSectionRow,
   toRawEmission,
 } from "../../../types/RowTypes";
+import { OrderElement } from "../../../types/Types";
+import {
+  CompareFunction,
+  concatCompares,
+  isNonEmptyArray,
+} from "../../../utils/Compare";
 import { getNewFilter } from "../../../utils/Filter";
 import {
   ActionStateReducer,
@@ -41,16 +53,27 @@ import {
 } from "../utils/Reducer";
 import { CreateEmissionDialog } from "./dialogs/CreateEmissionDialog";
 
-export const pageUrl = "/stock/emission";
-
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
+  const [order, setOrder] = useState<OrderElement<EmissionRow>[]>([
+    { field: "emittedAt", direction: "descending" },
+  ]);
   const [filter, setFilter] = useState<TimeintervalFilter>(
     getNewFilter({
       from: DateTime.now().minus({ days: 7 }),
       to: DateTime.now().endOf("day"),
     })
+  );
+  const [isFilterComponentVisible, setIsFilterComponentVisible] =
+    useState(false);
+  const handleHideFilterComponent = useCallback(
+    () => setIsFilterComponentVisible(false),
+    []
+  );
+  const handleShowFilterComponent = useCallback(
+    () => setIsFilterComponentVisible(true),
+    []
   );
   const handleFilterChange = useCallback((newFilter: TimeintervalFilter) => {
     setFilter(newFilter);
@@ -63,7 +86,9 @@ export const Page = () => {
   const tableSize = width ? sizeVariantForWidth(width) : "tiny";
   const initialAction = getValidInitialAction(action);
   const resetInitialAction = useCallback(
-    () => initialAction !== "none" && navigate(pageUrl),
+    () =>
+      initialAction !== "none" &&
+      navigate(allRoutes().stockEmission.path, { replace: true }),
     [initialAction, navigate]
   );
 
@@ -76,7 +101,7 @@ export const Page = () => {
   );
   const { response: emissionResponse } = emissionApiResponse;
   const { result: emissionResult } = emissionResponse || {};
-  const rows = useMemo(() => {
+  const emissionRows = useMemo(() => {
     if (emissionResult) {
       const newRows: EmissionRow[] = [];
       emissionResult.rows.forEach((r) => {
@@ -88,6 +113,23 @@ export const Page = () => {
     }
     return undefined;
   }, [emissionResult]);
+
+  const filteredOrderedRows = useMemo(() => {
+    if (!emissionRows) return undefined;
+    const filtered = [...emissionRows]; //.filter((row) => passFilter(row));
+    const activeOrder = order?.filter((e) => e.direction) || [];
+    if (activeOrder.length) {
+      const compares: CompareFunction<EmissionRow>[] = [];
+      activeOrder.forEach((e) => {
+        const { field, direction } = e;
+        const compare = compareEmissionRow[field];
+        const compareFn = direction && compare && compare(direction);
+        compareFn && compares.push(compareFn);
+      });
+      isNonEmptyArray(compares) && filtered.sort(concatCompares(compares));
+    }
+    return filtered;
+  }, [emissionRows, order]);
 
   const [actionState, dispatch] = useReducer<
     typeof ActionStateReducer<EmissionRow>,
@@ -110,8 +152,23 @@ export const Page = () => {
     const newRows: ArticleRow[] = [];
     const { rows } = articleResult || {};
     rows?.forEach((raw) => newRows.push(fromRawArticle(raw)));
-    return newRows.length ? newRows : undefined;
+    return newRows;
   }, [articleResult]);
+
+  const receiverApiResponse = useReceiverSelect(
+    backendApiUrl,
+    "%",
+    1,
+    handleExpiredToken
+  );
+  const { response: receiverResponse } = receiverApiResponse;
+  const { result: receiverResult } = receiverResponse || {};
+  const receiverRows = useMemo(() => {
+    const newRows: ReceiverRow[] = [];
+    const { rows } = receiverResult || {};
+    rows?.forEach((raw) => newRows.push(fromRawReceiver(raw)));
+    return newRows;
+  }, [receiverResult]);
 
   const sectionsApiResponse = useStoreSectionSelect(
     backendApiUrl,
@@ -126,7 +183,7 @@ export const Page = () => {
     const newRows: StoreSectionRow[] = [];
     const { rows } = sectionsResult || {};
     rows?.forEach((raw) => newRows.push(fromRawStoreSection(raw)));
-    return newRows.length ? newRows : undefined;
+    return newRows;
   }, [sectionsResult]);
 
   const errorData = useMemo(() => {
@@ -143,7 +200,7 @@ export const Page = () => {
   }, [resetInitialAction]);
 
   useEffect(() => {
-    if (initialAction && rows) {
+    if (initialAction && emissionRows) {
       switch (initialAction) {
         case "new":
           dispatch({
@@ -155,6 +212,8 @@ export const Page = () => {
               articleId: "",
               articleCount: 1,
               emittedAt: new Date(),
+              reason: "loan",
+              receiver: "",
             },
           });
           break;
@@ -165,7 +224,7 @@ export const Page = () => {
               ? Number.parseInt(datasetId)
               : undefined;
             const data = datasetId
-              ? rows.find((row) => row.datasetId === datasetNumber)
+              ? emissionRows.find((row) => row.datasetId === datasetNumber)
               : undefined;
             data &&
               dispatch({
@@ -181,10 +240,14 @@ export const Page = () => {
           break;
       }
     }
-  }, [initialAction, params, rows, username]);
+  }, [initialAction, params, emissionRows, username]);
   const handleDuplicate = useCallback(
     (row: EmissionRow) => {
-      navigate(`${pageUrl}?action=duplicate&datasetId=${row.datasetId}`);
+      navigate(
+        `${allRoutes().stockEmission.path}?action=duplicate&datasetId=${
+          row.datasetId
+        }`
+      );
     },
     [navigate]
   );
@@ -253,19 +316,35 @@ export const Page = () => {
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
-      label: (
-        <Tooltip title="Daten aktualisieren">
-          <RefreshIcon />
-        </Tooltip>
-      ),
+      label: <RefreshIcon />,
+      tooltip: "Daten aktualisieren",
       onClick: refreshStatus,
     });
     newActions.push({
-      label: <AddBoxIcon />,
-      onClick: () => navigate(`${pageUrl}?action=new`),
+      label: isFilterComponentVisible ? <FilterAltOff /> : <FilterAlt />,
+      tooltip: isFilterComponentVisible
+        ? "Filter ausblenden"
+        : "Filter einblenden",
+      onClick: isFilterComponentVisible
+        ? handleHideFilterComponent
+        : handleShowFilterComponent,
+    });
+    newActions.push({
+      label: (
+        <Tooltip title="Neuen Datensatz anlegen">
+          <AddBoxIcon />
+        </Tooltip>
+      ),
+      onClick: () => navigate(`${allRoutes().stockEmission.path}?action=new`),
     });
     return newActions;
-  }, [refreshStatus, navigate]);
+  }, [
+    refreshStatus,
+    handleHideFilterComponent,
+    handleShowFilterComponent,
+    isFilterComponentVisible,
+    navigate,
+  ]);
 
   return (
     <>
@@ -275,19 +354,17 @@ export const Page = () => {
         isAnySnackbarOpen={isAnySnackbarOpen}
         closeSnackbar={() => setIsAnySnackbarOpen(false)}
       />
-      {actionState.action === "new" &&
-        actionState.data &&
-        sectionRows &&
-        articleRows && (
-          <CreateEmissionDialog
-            receipt={actionState.data}
-            articles={articleRows}
-            storeSections={sectionRows}
-            open={true}
-            handleCancel={handleCancel}
-            handleAccept={handleAccept}
-          />
-        )}
+      {actionState.action === "new" && actionState.data && (
+        <CreateEmissionDialog
+          receipt={actionState.data}
+          articles={articleRows}
+          receivers={receiverRows}
+          storeSections={sectionRows}
+          open={true}
+          handleCancel={handleCancel}
+          handleAccept={handleAccept}
+        />
+      )}
       <Grid container direction="column">
         <Grid item>
           <Typography variant="h5">{"Warenausgang"}</Typography>
@@ -297,11 +374,16 @@ export const Page = () => {
             <AppActions actions={actions} />
           </Paper>
         </Grid>
-        <Grid item>
-          <Paper>
-            <FilterComponent filter={filter} onChange={handleFilterChange} />
-          </Paper>
-        </Grid>
+        {isFilterComponentVisible && (
+          <Grid item>
+            <Paper style={{ marginBottom: 5 }}>
+              <TimeFilterComponent
+                filter={filter}
+                onChange={handleFilterChange}
+              />
+            </Paper>
+          </Grid>
+        )}
         <Grid item>
           <ErrorDisplays results={errorData} />
         </Grid>
@@ -312,7 +394,9 @@ export const Page = () => {
                 <EmissionsTable
                   containerStyle={{ width: "100%", maxWidth: 1200 }}
                   editable
-                  data={rows || []}
+                  data={filteredOrderedRows || []}
+                  order={order}
+                  onOrderChange={setOrder}
                   onDuplicate={handleDuplicate}
                   sizeVariant={tableSize}
                 />

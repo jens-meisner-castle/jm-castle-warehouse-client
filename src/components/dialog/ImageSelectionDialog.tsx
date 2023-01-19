@@ -11,10 +11,10 @@ import {
   useTheme,
 } from "@mui/material";
 import { useMemo, useState } from "react";
-import { useHandleExpiredToken } from "../auth/AuthorizationProvider";
-import { backendApiUrl, getImageDisplayUrl } from "../configuration/Urls";
-import { useImageContentRows } from "../hooks/useImageContentRows";
-import { ErrorDisplay } from "./ErrorDisplay";
+import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
+import { backendApiUrl, getImageDisplayUrl } from "../../configuration/Urls";
+import { useImageContentRows } from "../../hooks/useImageContentRows";
+import { ErrorDisplay } from "../ErrorDisplay";
 
 export interface ImageSelectionDialogProps {
   handleCancel: () => void;

@@ -1,5 +1,5 @@
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { Grid, Paper, Tooltip, Typography } from "@mui/material";
+import { Grid, Paper, Typography } from "@mui/material";
 import { ExecuteSetupResponse } from "jm-castle-warehouse-types/build";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppAction, AppActions } from "../../components/AppActions";
@@ -55,11 +55,8 @@ export const Page = () => {
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
-      label: (
-        <Tooltip title="Daten aktualisieren">
-          <RefreshIcon />
-        </Tooltip>
-      ),
+      label: <RefreshIcon />,
+      tooltip: "Daten aktualisieren",
       onClick: refreshStatus,
     });
     newActions.push({ label: "SETUP", onClick: startSetup });

@@ -9,18 +9,26 @@ import { AppAction, AppActions } from "../../../components/AppActions";
 import {
   ImagesTable,
   sizeVariantForWidth,
-} from "../../../components/ImagesTable";
+} from "../../../components/table/ImagesTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useImageContentInsert } from "../../../hooks/useImageContentInsert";
 import { useImageContentRows } from "../../../hooks/useImageContentRows";
 import { useImageContentUpdate } from "../../../hooks/useImageContentUpdate";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
+import { allRoutes } from "../../../navigation/AppRoutes";
 import {
+  compareImageRow,
   fromRawImageContent,
   ImageContentRow,
   toRawImageContent,
 } from "../../../types/RowTypes";
+import { OrderElement } from "../../../types/Types";
+import {
+  CompareFunction,
+  concatCompares,
+  isNonEmptyArray,
+} from "../../../utils/Compare";
 import {
   ActionStateReducer,
   getValidInitialAction,
@@ -30,11 +38,12 @@ import { CreateImageContentDialog } from "./dialogs/CreateImageContentDialog";
 import { EditImageContentDialog } from "./dialogs/EditImageContentDialog";
 import { ImageContentEditState } from "./Types";
 
-export const pageUrl = "/masterdata/image";
-
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
+  const [order, setOrder] = useState<OrderElement<ImageContentRow>[]>([
+    { field: "imageId", direction: "ascending" },
+  ]);
   const handleExpiredToken = useHandleExpiredToken();
   const navigate = useNavigate();
   const { action, params } = useUrlAction() || {};
@@ -42,7 +51,9 @@ export const Page = () => {
   const tableSize = width ? sizeVariantForWidth(width) : "tiny";
   const initialAction = getValidInitialAction(action);
   const resetInitialAction = useCallback(
-    () => initialAction !== "none" && navigate(pageUrl),
+    () =>
+      initialAction !== "none" &&
+      navigate(allRoutes().masterdataImageContent.path, { replace: true }),
     [initialAction, navigate]
   );
 
@@ -65,6 +76,23 @@ export const Page = () => {
     }
     return undefined;
   }, [selectResult]);
+
+  const filteredOrderedRows = useMemo(() => {
+    if (!rows) return undefined;
+    const filtered = [...rows]; //.filter((row) => passFilter(row));
+    const activeOrder = order?.filter((e) => e.direction) || [];
+    if (activeOrder.length) {
+      const compares: CompareFunction<ImageContentRow>[] = [];
+      activeOrder.forEach((e) => {
+        const { field, direction } = e;
+        const compare = compareImageRow[field];
+        const compareFn = direction && compare && compare(direction);
+        compareFn && compares.push(compareFn);
+      });
+      isNonEmptyArray(compares) && filtered.sort(concatCompares(compares));
+    }
+    return filtered;
+  }, [rows, order]);
 
   const [actionState, dispatch] = useReducer<
     typeof ActionStateReducer<ImageContentEditState>,
@@ -143,13 +171,21 @@ export const Page = () => {
   }, [initialAction, params, rows]);
   const handleEdit = useCallback(
     (row: ImageContentRow) => {
-      navigate(`${pageUrl}?action=edit&imageId=${row.imageId}`);
+      navigate(
+        `${allRoutes().masterdataImageContent.path}?action=edit&imageId=${
+          row.imageId
+        }`
+      );
     },
     [navigate]
   );
   const handleDuplicate = useCallback(
     (row: ImageContentRow) => {
-      navigate(`${pageUrl}?action=duplicate&imageId=${row.imageId}`);
+      navigate(
+        `${allRoutes().masterdataImageContent.path}?action=duplicate&imageId=${
+          row.imageId
+        }`
+      );
     },
     [navigate]
   );
@@ -275,16 +311,18 @@ export const Page = () => {
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
-      label: (
-        <Tooltip title="Daten aktualisieren">
-          <RefreshIcon />
-        </Tooltip>
-      ),
+      label: <RefreshIcon />,
+      tooltip: "Daten aktualisieren",
       onClick: refreshStatus,
     });
     newActions.push({
-      label: <AddBoxIcon />,
-      onClick: () => navigate(`${pageUrl}?action=new`),
+      label: (
+        <Tooltip title="Neuen Datensatz anlegen">
+          <AddBoxIcon />
+        </Tooltip>
+      ),
+      onClick: () =>
+        navigate(`${allRoutes().masterdataImageContent.path}?action=new`),
     });
     return newActions;
   }, [refreshStatus, navigate]);
@@ -337,7 +375,9 @@ export const Page = () => {
                   containerStyle={{ width: "100%", maxWidth: 1200 }}
                   editable
                   displayImage="small"
-                  data={rows || []}
+                  data={filteredOrderedRows || []}
+                  order={order}
+                  onOrderChange={setOrder}
                   onEdit={handleEdit}
                   onDuplicate={handleDuplicate}
                   sizeVariant={tableSize}

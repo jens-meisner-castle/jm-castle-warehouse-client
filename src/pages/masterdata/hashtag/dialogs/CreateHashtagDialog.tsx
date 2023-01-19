@@ -38,7 +38,7 @@ export const CreateHashtagDialog = (props: CreateHashtagDialogProps) => {
           margin="dense"
           id="tagId"
           label="Hashtag"
-          value={data.tagId}
+          value={tagId}
           onChange={(s) => updateData({ tagId: s })}
           fullWidth
           variant="standard"
@@ -47,7 +47,7 @@ export const CreateHashtagDialog = (props: CreateHashtagDialogProps) => {
           margin="dense"
           id="name"
           label="Name"
-          value={data.name}
+          value={name}
           onChange={(s) => updateData({ name: s })}
           fullWidth
           variant="standard"

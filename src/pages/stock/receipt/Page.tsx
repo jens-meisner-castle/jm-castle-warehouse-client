@@ -1,3 +1,4 @@
+import { FilterAlt, FilterAltOff } from "@mui/icons-material";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Grid, Paper, Tooltip, Typography } from "@mui/material";
@@ -14,9 +15,9 @@ import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
 import {
   ReceiptsTable,
   sizeVariantForWidth,
-} from "../../../components/ReceiptsTable";
+} from "../../../components/table/ReceiptsTable";
 import { backendApiUrl } from "../../../configuration/Urls";
-import { FilterComponent } from "../../../filter/FilterComponent";
+import { TimeFilterComponent } from "../../../filter/TimeFilterComponent";
 import { TimeintervalFilter } from "../../../filter/Types";
 import { useArticleSelect } from "../../../hooks/useArticleSelect";
 import { useReceiptInsert } from "../../../hooks/useReceiptInsert";
@@ -24,8 +25,10 @@ import { useReceiptSelect } from "../../../hooks/useReceiptSelect";
 import { useStoreSectionSelect } from "../../../hooks/useStoreSectionSelect";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
+import { allRoutes } from "../../../navigation/AppRoutes";
 import {
   ArticleRow,
+  compareReceiptRow,
   fromRawArticle,
   fromRawReceipt,
   fromRawStoreSection,
@@ -33,6 +36,12 @@ import {
   StoreSectionRow,
   toRawReceipt,
 } from "../../../types/RowTypes";
+import { OrderElement } from "../../../types/Types";
+import {
+  CompareFunction,
+  concatCompares,
+  isNonEmptyArray,
+} from "../../../utils/Compare";
 import { getNewFilter } from "../../../utils/Filter";
 import {
   ActionStateReducer,
@@ -41,16 +50,27 @@ import {
 } from "../utils/Reducer";
 import { CreateReceiptDialog } from "./dialogs/CreateReceiptDialog";
 
-export const pageUrl = "/stock/receipt";
-
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
+  const [order, setOrder] = useState<OrderElement<ReceiptRow>[]>([
+    { field: "receiptAt", direction: "descending" },
+  ]);
   const [filter, setFilter] = useState<TimeintervalFilter>(
     getNewFilter({
       from: DateTime.now().minus({ days: 7 }),
       to: DateTime.now().endOf("day"),
     })
+  );
+  const [isFilterComponentVisible, setIsFilterComponentVisible] =
+    useState(false);
+  const handleHideFilterComponent = useCallback(
+    () => setIsFilterComponentVisible(false),
+    []
+  );
+  const handleShowFilterComponent = useCallback(
+    () => setIsFilterComponentVisible(true),
+    []
   );
   const { width } = useWindowSize() || {};
   const tableSize = width ? sizeVariantForWidth(width) : "tiny";
@@ -64,7 +84,9 @@ export const Page = () => {
   const { action, params } = useUrlAction() || {};
   const initialAction = getValidInitialAction(action);
   const resetInitialAction = useCallback(
-    () => initialAction !== "none" && navigate(pageUrl),
+    () =>
+      initialAction !== "none" &&
+      navigate(allRoutes().stockReceipt.path, { replace: true }),
     [initialAction, navigate]
   );
 
@@ -77,7 +99,7 @@ export const Page = () => {
   );
   const { response: receiptResponse } = receiptApiResponse;
   const { result: receiptResult } = receiptResponse || {};
-  const rows = useMemo(() => {
+  const receiptRows = useMemo(() => {
     if (receiptResult) {
       const newRows: ReceiptRow[] = [];
       receiptResult.rows.forEach((r) => {
@@ -89,6 +111,23 @@ export const Page = () => {
     }
     return undefined;
   }, [receiptResult]);
+
+  const filteredOrderedRows = useMemo(() => {
+    if (!receiptRows) return undefined;
+    const filtered = [...receiptRows]; //.filter((row) => passFilter(row));
+    const activeOrder = order?.filter((e) => e.direction) || [];
+    if (activeOrder.length) {
+      const compares: CompareFunction<ReceiptRow>[] = [];
+      activeOrder.forEach((e) => {
+        const { field, direction } = e;
+        const compare = compareReceiptRow[field];
+        const compareFn = direction && compare && compare(direction);
+        compareFn && compares.push(compareFn);
+      });
+      isNonEmptyArray(compares) && filtered.sort(concatCompares(compares));
+    }
+    return filtered;
+  }, [receiptRows, order]);
 
   const [actionState, dispatch] = useReducer<
     typeof ActionStateReducer<ReceiptRow>,
@@ -111,7 +150,7 @@ export const Page = () => {
     const newRows: ArticleRow[] = [];
     const { rows } = articleResult || {};
     rows?.forEach((raw) => newRows.push(fromRawArticle(raw)));
-    return newRows.length ? newRows : undefined;
+    return newRows;
   }, [articleResult]);
 
   const sectionsApiResponse = useStoreSectionSelect(
@@ -126,7 +165,7 @@ export const Page = () => {
     const newRows: StoreSectionRow[] = [];
     const { rows } = sectionsResult || {};
     rows?.forEach((raw) => newRows.push(fromRawStoreSection(raw)));
-    return newRows.length ? newRows : undefined;
+    return newRows;
   }, [sectionsResult]);
 
   const errorData = useMemo(() => {
@@ -143,7 +182,7 @@ export const Page = () => {
   }, [resetInitialAction]);
 
   useEffect(() => {
-    if (initialAction && rows) {
+    if (initialAction && receiptRows) {
       switch (initialAction) {
         case "new":
           dispatch({
@@ -158,6 +197,7 @@ export const Page = () => {
               wwwLink: undefined,
               receiptAt: new Date(),
               guarantyTo: undefined,
+              reason: "buy",
             },
           });
           break;
@@ -168,7 +208,7 @@ export const Page = () => {
               ? Number.parseInt(datasetId)
               : undefined;
             const data = datasetId
-              ? rows.find((row) => row.datasetId === datasetNumber)
+              ? receiptRows.find((row) => row.datasetId === datasetNumber)
               : undefined;
             data &&
               dispatch({
@@ -184,10 +224,14 @@ export const Page = () => {
           break;
       }
     }
-  }, [initialAction, params, rows, username]);
+  }, [initialAction, params, receiptRows, username]);
   const handleDuplicate = useCallback(
     (row: ReceiptRow) => {
-      navigate(`${pageUrl}?action=duplicate&datasetId=${row.datasetId}`);
+      navigate(
+        `${allRoutes().stockReceipt.path}?action=duplicate&datasetId=${
+          row.datasetId
+        }`
+      );
     },
     [navigate]
   );
@@ -256,19 +300,35 @@ export const Page = () => {
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
-      label: (
-        <Tooltip title="Daten aktualisieren">
-          <RefreshIcon />
-        </Tooltip>
-      ),
+      label: <RefreshIcon />,
+      tooltip: "Daten aktualisieren",
       onClick: refreshStatus,
     });
     newActions.push({
-      label: <AddBoxIcon />,
-      onClick: () => navigate(`${pageUrl}?action=new`),
+      label: isFilterComponentVisible ? <FilterAltOff /> : <FilterAlt />,
+      tooltip: isFilterComponentVisible
+        ? "Filter ausblenden"
+        : "Filter einblenden",
+      onClick: isFilterComponentVisible
+        ? handleHideFilterComponent
+        : handleShowFilterComponent,
+    });
+    newActions.push({
+      label: (
+        <Tooltip title="Neuen Datensatz anlegen">
+          <AddBoxIcon />
+        </Tooltip>
+      ),
+      onClick: () => navigate(`${allRoutes().stockReceipt.path}?action=new`),
     });
     return newActions;
-  }, [refreshStatus, navigate]);
+  }, [
+    refreshStatus,
+    handleHideFilterComponent,
+    handleShowFilterComponent,
+    isFilterComponentVisible,
+    navigate,
+  ]);
 
   return (
     <>
@@ -278,19 +338,16 @@ export const Page = () => {
         isAnySnackbarOpen={isAnySnackbarOpen}
         closeSnackbar={() => setIsAnySnackbarOpen(false)}
       />
-      {actionState.action === "new" &&
-        actionState.data &&
-        sectionRows &&
-        articleRows && (
-          <CreateReceiptDialog
-            receipt={actionState.data}
-            articles={articleRows}
-            storeSections={sectionRows}
-            open={true}
-            handleCancel={handleCancel}
-            handleAccept={handleAccept}
-          />
-        )}
+      {actionState.action === "new" && actionState.data && (
+        <CreateReceiptDialog
+          receipt={actionState.data}
+          articles={articleRows}
+          storeSections={sectionRows}
+          open={true}
+          handleCancel={handleCancel}
+          handleAccept={handleAccept}
+        />
+      )}
       <Grid container direction="column">
         <Grid item>
           <Typography variant="h5">{"Wareneingang"}</Typography>
@@ -300,11 +357,16 @@ export const Page = () => {
             <AppActions actions={actions} />
           </Paper>
         </Grid>
-        <Grid item>
-          <Paper>
-            <FilterComponent filter={filter} onChange={handleFilterChange} />
-          </Paper>
-        </Grid>
+        {isFilterComponentVisible && (
+          <Grid item>
+            <Paper style={{ marginBottom: 5 }}>
+              <TimeFilterComponent
+                filter={filter}
+                onChange={handleFilterChange}
+              />
+            </Paper>
+          </Grid>
+        )}
         <Grid item>
           <ErrorDisplays results={errorData} />
         </Grid>
@@ -316,7 +378,9 @@ export const Page = () => {
                   containerStyle={{ width: "100%", maxWidth: 1200 }}
                   editable
                   displayImage={displayImage}
-                  data={rows || []}
+                  data={filteredOrderedRows || []}
+                  order={order}
+                  onOrderChange={setOrder}
                   onDuplicate={handleDuplicate}
                   sizeVariant={tableSize}
                 />

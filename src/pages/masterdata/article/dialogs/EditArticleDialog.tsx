@@ -8,21 +8,23 @@ import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import { CountUnits, isCountUnit } from "jm-castle-warehouse-types/build";
 import { useMemo, useState } from "react";
-import { HashtagsEditor } from "../../../../components/HashtagsEditor";
-import { ImageRefsEditor } from "../../../../components/ImageRefsEditor";
+import { HashtagsRefEditor } from "../../../../components/multi-ref/HashtagsRefEditor";
+import { ImageRefsEditor } from "../../../../components/multi-ref/ImageRefsEditor";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
 
-import { ArticleRow } from "../../../../types/RowTypes";
+import { ArticleRow, HashtagRow } from "../../../../types/RowTypes";
 
 export interface EditArticleDialogProps {
   article: ArticleRow;
+  availableHashtags: HashtagRow[];
   open: boolean;
   handleCancel: () => void;
   handleAccept: (data: ArticleRow) => void;
 }
 
 export const EditArticleDialog = (props: EditArticleDialogProps) => {
-  const { article, handleAccept, handleCancel, open } = props;
+  const { article, availableHashtags, handleAccept, handleCancel, open } =
+    props;
   const [data, setData] = useState(article);
   const updateData = (updates: Partial<ArticleRow>) => {
     setData((previous) => ({ ...previous, ...updates }));
@@ -36,7 +38,17 @@ export const EditArticleDialog = (props: EditArticleDialogProps) => {
     []
   );
   const { articleId, name, countUnit, imageRefs, hashtags, wwwLink } = data;
+
   const isSavingAllowed = !!articleId && !!name && !!countUnit;
+
+  const currentHashtags = useMemo(() => {
+    const newHashtags: HashtagRow[] = [];
+    hashtags?.forEach((tagId) => {
+      const hashtag = availableHashtags.find((r) => r.tagId === tagId);
+      hashtag && newHashtags.push(hashtag);
+    });
+    return newHashtags;
+  }, [hashtags, availableHashtags]);
 
   return (
     <>
@@ -70,9 +82,12 @@ export const EditArticleDialog = (props: EditArticleDialogProps) => {
             fullWidth
             variant="standard"
           />
-          <HashtagsEditor
-            hashtags={hashtags}
-            onChange={(hashtags) => updateData({ hashtags })}
+          <HashtagsRefEditor
+            value={currentHashtags}
+            hashtags={availableHashtags}
+            onChange={(hashtags) =>
+              updateData({ hashtags: hashtags?.map((r) => r.tagId) })
+            }
           />
           <TextField
             margin="dense"

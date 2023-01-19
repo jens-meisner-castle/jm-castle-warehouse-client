@@ -1,3 +1,4 @@
+import { FilterAlt, FilterAltOff } from "@mui/icons-material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
 import { Grid, Paper, Tooltip, Typography } from "@mui/material";
@@ -5,12 +6,17 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { ErrorData, ErrorDisplays } from "../../components/ErrorDisplays";
-import { StockChangeTable } from "../../components/StockChangeTable";
+import {
+  sizeVariantForWidth,
+  StockChangeTable,
+} from "../../components/table/StockChangeTable";
 import { backendApiUrl } from "../../configuration/Urls";
-import { FilterComponent } from "../../filter/FilterComponent";
+import { TimeFilterComponent } from "../../filter/TimeFilterComponent";
 import { TimeintervalFilter } from "../../filter/Types";
 import { useEmissionSelect } from "../../hooks/useEmissionSelect";
 import { useReceiptSelect } from "../../hooks/useReceiptSelect";
+import { useWindowSize } from "../../hooks/useWindowSize";
+import { allRoutes } from "../../navigation/AppRoutes";
 import {
   StockChangingRow,
   stockChangingRowFromRawEmission,
@@ -26,31 +32,43 @@ import {
 import { getNewOptions, PageOptions } from "./parts/OptionsComponent";
 import { OptionsMenu } from "./parts/OptionsMenu";
 
-export const pageUrl = "/history";
-
 export const Page = () => {
   const handleExpiredToken = useHandleExpiredToken();
   const [pageOptions, setPageOptions] = useState(
-    getNewOptions(loadOptionsForPage(pageUrl) || {})
+    getNewOptions(loadOptionsForPage(allRoutes().history.path) || {})
   );
+  const { width } = useWindowSize() || {};
+  const tableSize = width ? sizeVariantForWidth(width) : "tiny";
   const handleNewOptions = useCallback((newOptions: Partial<PageOptions>) => {
     let mergedOptions: PageOptions | Partial<PageOptions> = {};
     setPageOptions((previous) => {
       mergedOptions = { ...previous, ...newOptions };
       return { ...previous, ...newOptions };
     });
-    mergedOptions && storeOptionsForPage(mergedOptions, pageUrl);
+    mergedOptions &&
+      storeOptionsForPage(mergedOptions, allRoutes().history.path);
   }, []);
   const [isOptionsVisible, setIsOptionsVisible] = useState(false);
   const optionsSelectionRef = useRef<HTMLButtonElement | null>(null);
 
   const initialFilter = useMemo(
-    () => getNewFilter(loadFilterForPage(pageUrl)),
+    () => getNewFilter(loadFilterForPage(allRoutes().history.path)),
     []
   );
   const [filter, setFilter] = useState<TimeintervalFilter>(initialFilter);
+  const [isFilterComponentVisible, setIsFilterComponentVisible] =
+    useState(false);
+  const handleHideFilterComponent = useCallback(
+    () => setIsFilterComponentVisible(false),
+    []
+  );
+  const handleShowFilterComponent = useCallback(
+    () => setIsFilterComponentVisible(true),
+    []
+  );
+
   const handleFilterChange = useCallback((newFilter: TimeintervalFilter) => {
-    storeFilterForPage(newFilter, pageUrl);
+    storeFilterForPage(newFilter, allRoutes().history.path);
     setFilter(newFilter);
   }, []);
 
@@ -116,12 +134,26 @@ export const Page = () => {
       onClick: refresh,
     });
     newActions.push({
+      label: isFilterComponentVisible ? <FilterAltOff /> : <FilterAlt />,
+      tooltip: isFilterComponentVisible
+        ? "Filter ausblenden"
+        : "Filter einblenden",
+      onClick: isFilterComponentVisible
+        ? handleHideFilterComponent
+        : handleShowFilterComponent,
+    });
+    newActions.push({
       label: <SettingsApplicationsIcon />,
       onClick: () => setIsOptionsVisible((previous) => !previous),
       elementRef: optionsSelectionRef,
     });
     return newActions;
-  }, [refresh]);
+  }, [
+    refresh,
+    handleHideFilterComponent,
+    handleShowFilterComponent,
+    isFilterComponentVisible,
+  ]);
 
   return (
     <>
@@ -142,18 +174,23 @@ export const Page = () => {
             <AppActions actions={actions} />
           </Paper>
         </Grid>
-        <Grid item>
-          <Paper>
-            <FilterComponent filter={filter} onChange={handleFilterChange} />
-          </Paper>
-        </Grid>
+        {isFilterComponentVisible && (
+          <Grid item>
+            <Paper style={{ marginBottom: 5 }}>
+              <TimeFilterComponent
+                filter={filter}
+                onChange={handleFilterChange}
+              />
+            </Paper>
+          </Grid>
+        )}
         <Grid item>
           <ErrorDisplays results={errorData} />
         </Grid>
         <Grid item>
           <StockChangeTable
             data={tableData}
-            cellSize="small"
+            sizeVariant={tableSize}
             containerStyle={{ width: "100%", maxWidth: 1200 }}
           />
         </Grid>

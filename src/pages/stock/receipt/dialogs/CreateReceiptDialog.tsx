@@ -1,4 +1,4 @@
-import { MenuItem } from "@mui/material";
+import { useTheme } from "@mui/material";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -8,8 +8,10 @@ import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import { CountUnits } from "jm-castle-warehouse-types/build";
 import { useMemo, useState } from "react";
-import { ArticleRefEditor } from "../../../../components/ArticleRefEditor";
-import { ImageRefsEditor } from "../../../../components/ImageRefsEditor";
+import { ArticleRefAutocomplete } from "../../../../components/autocomplete/ArticleRefAutocomplete";
+import { StoreSectionRefAutocomplete } from "../../../../components/autocomplete/StoreSectionRefAutocomplete";
+import { DateField } from "../../../../components/DateField";
+import { ImageRefsEditor } from "../../../../components/multi-ref/ImageRefsEditor";
 import {
   ArticleRow,
   ReceiptRow,
@@ -29,16 +31,25 @@ export const CreateReceiptDialog = (props: CreateReceiptDialogProps) => {
   const { receipt, handleAccept, handleCancel, open, storeSections, articles } =
     props;
   const [data, setData] = useState(receipt);
+  const theme = useTheme();
   const updateData = (updates: Partial<ReceiptRow>) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
-  const { articleId, articleCount, sectionId, imageRefs, wwwLink } = data;
+  const { articleId, articleCount, sectionId, imageRefs, wwwLink, receiptAt } =
+    data;
+
+  const currentSection = useMemo(
+    () => storeSections.find((r) => r.sectionId === sectionId),
+    [storeSections, sectionId]
+  );
   const currentArticle = useMemo(() => {
     return articles.find((row) => row.articleId === articleId);
   }, [articles, articleId]);
+
   const currentCountUnit = currentArticle
     ? CountUnits[currentArticle.countUnit]
     : undefined;
+
   const countLabel = currentCountUnit
     ? `Anzahl (${currentCountUnit.name})`
     : "Anzahl";
@@ -52,7 +63,7 @@ export const CreateReceiptDialog = (props: CreateReceiptDialogProps) => {
             "Füllen Sie die notwendigen Felder aus und drücken Sie am Ende 'Speichern'."
           }
         </DialogContentText>
-        <ArticleRefEditor
+        <ArticleRefAutocomplete
           autoFocus
           margin="dense"
           id="articleId"
@@ -62,6 +73,17 @@ export const CreateReceiptDialog = (props: CreateReceiptDialogProps) => {
           onChange={(row) => updateData({ articleId: row?.articleId })}
           fullWidth
           variant="standard"
+          helperText={
+            articles.length ? (
+              "Bitte wählen Sie einen Artikel aus"
+            ) : (
+              <span style={{ color: theme.palette.error.main }}>
+                {
+                  "Es sind keine Artikel vorhanden. Sie müssen zuerst einen Artikel anlegen."
+                }
+              </span>
+            )
+          }
         />
         <TextField
           margin="dense"
@@ -86,23 +108,22 @@ export const CreateReceiptDialog = (props: CreateReceiptDialogProps) => {
           fullWidth
           variant="standard"
         />
-        <TextField
-          margin="dense"
-          id="sectionId"
-          select
-          label="Lagerbereich"
-          value={sectionId}
-          onChange={(event) => updateData({ sectionId: event.target.value })}
-          helperText="Bitte wählen Sie einen Lagerbereich aus"
+        <StoreSectionRefAutocomplete
+          value={currentSection}
+          sections={storeSections}
+          onChange={(section) => updateData({ sectionId: section?.sectionId })}
           fullWidth
           variant="standard"
-        >
-          {storeSections.map((row) => (
-            <MenuItem key={row.sectionId} value={row.sectionId}>
-              {row.sectionId}
-            </MenuItem>
-          ))}
-        </TextField>
+          margin="dense"
+        />
+        <DateField
+          value={receiptAt}
+          level="minute"
+          onChange={(value) => updateData({ receiptAt: value })}
+          label="empfangen um"
+          variant="standard"
+          fullWidth
+        />
         <ImageRefsEditor
           imageRefs={imageRefs}
           onChange={(imageRefs) =>

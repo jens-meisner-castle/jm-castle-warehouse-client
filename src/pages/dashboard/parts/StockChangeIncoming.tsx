@@ -2,7 +2,8 @@ import { Grid, Paper } from "@mui/material";
 import { useMemo } from "react";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
-import { StockChangeTable } from "../../../components/StockChangeTable";
+import { SizeVariant } from "../../../components/SizeVariant";
+import { StockChangeTable } from "../../../components/table/StockChangeTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { TimeintervalFilter } from "../../../filter/Types";
 import { useReceiptSelect } from "../../../hooks/useReceiptSelect";
@@ -13,10 +14,11 @@ import {
 
 export interface StockChangeIncomingProps {
   filter: TimeintervalFilter;
+  sizeVariant: SizeVariant;
 }
 
 export const StockChangeIncoming = (props: StockChangeIncomingProps) => {
-  const { filter } = props;
+  const { filter, sizeVariant } = props;
   const handleExpiredToken = useHandleExpiredToken();
 
   const receiptApiResponse = useReceiptSelect(
@@ -50,7 +52,7 @@ export const StockChangeIncoming = (props: StockChangeIncomingProps) => {
       </Grid>
       <Grid item>
         <Paper style={{ padding: 5 }}>
-          <StockChangeTable data={allRows} cellSize="small" />
+          <StockChangeTable data={allRows} sizeVariant={sizeVariant} />
         </Paper>
       </Grid>
     </Grid>

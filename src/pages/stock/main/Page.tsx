@@ -1,5 +1,5 @@
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { Grid, Paper, Tooltip, Typography } from "@mui/material";
+import { Grid, Paper, Typography } from "@mui/material";
 import { DateTime } from "luxon";
 import { useCallback, useMemo, useState } from "react";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
@@ -9,11 +9,11 @@ import { backendApiUrl } from "../../../configuration/Urls";
 import { TimeintervalFilter } from "../../../filter/Types";
 import { useEmissionSelect } from "../../../hooks/useEmissionSelect";
 import { useReceiptSelect } from "../../../hooks/useReceiptSelect";
+import { useStockSectionAll } from "../../../hooks/useStockSectionAll";
 import { getNewFilter } from "../../../utils/Filter";
 import { Emissions } from "./parts/Emissions";
 import { Receipts } from "./parts/Receipts";
-
-export const pageUrl = "/stock/main";
+import { StockSections } from "./parts/StockSections";
 
 export const Page = () => {
   const [filter] = useState<TimeintervalFilter>(
@@ -49,21 +49,26 @@ export const Page = () => {
   const { result: emissionResult } = emissionResponse || {};
   const { rows: emissionRows } = emissionResult || {};
 
+  const stockApiResponse = useStockSectionAll(
+    backendApiUrl,
+    updateIndicator,
+    handleExpiredToken
+  );
+  const { response: stock } = stockApiResponse;
+
   const errorData = useMemo(() => {
     const newErrors: Record<string, ErrorData> = {};
     newErrors.receipt = { ...receiptApiResponse };
     newErrors.emission = { ...emissionApiResponse };
+    newErrors.stock = { ...stockApiResponse };
     return newErrors;
-  }, [receiptApiResponse, emissionApiResponse]);
+  }, [receiptApiResponse, emissionApiResponse, stockApiResponse]);
 
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
-      label: (
-        <Tooltip title="Daten aktualisieren">
-          <RefreshIcon />
-        </Tooltip>
-      ),
+      label: <RefreshIcon />,
+      tooltip: "Daten aktualisieren",
       onClick: refreshStatus,
     });
     return newActions;
@@ -84,6 +89,13 @@ export const Page = () => {
       </Grid>
       <Grid item>
         <Grid container direction="row">
+          <Grid item>
+            <Paper
+              style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
+            >
+              <StockSections stock={stock || {}} />
+            </Paper>
+          </Grid>
           <Grid item>
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}

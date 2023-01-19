@@ -9,18 +9,26 @@ import { AppAction, AppActions } from "../../../components/AppActions";
 import {
   ArticlesTable,
   sizeVariantForWidth,
-} from "../../../components/ArticlesTable";
+} from "../../../components/table/ArticlesTable";
+import { ErrorDisplays } from "../../../components/ErrorDisplays";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useArticleInsert } from "../../../hooks/useArticleInsert";
-import { useArticleSelect } from "../../../hooks/useArticleSelect";
 import { useArticleUpdate } from "../../../hooks/useArticleUpdate";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
+import { allRoutes } from "../../../navigation/AppRoutes";
 import {
   ArticleRow,
+  compareArticleRow,
   fromRawArticle,
   toRawArticle,
 } from "../../../types/RowTypes";
+import { OrderElement } from "../../../types/Types";
+import {
+  CompareFunction,
+  concatCompares,
+  isNonEmptyArray,
+} from "../../../utils/Compare";
 import {
   ActionStateReducer,
   getValidInitialAction,
@@ -28,12 +36,14 @@ import {
 } from "../utils/Reducer";
 import { CreateArticleDialog } from "./dialogs/CreateArticleDialog";
 import { EditArticleDialog } from "./dialogs/EditArticleDialog";
-
-export const pageUrl = "/masterdata/article";
+import { usePageData } from "./PageData";
 
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
+  const [order, setOrder] = useState<OrderElement<ArticleRow>[]>([
+    { field: "articleId", direction: "ascending" },
+  ]);
   const handleExpiredToken = useHandleExpiredToken();
   const { width } = useWindowSize() || {};
   const tableSize = width ? sizeVariantForWidth(width) : "tiny";
@@ -41,28 +51,35 @@ export const Page = () => {
   const { action, params } = useUrlAction() || {};
   const initialAction = getValidInitialAction(action);
   const resetInitialAction = useCallback(
-    () => initialAction !== "none" && navigate(pageUrl),
+    () =>
+      initialAction !== "none" &&
+      navigate(allRoutes().masterdataArticle.path, { replace: true }),
     [initialAction, navigate]
   );
 
-  const { response: selectResponse, error: selectError } = useArticleSelect(
+  const { errors, rows } = usePageData(
     backendApiUrl,
-    "%",
-    updateIndicator
+    updateIndicator,
+    handleExpiredToken
   );
-  const { result: selectResult } = selectResponse || {};
-  const rows = useMemo(() => {
-    if (selectResult) {
-      const newRows: ArticleRow[] = [];
-      selectResult.rows.forEach((r) => {
-        const newRow = fromRawArticle(r);
-        newRows.push(newRow);
+  const { articleRows, hashtagRows } = rows;
+
+  const filteredOrderedRows = useMemo(() => {
+    if (!articleRows) return undefined;
+    const filtered = [...articleRows]; //.filter((row) => passFilter(row));
+    const activeOrder = order?.filter((e) => e.direction) || [];
+    if (activeOrder.length) {
+      const compares: CompareFunction<ArticleRow>[] = [];
+      activeOrder.forEach((e) => {
+        const { field, direction } = e;
+        const compare = compareArticleRow[field];
+        const compareFn = direction && compare && compare(direction);
+        compareFn && compares.push(compareFn);
       });
-      newRows.sort((a, b) => a.name.localeCompare(b.name));
-      return newRows;
+      isNonEmptyArray(compares) && filtered.sort(concatCompares(compares));
     }
-    return undefined;
-  }, [selectResult]);
+    return filtered;
+  }, [articleRows, order]);
 
   const [actionState, dispatch] = useReducer<
     typeof ActionStateReducer<ArticleRow>,
@@ -80,7 +97,7 @@ export const Page = () => {
   }, [resetInitialAction]);
 
   useEffect(() => {
-    if (initialAction && rows) {
+    if (initialAction && articleRows) {
       switch (initialAction) {
         case "new":
           dispatch({
@@ -101,7 +118,7 @@ export const Page = () => {
         case "edit": {
           const articleId = params?.articleId;
           const row = articleId
-            ? rows.find((row) => row.articleId === articleId)
+            ? articleRows.find((row) => row.articleId === articleId)
             : undefined;
           row &&
             dispatch({
@@ -114,7 +131,7 @@ export const Page = () => {
           {
             const articleId = params?.articleId;
             const data = articleId
-              ? rows.find((row) => row.articleId === articleId)
+              ? articleRows.find((row) => row.articleId === articleId)
               : undefined;
             data &&
               dispatch({
@@ -130,16 +147,24 @@ export const Page = () => {
           break;
       }
     }
-  }, [initialAction, params, rows]);
+  }, [initialAction, params, articleRows]);
   const handleEdit = useCallback(
     (row: ArticleRow) => {
-      navigate(`${pageUrl}?action=edit&articleId=${row.articleId}`);
+      navigate(
+        `${allRoutes().masterdataArticle.path}?action=edit&articleId=${
+          row.articleId
+        }`
+      );
     },
     [navigate]
   );
   const handleDuplicate = useCallback(
     (row: ArticleRow) => {
-      navigate(`${pageUrl}?action=duplicate&articleId=${row.articleId}`);
+      navigate(
+        `${allRoutes().masterdataArticle.path}?action=duplicate&articleId=${
+          row.articleId
+        }`
+      );
     },
     [navigate]
   );
@@ -253,16 +278,18 @@ export const Page = () => {
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
-      label: (
-        <Tooltip title="Daten aktualisieren">
-          <RefreshIcon />
-        </Tooltip>
-      ),
+      label: <RefreshIcon />,
+      tooltip: "Daten aktualisieren",
       onClick: refreshStatus,
     });
     newActions.push({
-      label: <AddBoxIcon />,
-      onClick: () => navigate(`${pageUrl}?action=new`),
+      label: (
+        <Tooltip title="Neuen Datensatz anlegen">
+          <AddBoxIcon />
+        </Tooltip>
+      ),
+      onClick: () =>
+        navigate(`${allRoutes().masterdataArticle.path}?action=new`),
     });
     return newActions;
   }, [refreshStatus, navigate]);
@@ -278,6 +305,7 @@ export const Page = () => {
       {actionState.action === "new" && actionState.data && (
         <CreateArticleDialog
           article={actionState.data}
+          availableHashtags={hashtagRows || []}
           open={true}
           handleCancel={handleCancel}
           handleAccept={handleAccept}
@@ -286,6 +314,7 @@ export const Page = () => {
       {actionState.action === "edit" && actionState.data && (
         <EditArticleDialog
           article={actionState.data}
+          availableHashtags={hashtagRows || []}
           open={true}
           handleCancel={handleCancel}
           handleAccept={handleAccept}
@@ -300,10 +329,10 @@ export const Page = () => {
             <AppActions actions={actions} />
           </Paper>
         </Grid>
-        {selectError && (
+        {!!Object.keys(errors).length && (
           <Grid item>
             <Paper style={{ padding: 5, marginBottom: 5 }}>
-              <Typography>{selectError}</Typography>
+              <ErrorDisplays results={errors} />
             </Paper>
           </Grid>
         )}
@@ -316,7 +345,9 @@ export const Page = () => {
                   editable
                   displayImage="small"
                   sizeVariant={tableSize}
-                  data={rows || []}
+                  data={filteredOrderedRows || []}
+                  order={order}
+                  onOrderChange={setOrder}
                   onEdit={handleEdit}
                   onDuplicate={handleDuplicate}
                 />

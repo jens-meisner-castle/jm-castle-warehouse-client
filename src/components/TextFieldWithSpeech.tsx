@@ -2,7 +2,7 @@ import MicIcon from "@mui/icons-material/Mic";
 import MicOffIcon from "@mui/icons-material/MicOff";
 import { Alert, IconButton, Snackbar } from "@mui/material";
 import TextField, { TextFieldProps } from "@mui/material/TextField";
-import { useCallback, useEffect, useState } from "react";
+import { CSSProperties, useCallback, useEffect, useState } from "react";
 import { useSpeechInput } from "../speech/useSpeechInput";
 
 export type TextFieldWithSpeechProps = Omit<
@@ -22,6 +22,8 @@ export type TextFieldWithSpeechProps = Omit<
 
 export const TextFieldWithSpeech = (props: TextFieldWithSpeechProps) => {
   const { label, value, onChange, helperText, ...textFieldProps } = props;
+
+  const iconButtonStyle: CSSProperties = { padding: 4 };
 
   const [speechInput, setSpeechInput] = useState<{
     updateIndicator: number;
@@ -74,12 +76,16 @@ export const TextFieldWithSpeech = (props: TextFieldWithSpeechProps) => {
         InputProps={{
           endAdornment: recognitionInProgress ? (
             <IconButton
+              style={iconButtonStyle}
+              tabIndex={-1}
               onClick={() => cancelSpeechInput && cancelSpeechInput()}
             >
               <MicOffIcon />
             </IconButton>
           ) : (
             <IconButton
+              style={iconButtonStyle}
+              tabIndex={-1}
               disabled={recognitionInProgress}
               onClick={() => startSpeechInput()}
             >
@@ -88,7 +94,7 @@ export const TextFieldWithSpeech = (props: TextFieldWithSpeechProps) => {
           ),
         }}
         helperText={
-          recognitionInProgress ? helperText || "Bitte sprechen Sie jetzt." : ""
+          recognitionInProgress ? "Bitte sprechen Sie jetzt." : helperText || ""
         }
       />
     </>

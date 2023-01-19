@@ -1,79 +1,60 @@
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
-import { Alert, IconButton, Snackbar, TextField } from "@mui/material";
-import { Row_Hashtag } from "jm-castle-warehouse-types/build";
+import {
+  Alert,
+  IconButton,
+  Snackbar,
+  TextField,
+  useTheme,
+} from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
-import { useHandleExpiredToken } from "../auth/AuthorizationProvider";
-import { backendApiUrl } from "../configuration/Urls";
-import { useHashtagSelect } from "../hooks/useHashtagSelect";
-import { ErrorDisplay } from "./ErrorDisplay";
-import { HashtagMultiselectionDialog } from "./HashtagMultiselectionDialog";
+import { HashtagRow } from "../../types/RowTypes";
+import { HashtagMultiselectionDialog } from "../dialog/HashtagMultiselectionDialog";
 
-export interface HashtagsEditorProps {
-  hashtags: string[] | undefined;
-  onChange: (hashtags: string[] | undefined) => void;
+export interface HashtagsRefEditorProps {
+  value: HashtagRow[] | undefined;
+  onChange: (hashtags: HashtagRow[] | undefined) => void;
+  hashtags: HashtagRow[];
 }
 
-export const HashtagsEditor = (props: HashtagsEditorProps) => {
-  const { hashtags, onChange } = props;
+export const HashtagsRefEditor = (props: HashtagsRefEditorProps) => {
+  const { hashtags, onChange, value } = props;
+  const theme = useTheme();
   const [editorWarning, setEditorWarning] = useState<string | undefined>(
     undefined
   );
   const [isHashtagAddOpen, setIsHashtagAddOpen] = useState(false);
   const [isHashtagRemoveOpen, setIsHashtagRemoveOpen] = useState(false);
 
-  const handleExpiredToken = useHandleExpiredToken();
-
   const handleAcceptNewHashtags = useCallback(
-    (newTags: string[]) => {
+    (newRows: HashtagRow[]) => {
       setIsHashtagAddOpen(false);
-      const newHashtags = hashtags ? [...hashtags, ...newTags] : [...newTags];
+      const newHashtags = value ? [...value, ...newRows] : [...newRows];
       onChange(newHashtags);
     },
-    [hashtags, onChange]
+    [value, onChange]
   );
 
   const handleAcceptRemovedHashtags = useCallback(
-    (newTags: string[]) => {
+    (newRows: HashtagRow[]) => {
       setIsHashtagRemoveOpen(false);
-      onChange(newTags.length ? newTags : undefined);
+      onChange(newRows.length ? newRows : undefined);
     },
     [onChange]
   );
 
-  const { error, errorCode, errorDetails, response } = useHashtagSelect(
-    backendApiUrl,
-    "%",
-    1,
-    handleExpiredToken
-  );
-  const { result } = response || {};
-  const { rows: allHashtags } = result || {};
-  const currentHashtagRows = useMemo(() => {
-    const currentRows: Row_Hashtag[] = [];
-    hashtags &&
-      hashtags.forEach((tag) => {
-        const row = allHashtags?.find((r) => r.tag_id === tag);
-        row && currentRows.push(row);
-      });
-    return currentRows;
-  }, [allHashtags, hashtags]);
+  const currentHashtagRows = value || [];
+
   const notSelectedHashtagRows = useMemo(() => {
-    const notSelectedRows: Row_Hashtag[] = [];
-    allHashtags &&
-      allHashtags.forEach((row) => {
-        !hashtags?.includes(row.tag_id) && notSelectedRows.push(row);
-      });
+    const notSelectedRows: HashtagRow[] = [];
+    hashtags.forEach((row) => {
+      !value?.includes(row) && notSelectedRows.push(row);
+    });
     return notSelectedRows;
-  }, [allHashtags, hashtags]);
+  }, [hashtags, value]);
 
   return (
     <>
-      <ErrorDisplay
-        error={error}
-        errorCode={errorCode}
-        errorDetails={errorDetails}
-      />
       {editorWarning && (
         <Snackbar
           anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
@@ -84,16 +65,16 @@ export const HashtagsEditor = (props: HashtagsEditorProps) => {
           <Alert severity="warning">{editorWarning}</Alert>
         </Snackbar>
       )}
-      {isHashtagAddOpen && allHashtags && (
+      {isHashtagAddOpen && (
         <HashtagMultiselectionDialog
           visibleHashtags={notSelectedHashtagRows}
           handleAccept={(tagIds) => handleAcceptNewHashtags(tagIds)}
           handleCancel={() => setIsHashtagAddOpen(false)}
         />
       )}
-      {isHashtagRemoveOpen && hashtags && currentHashtagRows && (
+      {isHashtagRemoveOpen && value && currentHashtagRows && (
         <HashtagMultiselectionDialog
-          initialSelection={hashtags}
+          initialSelection={value}
           visibleHashtags={currentHashtagRows}
           handleAccept={(tagIds) => handleAcceptRemovedHashtags(tagIds)}
           handleCancel={() => setIsHashtagRemoveOpen(false)}
@@ -103,15 +84,16 @@ export const HashtagsEditor = (props: HashtagsEditorProps) => {
         margin="dense"
         id="hashtags"
         label="Hashtags"
-        value={hashtags ? hashtags.join(", ") : ""}
+        value={value ? value.map((r) => r.tagId).join(", ") : ""}
         type="text"
         fullWidth
         variant="standard"
+        tabIndex={-1}
         InputProps={{
           endAdornment: (
             <>
               <IconButton
-                disabled={!hashtags}
+                disabled={!value}
                 onClick={() => setIsHashtagRemoveOpen(true)}
               >
                 <RemoveIcon />
@@ -125,6 +107,17 @@ export const HashtagsEditor = (props: HashtagsEditorProps) => {
             </>
           ),
         }}
+        helperText={
+          hashtags?.length ? (
+            "Verwenden Sie die Schaltflächen, um Tags hinzuzufügen oder zu entfernen."
+          ) : (
+            <span style={{ color: theme.palette.warning.main }}>
+              {
+                "Es sind keine Hashtags vorhanden. Sie müssen zuerst ein Hashtag anlegen."
+              }
+            </span>
+          )
+        }
       />
     </>
   );

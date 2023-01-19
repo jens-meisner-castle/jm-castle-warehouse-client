@@ -1,10 +1,12 @@
-import { Box, Button, Grid } from "@mui/material";
+import { Box, Button, Grid, Tooltip } from "@mui/material";
 import { MutableRefObject, ReactElement, useMemo } from "react";
 import { ToolbarLink } from "../navigation/ToolbarLink";
 
 export type AppAction = {
   label: string | ReactElement;
+  tooltip?: string;
   disabled?: boolean;
+  hidden?: boolean;
 } & (
   | {
       onClick: () => void;
@@ -42,17 +44,42 @@ export const AppActions = (props: AppActionProps) => {
         {actionsDisplay.map((action, i) => (
           <Grid item key={i}>
             {action.onClick ? (
-              <Button
-                ref={action.elementRef}
-                style={{ marginLeft: i > 0 ? 10 : 0 }}
-                variant="contained"
-                onClick={action.onClick}
-                disabled={action.disabled}
-              >
-                {action.icon || action.label}
-              </Button>
+              action.tooltip ? (
+                <Tooltip title={action.tooltip}>
+                  <Button
+                    ref={action.elementRef}
+                    style={{
+                      marginLeft: i > 0 ? 10 : 0,
+                      display: action.hidden ? "none" : undefined,
+                    }}
+                    variant="contained"
+                    onClick={action.onClick}
+                    disabled={action.disabled}
+                  >
+                    {action.icon || action.label}
+                  </Button>
+                </Tooltip>
+              ) : (
+                <Button
+                  ref={action.elementRef}
+                  style={{
+                    marginLeft: i > 0 ? 10 : 0,
+                    display: action.hidden ? "none" : undefined,
+                  }}
+                  variant="contained"
+                  onClick={action.onClick}
+                  disabled={action.disabled}
+                >
+                  {action.icon || action.label}
+                </Button>
+              )
             ) : (
-              <Box style={{ marginLeft: i > 0 ? 10 : 0 }}>
+              <Box
+                style={{
+                  marginLeft: i > 0 ? 10 : 0,
+                  display: action.hidden ? "none" : undefined,
+                }}
+              >
                 <ToolbarLink
                   to={action.onClickNavigate.to}
                   label={typeof action.label === "string" ? action.label : ""}

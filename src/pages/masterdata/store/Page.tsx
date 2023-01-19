@@ -8,14 +8,26 @@ import { AppAction, AppActions } from "../../../components/AppActions";
 import {
   sizeVariantForWidth,
   StoresTable,
-} from "../../../components/StoresTable";
+} from "../../../components/table/StoresTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useStoreInsert } from "../../../hooks/useStoreInsert";
 import { useStoreSelect } from "../../../hooks/useStoreSelect";
 import { useStoreUpdate } from "../../../hooks/useStoreUpdate";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
-import { fromRawStore, StoreRow, toRawStore } from "../../../types/RowTypes";
+import { allRoutes } from "../../../navigation/AppRoutes";
+import {
+  compareStoreRow,
+  fromRawStore,
+  StoreRow,
+  toRawStore,
+} from "../../../types/RowTypes";
+import { OrderElement } from "../../../types/Types";
+import {
+  CompareFunction,
+  concatCompares,
+  isNonEmptyArray,
+} from "../../../utils/Compare";
 import {
   ActionStateReducer,
   getValidInitialAction,
@@ -24,11 +36,12 @@ import {
 import { CreateStoreDialog } from "./dialogs/CreateStoreDialog";
 import { EditStoreDialog } from "./dialogs/EditStoreDialog";
 
-export const pageUrl = "/masterdata/store";
-
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
+  const [order, setOrder] = useState<OrderElement<StoreRow>[]>([
+    { field: "storeId", direction: "ascending" },
+  ]);
   const navigate = useNavigate();
   const { action, params } = useUrlAction() || {};
   const initialAction = getValidInitialAction(action);
@@ -36,7 +49,9 @@ export const Page = () => {
   const tableSize = width ? sizeVariantForWidth(width) : "tiny";
 
   const resetInitialAction = useCallback(
-    () => initialAction !== "none" && navigate(pageUrl),
+    () =>
+      initialAction !== "none" &&
+      navigate(allRoutes().masterdataStore.path, { replace: true }),
     [initialAction, navigate]
   );
 
@@ -58,6 +73,23 @@ export const Page = () => {
     }
     return undefined;
   }, [selectResult]);
+
+  const filteredOrderedRows = useMemo(() => {
+    if (!rows) return undefined;
+    const filtered = [...rows]; //.filter((row) => passFilter(row));
+    const activeOrder = order?.filter((e) => e.direction) || [];
+    if (activeOrder.length) {
+      const compares: CompareFunction<StoreRow>[] = [];
+      activeOrder.forEach((e) => {
+        const { field, direction } = e;
+        const compare = compareStoreRow[field];
+        const compareFn = direction && compare && compare(direction);
+        compareFn && compares.push(compareFn);
+      });
+      isNonEmptyArray(compares) && filtered.sort(concatCompares(compares));
+    }
+    return filtered;
+  }, [rows, order]);
 
   const [actionState, dispatch] = useReducer<
     typeof ActionStateReducer<StoreRow>,
@@ -124,13 +156,19 @@ export const Page = () => {
   }, [initialAction, params, rows]);
   const handleDuplicate = useCallback(
     (row: StoreRow) => {
-      navigate(`${pageUrl}?action=duplicate&storeId=${row.storeId}`);
+      navigate(
+        `${allRoutes().masterdataStore.path}?action=duplicate&storeId=${
+          row.storeId
+        }`
+      );
     },
     [navigate]
   );
   const handleEdit = useCallback(
     (row: StoreRow) => {
-      navigate(`${pageUrl}?action=edit&storeId=${row.storeId}`);
+      navigate(
+        `${allRoutes().masterdataStore.path}?action=edit&storeId=${row.storeId}`
+      );
     },
     [navigate]
   );
@@ -231,16 +269,17 @@ export const Page = () => {
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
-      label: (
-        <Tooltip title="Daten aktualisieren">
-          <RefreshIcon />
-        </Tooltip>
-      ),
+      label: <RefreshIcon />,
+      tooltip: "Daten aktualisieren",
       onClick: refreshStatus,
     });
     newActions.push({
-      label: <AddBoxIcon />,
-      onClick: () => navigate(`${pageUrl}?action=new`),
+      label: (
+        <Tooltip title="Neuen Datensatz anlegen">
+          <AddBoxIcon />
+        </Tooltip>
+      ),
+      onClick: () => navigate(`${allRoutes().masterdataStore.path}?action=new`),
     });
     return newActions;
   }, [refreshStatus, navigate]);
@@ -291,7 +330,9 @@ export const Page = () => {
               <Paper style={{ padding: 5 }}>
                 <StoresTable
                   editable
-                  data={rows || []}
+                  data={filteredOrderedRows || []}
+                  order={order}
+                  onOrderChange={setOrder}
                   onEdit={handleEdit}
                   onDuplicate={handleDuplicate}
                   sizeVariant={tableSize}

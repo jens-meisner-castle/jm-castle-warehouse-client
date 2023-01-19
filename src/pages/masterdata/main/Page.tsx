@@ -1,5 +1,5 @@
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { Grid, Paper, Tooltip, Typography } from "@mui/material";
+import { Grid, Paper, Typography } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../../components/AppActions";
@@ -8,15 +8,15 @@ import { backendApiUrl } from "../../../configuration/Urls";
 import { useArticleSelect } from "../../../hooks/useArticleSelect";
 import { useHashtagSelect } from "../../../hooks/useHashtagSelect";
 import { useImageContentRows } from "../../../hooks/useImageContentRows";
+import { useReceiverSelect } from "../../../hooks/useReceiverSelect";
 import { useStoreSectionSelect } from "../../../hooks/useStoreSectionSelect";
 import { useStoreSelect } from "../../../hooks/useStoreSelect";
 import { Articles } from "./parts/Articles";
 import { Hashtags } from "./parts/Hashtags";
 import { Images } from "./parts/Images";
+import { Receivers } from "./parts/Receivers";
 import { Stores } from "./parts/Stores";
 import { StoreSections } from "./parts/StoreSections";
-
-export const pageUrl = "/masterdata/main";
 
 export const Page = () => {
   const handleExpiredToken = useHandleExpiredToken();
@@ -66,6 +66,15 @@ export const Page = () => {
   const { response: hashtagResponse } = hashtagApiResponse;
   const { result: hashtagResult } = hashtagResponse || {};
 
+  const receiverApiResponse = useReceiverSelect(
+    backendApiUrl,
+    "%",
+    updateIndicator,
+    handleExpiredToken
+  );
+  const { response: receiverResponse } = receiverApiResponse;
+  const { result: receiverResult } = receiverResponse || {};
+
   const errorData = useMemo(() => {
     const newErrors: Record<string, ErrorData> = {};
     newErrors.article = { ...articleApiResponse };
@@ -73,6 +82,7 @@ export const Page = () => {
     newErrors.storeSection = { ...storeSectionApiResponse };
     newErrors.imageContent = { ...imageContentApiResponse };
     newErrors.hashtag = { ...hashtagApiResponse };
+    newErrors.receiver = { ...receiverApiResponse };
 
     return newErrors;
   }, [
@@ -81,16 +91,14 @@ export const Page = () => {
     storeSectionApiResponse,
     imageContentApiResponse,
     hashtagApiResponse,
+    receiverApiResponse,
   ]);
 
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
-      label: (
-        <Tooltip title="Daten aktualisieren">
-          <RefreshIcon />
-        </Tooltip>
-      ),
+      label: <RefreshIcon />,
+      tooltip: "Daten aktualisieren",
       onClick: refreshStatus,
     });
     return newActions;
@@ -132,6 +140,15 @@ export const Page = () => {
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
               <Articles articles={articleResult ? articleResult.rows : []} />
+            </Paper>
+          </Grid>
+          <Grid item>
+            <Paper
+              style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
+            >
+              <Receivers
+                receivers={receiverResult ? receiverResult.rows : []}
+              />
             </Paper>
           </Grid>
           <Grid item>

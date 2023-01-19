@@ -2,8 +2,7 @@ import { TextField, TextFieldProps } from "@mui/material";
 import { useMemo } from "react";
 
 export type TextComponentProps = TextFieldProps & {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  value: string | Record<string, any>;
+  value: string | Record<string, unknown>;
   formatObject?: boolean;
 };
 

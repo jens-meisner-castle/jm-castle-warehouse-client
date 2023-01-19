@@ -1,6 +1,6 @@
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { Grid, Paper, Tooltip, Typography } from "@mui/material";
+import { Grid, Paper, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
@@ -9,18 +9,26 @@ import { AppAction, AppActions } from "../../../components/AppActions";
 import {
   HashtagsTable,
   sizeVariantForWidth,
-} from "../../../components/HashtagsTable";
+} from "../../../components/table/HashtagsTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useHashtagInsert } from "../../../hooks/useHashtagInsert";
 import { useHashtagSelect } from "../../../hooks/useHashtagSelect";
 import { useHashtagUpdate } from "../../../hooks/useHashtagUpdate";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
+import { allRoutes } from "../../../navigation/AppRoutes";
 import {
+  compareHashtagRow,
   fromRawHashtag,
   HashtagRow,
   toRawHashtag,
 } from "../../../types/RowTypes";
+import { OrderElement } from "../../../types/Types";
+import {
+  CompareFunction,
+  concatCompares,
+  isNonEmptyArray,
+} from "../../../utils/Compare";
 import {
   ActionStateReducer,
   getValidInitialAction,
@@ -29,11 +37,12 @@ import {
 import { CreateHashtagDialog } from "./dialogs/CreateHashtagDialog";
 import { EditHashtagDialog } from "./dialogs/EditHashtagDialog";
 
-export const pageUrl = "/masterdata/hashtag";
-
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
+  const [order, setOrder] = useState<OrderElement<HashtagRow>[]>([
+    { field: "tagId", direction: "ascending" },
+  ]);
   const handleExpiredToken = useHandleExpiredToken();
   const navigate = useNavigate();
   const { action, params } = useUrlAction() || {};
@@ -41,7 +50,9 @@ export const Page = () => {
   const tableSize = width ? sizeVariantForWidth(width) : "tiny";
   const initialAction = getValidInitialAction(action);
   const resetInitialAction = useCallback(
-    () => initialAction !== "none" && navigate(pageUrl),
+    () =>
+      initialAction !== "none" &&
+      navigate(allRoutes().masterdataHashtag.path, { replace: true }),
     [initialAction, navigate]
   );
 
@@ -63,6 +74,23 @@ export const Page = () => {
     }
     return undefined;
   }, [selectResult]);
+
+  const filteredOrderedRows = useMemo(() => {
+    if (!rows) return undefined;
+    const filtered = [...rows]; //.filter((row) => passFilter(row));
+    const activeOrder = order?.filter((e) => e.direction) || [];
+    if (activeOrder.length) {
+      const compares: CompareFunction<HashtagRow>[] = [];
+      activeOrder.forEach((e) => {
+        const { field, direction } = e;
+        const compare = compareHashtagRow[field];
+        const compareFn = direction && compare && compare(direction);
+        compareFn && compares.push(compareFn);
+      });
+      isNonEmptyArray(compares) && filtered.sort(concatCompares(compares));
+    }
+    return filtered;
+  }, [rows, order]);
 
   const [actionState, dispatch] = useReducer<
     typeof ActionStateReducer<HashtagRow>,
@@ -129,13 +157,19 @@ export const Page = () => {
   }, [initialAction, params, rows]);
   const handleEdit = useCallback(
     (row: HashtagRow) => {
-      navigate(`${pageUrl}?action=edit&tagId=${row.tagId}`);
+      navigate(
+        `${allRoutes().masterdataHashtag.path}?action=edit&tagId=${row.tagId}`
+      );
     },
     [navigate]
   );
   const handleDuplicate = useCallback(
     (row: HashtagRow) => {
-      navigate(`${pageUrl}?action=duplicate&tagId=${row.tagId}`);
+      navigate(
+        `${allRoutes().masterdataHashtag.path}?action=duplicate&tagId=${
+          row.tagId
+        }`
+      );
     },
     [navigate]
   );
@@ -249,16 +283,14 @@ export const Page = () => {
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
-      label: (
-        <Tooltip title="Daten aktualisieren">
-          <RefreshIcon />
-        </Tooltip>
-      ),
+      label: <RefreshIcon />,
+      tooltip: "Daten aktualisieren",
       onClick: refreshStatus,
     });
     newActions.push({
       label: <AddBoxIcon />,
-      onClick: () => navigate(`${pageUrl}?action=new`),
+      onClick: () =>
+        navigate(`${allRoutes().masterdataHashtag.path}?action=new`),
     });
     return newActions;
   }, [refreshStatus, navigate]);
@@ -310,7 +342,9 @@ export const Page = () => {
                 <HashtagsTable
                   containerStyle={{ width: "100%", maxWidth: 1200 }}
                   editable
-                  data={rows || []}
+                  data={filteredOrderedRows || []}
+                  order={order}
+                  onOrderChange={setOrder}
                   onEdit={handleEdit}
                   onDuplicate={handleDuplicate}
                   sizeVariant={tableSize}

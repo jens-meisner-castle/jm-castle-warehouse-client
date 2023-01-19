@@ -1,4 +1,3 @@
-import { MenuItem } from "@mui/material";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -6,8 +5,9 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
-import { useState } from "react";
-import { ImageRefsEditor } from "../../../../components/ImageRefsEditor";
+import { useMemo, useState } from "react";
+import { StoreRefAutocomplete } from "../../../../components/autocomplete/StoreRefAutocomplete";
+import { ImageRefsEditor } from "../../../../components/multi-ref/ImageRefsEditor";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
 import { StoreRow, StoreSectionRow } from "../../../../types/RowTypes";
 
@@ -21,12 +21,17 @@ export interface EditStoreSectionDialogProps {
 
 export const EditStoreSectionDialog = (props: EditStoreSectionDialogProps) => {
   const { section, stores, handleAccept, handleCancel, open } = props;
-  const [data, setData] = useState(section);
-  const { storeId, sectionId, name, imageRefs } = data;
 
+  const [data, setData] = useState(section);
   const updateData = (updates: Partial<StoreSectionRow>) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
+
+  const { storeId, sectionId, name, imageRefs } = data;
+  const currentStore = useMemo(
+    () => stores.find((r) => r.storeId === storeId),
+    [stores, storeId]
+  );
   const isSavingAllowed = !!sectionId && !!storeId && !!name;
 
   return (
@@ -59,24 +64,15 @@ export const EditStoreSectionDialog = (props: EditStoreSectionDialogProps) => {
             fullWidth
             variant="standard"
           />
-          <TextField
+          <StoreRefAutocomplete
+            value={currentStore}
+            stores={stores}
+            onChange={(store) => updateData({ storeId: store?.storeId })}
             margin="dense"
-            id="storeId"
-            select
-            label="Lager"
-            value={storeId}
-            onChange={(event) => {
-              updateData({ storeId: event.target.value });
-            }}
-            helperText="Ordnen Sie den Bereich einem Lager zu"
+            fullWidth
             variant="standard"
-          >
-            {stores.map((store) => (
-              <MenuItem key={store.storeId} value={store.storeId}>
-                {`${store.storeId} (${store.name})`}
-              </MenuItem>
-            ))}
-          </TextField>
+            helperText="Wählen Sie ein Lager"
+          />
           <ImageRefsEditor
             imageRefs={imageRefs}
             onChange={(imageRefs) =>

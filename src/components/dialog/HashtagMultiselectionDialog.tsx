@@ -8,14 +8,14 @@ import {
   DialogTitle,
   Grid,
 } from "@mui/material";
-import { Row_Hashtag } from "jm-castle-warehouse-types/build";
 import { useCallback, useState } from "react";
+import { HashtagRow } from "../../types/RowTypes";
 
 export interface HashtagMultiselectionDialogProps {
-  initialSelection?: string[];
+  initialSelection?: HashtagRow[];
   handleCancel: () => void;
-  handleAccept: (tagIds: string[]) => void;
-  visibleHashtags: Row_Hashtag[];
+  handleAccept: (hashtags: HashtagRow[]) => void;
+  visibleHashtags: HashtagRow[];
 }
 
 export const HashtagMultiselectionDialog = (
@@ -23,17 +23,19 @@ export const HashtagMultiselectionDialog = (
 ) => {
   const { handleAccept, handleCancel, visibleHashtags, initialSelection } =
     props;
-  const [selected, setSelected] = useState<string[]>(initialSelection || []);
-  const handleClickOnTag = useCallback((tagId: string) => {
+  const [selected, setSelected] = useState<HashtagRow[]>(
+    initialSelection || []
+  );
+  const handleClickOnTag = useCallback((row: HashtagRow) => {
     setSelected((previous) => {
-      const index = previous.indexOf(tagId);
+      const index = previous.indexOf(row);
       const newSelection =
         index > -1
           ? [
               ...previous.slice(0, index),
               ...previous.slice(index + 1, previous.length),
             ]
-          : [...previous, tagId];
+          : [...previous, row];
       console.log(newSelection);
       return newSelection;
     });
@@ -49,15 +51,13 @@ export const HashtagMultiselectionDialog = (
 
         <Grid container direction="row">
           {visibleHashtags?.map((row) => (
-            <Grid key={row.tag_id} item>
+            <Grid key={row.tagId} item>
               <Grid container direction="column">
                 <Grid item>
                   <Chip
-                    label={row.tag_id}
-                    onClick={() => handleClickOnTag(row.tag_id)}
-                    variant={
-                      selected.includes(row.tag_id) ? "filled" : "outlined"
-                    }
+                    label={row.tagId}
+                    onClick={() => handleClickOnTag(row)}
+                    variant={selected.includes(row) ? "filled" : "outlined"}
                   />
                 </Grid>
               </Grid>

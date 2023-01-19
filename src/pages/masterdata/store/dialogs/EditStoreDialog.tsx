@@ -6,7 +6,7 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
-import { ImageRefsEditor } from "../../../../components/ImageRefsEditor";
+import { ImageRefsEditor } from "../../../../components/multi-ref/ImageRefsEditor";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
 import { StoreRow } from "../../../../types/RowTypes";
 

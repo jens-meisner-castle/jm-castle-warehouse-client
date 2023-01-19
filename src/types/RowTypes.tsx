@@ -1,14 +1,28 @@
 import {
+  ArticleStockState,
   CountUnit,
+  EmissionReason,
+  EmissionRequestReason,
+  ReceiptReason,
+  ReceiptRequestReason,
   Row_Article,
   Row_Emission,
   Row_Hashtag,
   Row_ImageContent,
   Row_Masterdata,
   Row_Receipt,
+  Row_Receiver,
   Row_Store,
   Row_StoreSection,
+  StockStateCounts,
 } from "jm-castle-warehouse-types/build";
+import {
+  compareDate,
+  CompareFunction,
+  compareNumber,
+  compareString,
+} from "../utils/Compare";
+import { OrderDirection } from "./Types";
 
 export interface MasterdataRow {
   datasetVersion: number;
@@ -43,6 +57,12 @@ export interface HashtagRow extends MasterdataRow {
   name: string;
 }
 
+export interface ReceiverRow extends MasterdataRow {
+  receiverId: string;
+  name: string;
+  mailAddress: string;
+}
+
 export interface ImageContentRow extends MasterdataRow {
   imageId: string;
   imageExtension: string;
@@ -53,6 +73,19 @@ export interface ImageContentRow extends MasterdataRow {
 
 export type EmployeeId = string;
 
+export interface ReceiptRequestRow {
+  datasetId: number | "new";
+  sectionId: string;
+  articleId: string;
+  articleCount: number;
+  byUser: EmployeeId;
+  requestedAt: Date;
+  wwwLink: string | undefined;
+  guarantyTo: Date | undefined;
+  imageRefs: string[] | undefined;
+  reason: ReceiptRequestReason;
+  receiver: string;
+}
 export interface ReceiptRow {
   datasetId: number | "new";
   sectionId: string;
@@ -63,6 +96,18 @@ export interface ReceiptRow {
   wwwLink: string | undefined;
   guarantyTo: Date | undefined;
   imageRefs: string[] | undefined;
+  reason: ReceiptReason;
+}
+
+export interface EmissionRequestRow {
+  datasetId: number | "new";
+  sectionId: string;
+  articleId: string;
+  articleCount: number;
+  byUser: EmployeeId;
+  requestedAt: Date;
+  reason: EmissionRequestReason;
+  receiver: string;
 }
 
 export interface EmissionRow {
@@ -72,7 +117,154 @@ export interface EmissionRow {
   articleCount: number;
   byUser: EmployeeId;
   emittedAt: Date;
+  reason: EmissionReason;
+  receiver: string;
 }
+
+export type StockArticleRow = ArticleRow & {
+  sectionStates: Array<{ section: StoreSectionRow } & StockStateCounts>;
+};
+
+export type StockArticleRowExt = StockArticleRow & {
+  physicalCount: number;
+  availableCount: number;
+  sectionsWithCount: StoreSectionRow[];
+};
+
+export const stockArticleExtRowsFromStockState = (
+  stock: Record<string, ArticleStockState>
+) => {
+  const newRows: StockArticleRowExt[] = [];
+  Object.keys(stock).forEach((articleId) => {
+    const article = fromRawArticle(stock[articleId].article);
+    const sectionStates: StockArticleRow["sectionStates"] = [];
+    let physicalCount = 0;
+    let availableCount = 0;
+    const sectionsWithCount: StoreSectionRow[] = [];
+    stock[articleId].states.forEach((state) => {
+      physicalCount = physicalCount + state.physicalCount;
+      availableCount = availableCount + state.availableCount;
+      const sectionState = {
+        section: fromRawStoreSection(state.section),
+        physicalCount: state.physicalCount,
+        availableCount: state.availableCount,
+      };
+      sectionStates.push(sectionState);
+      (state.physicalCount > 0 || state.availableCount > 0) &&
+        sectionsWithCount.push(sectionState.section);
+    });
+    newRows.push({
+      ...article,
+      sectionStates,
+      sectionsWithCount,
+      physicalCount,
+      availableCount,
+    });
+  });
+  return newRows;
+};
+
+export const compareStockArticleRow: Record<
+  string,
+  (direction: OrderDirection) => CompareFunction<StockArticleRowExt>
+> = {
+  articleId: (direction: OrderDirection) =>
+    compareString<StockArticleRow>("articleId", direction),
+  name: (direction: OrderDirection) =>
+    compareString<StockArticleRow>("name", direction),
+  physicalCount: (direction: OrderDirection) =>
+    compareNumber<StockArticleRowExt>("physicalCount", direction),
+  availableCount: (direction: OrderDirection) =>
+    compareNumber<StockArticleRowExt>("availableCount", direction),
+};
+
+export const compareArticleRow: Record<
+  string,
+  (direction: OrderDirection) => CompareFunction<ArticleRow>
+> = {
+  articleId: (direction: OrderDirection) =>
+    compareString<ArticleRow>("articleId", direction),
+  name: (direction: OrderDirection) =>
+    compareString<ArticleRow>("name", direction),
+};
+
+export const compareImageRow: Record<
+  string,
+  (direction: OrderDirection) => CompareFunction<ImageContentRow>
+> = {
+  imageId: (direction: OrderDirection) =>
+    compareString<ImageContentRow>("imageId", direction),
+};
+
+export const compareReceiverRow: Record<
+  string,
+  (direction: OrderDirection) => CompareFunction<ReceiverRow>
+> = {
+  receiverId: (direction: OrderDirection) =>
+    compareString<ReceiverRow>("receiverId", direction),
+  name: (direction: OrderDirection) =>
+    compareString<ReceiverRow>("name", direction),
+};
+
+export const compareStoreRow: Record<
+  string,
+  (direction: OrderDirection) => CompareFunction<StoreRow>
+> = {
+  storeId: (direction: OrderDirection) =>
+    compareString<StoreRow>("storeId", direction),
+  name: (direction: OrderDirection) =>
+    compareString<StoreRow>("name", direction),
+};
+
+export const compareStoreSectionRow: Record<
+  string,
+  (direction: OrderDirection) => CompareFunction<StoreSectionRow>
+> = {
+  sectionId: (direction: OrderDirection) =>
+    compareString<StoreSectionRow>("sectionId", direction),
+  storeId: (direction: OrderDirection) =>
+    compareString<StoreSectionRow>("storeId", direction),
+  name: (direction: OrderDirection) =>
+    compareString<StoreSectionRow>("name", direction),
+};
+
+export const compareHashtagRow: Record<
+  string,
+  (direction: OrderDirection) => CompareFunction<HashtagRow>
+> = {
+  tagId: (direction: OrderDirection) =>
+    compareString<HashtagRow>("tagId", direction),
+  name: (direction: OrderDirection) =>
+    compareString<HashtagRow>("name", direction),
+};
+
+export const compareEmissionRow: Record<
+  string,
+  (direction: OrderDirection) => CompareFunction<EmissionRow>
+> = {
+  articleId: (direction: OrderDirection) =>
+    compareString<EmissionRow>("articleId", direction),
+  sectionId: (direction: OrderDirection) =>
+    compareString<EmissionRow>("sectionId", direction),
+  articleCount: (direction: OrderDirection) =>
+    compareNumber<EmissionRow>("articleCount", direction),
+  emittedAt: (direction: OrderDirection) =>
+    compareDate<EmissionRow>("emittedAt", direction),
+};
+
+export const compareReceiptRow: Record<
+  string,
+  (direction: OrderDirection) => CompareFunction<ReceiptRow>
+> = {
+  articleId: (direction: OrderDirection) =>
+    compareString<ReceiptRow>("articleId", direction),
+  sectionId: (direction: OrderDirection) =>
+    compareString<ReceiptRow>("sectionId", direction),
+  articleCount: (direction: OrderDirection) =>
+    compareNumber<ReceiptRow>("articleCount", direction),
+  receiptAt: (direction: OrderDirection) =>
+    compareDate<ReceiptRow>("receiptAt", direction),
+};
 
 export const toRawMasterdataFields = (row: MasterdataRow): Row_Masterdata => {
   return {
@@ -126,6 +318,24 @@ export const fromRawHashtag = (raw: Row_Hashtag): HashtagRow => {
   return {
     tagId: raw.tag_id,
     name: raw.name,
+    ...fromRawMasterdataFields(raw),
+  };
+};
+
+export const toRawReceiver = (row: ReceiverRow): Row_Receiver => {
+  return {
+    receiver_id: row.receiverId,
+    name: row.name,
+    mail_address: row.mailAddress,
+    ...toRawMasterdataFields(row),
+  };
+};
+
+export const fromRawReceiver = (raw: Row_Receiver): ReceiverRow => {
+  return {
+    receiverId: raw.receiver_id,
+    name: raw.name,
+    mailAddress: raw.mail_address,
     ...fromRawMasterdataFields(raw),
   };
 };
@@ -198,6 +408,8 @@ export const fromRawEmission = (raw: Row_Emission): EmissionRow => {
     articleCount: raw.article_count,
     byUser: raw.by_user,
     emittedAt: new Date(raw.emitted_at * 1000),
+    reason: raw.reason,
+    receiver: raw.receiver,
   };
 };
 
@@ -209,6 +421,8 @@ export const toRawEmission = (row: EmissionRow): Row_Emission => {
     article_count: row.articleCount,
     by_user: row.byUser,
     emitted_at: Math.floor(row.emittedAt.getTime() / 1000),
+    reason: row.reason,
+    receiver: row.receiver,
   };
 };
 
@@ -223,6 +437,7 @@ export const fromRawReceipt = (raw: Row_Receipt): ReceiptRow => {
     imageRefs: raw.image_refs ? JSON.parse(raw.image_refs) : undefined,
     wwwLink: raw.www_link || undefined,
     guarantyTo: raw.guaranty_to ? new Date(raw.guaranty_to * 1000) : undefined,
+    reason: raw.reason,
   };
 };
 
@@ -239,6 +454,7 @@ export const toRawReceipt = (row: ReceiptRow): Row_Receipt => {
     guaranty_to: row.guarantyTo
       ? Math.floor(row.guarantyTo.getTime() / 1000)
       : null,
+    reason: row.reason,
   };
 };
 

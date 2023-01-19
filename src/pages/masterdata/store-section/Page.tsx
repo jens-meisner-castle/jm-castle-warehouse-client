@@ -1,28 +1,44 @@
+import { FilterAlt, FilterAltOff } from "@mui/icons-material";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
+import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
 import {
   sizeVariantForWidth,
   StoreSectionsTable,
-} from "../../../components/StoreSectionsTable";
+} from "../../../components/table/StoreSectionsTable";
 import { backendApiUrl } from "../../../configuration/Urls";
+import {
+  ArbitraryFilterComponent,
+  FilterAspect,
+} from "../../../filter/ArbitraryFilterComponent";
+import { ArbitraryFilter } from "../../../filter/Types";
 import { useStoreSectionInsert } from "../../../hooks/useStoreSectionInsert";
 import { useStoreSectionSelect } from "../../../hooks/useStoreSectionSelect";
 import { useStoreSectionUpdate } from "../../../hooks/useStoreSectionUpdate";
 import { useStoreSelect } from "../../../hooks/useStoreSelect";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
+import { allRoutes } from "../../../navigation/AppRoutes";
 import {
+  compareStoreSectionRow,
   fromRawStore,
   fromRawStoreSection,
   StoreRow,
   StoreSectionRow,
   toRawStoreSection,
 } from "../../../types/RowTypes";
+import { OrderElement } from "../../../types/Types";
+import {
+  CompareFunction,
+  concatCompares,
+  isNonEmptyArray,
+} from "../../../utils/Compare";
 import {
   ActionStateReducer,
   getValidInitialAction,
@@ -31,11 +47,55 @@ import {
 import { CreateStoreSectionDialog } from "./dialogs/CreateStoreSectionDialog";
 import { EditStoreSectionDialog } from "./dialogs/EditStoreSectionDialog";
 
-export const pageUrl = "/masterdata/store-section";
+const filterAspects: FilterAspect[] = ["store", "nameFragment"];
 
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
+  const [order, setOrder] = useState<OrderElement<StoreSectionRow>[]>([
+    { field: "sectionId", direction: "ascending" },
+  ]);
+  const [filter, setFilter] = useState<ArbitraryFilter>({});
+  const [isFilterComponentVisible, setIsFilterComponentVisible] =
+    useState(false);
+
+  const handleFilterChange = useCallback(
+    (changes: Partial<ArbitraryFilter>) => {
+      setFilter((previous) => {
+        const newFilter = { ...previous, ...changes };
+        return Object.keys(newFilter).find(
+          (k) => newFilter[k as keyof typeof newFilter]
+        )
+          ? newFilter
+          : {};
+      });
+    },
+    []
+  );
+
+  const handleHideFilterComponent = useCallback(
+    () => setIsFilterComponentVisible(false),
+    []
+  );
+  const handleShowFilterComponent = useCallback(
+    () => setIsFilterComponentVisible(true),
+    []
+  );
+  const passFilter = useCallback(
+    (row: StoreSectionRow) => {
+      const { nameFragment } = filter;
+      if (nameFragment?.length) {
+        if (
+          row.sectionId.indexOf(nameFragment) < 0 &&
+          row.name.indexOf(nameFragment) < 0
+        )
+          return false;
+      }
+      return true;
+    },
+    [filter]
+  );
+  const handleExpiredToken = useHandleExpiredToken();
   const navigate = useNavigate();
   const { action, params } = useUrlAction() || {};
   const initialAction = getValidInitialAction(action);
@@ -43,17 +103,24 @@ export const Page = () => {
   const tableSize = width ? sizeVariantForWidth(width) : "tiny";
 
   const resetInitialAction = useCallback(
-    () => initialAction !== "none" && navigate(pageUrl),
+    () =>
+      initialAction !== "none" &&
+      navigate(allRoutes().masterdataStoreSection.path, { replace: true }),
     [initialAction, navigate]
   );
 
-  const { response: selectResponse, error: selectError } =
-    useStoreSectionSelect(backendApiUrl, "%", updateIndicator);
-  const { result: selectResult } = selectResponse || {};
+  const sectionApiResponse = useStoreSectionSelect(
+    backendApiUrl,
+    "%",
+    updateIndicator,
+    handleExpiredToken
+  );
+  const { response: sectionResponse } = sectionApiResponse;
+  const { result: sectionResult } = sectionResponse || {};
   const rows = useMemo(() => {
-    if (selectResult) {
+    if (sectionResult) {
       const newRows: StoreSectionRow[] = [];
-      selectResult.rows.forEach((r) => {
+      sectionResult.rows.forEach((r) => {
         const newRow = fromRawStoreSection(r);
         newRows.push(newRow);
       });
@@ -61,13 +128,39 @@ export const Page = () => {
       return newRows;
     }
     return undefined;
-  }, [selectResult]);
+  }, [sectionResult]);
 
-  const { response: storeResponse, error: storeError } = useStoreSelect(
+  const filteredOrderedRows = useMemo(() => {
+    if (!rows) return undefined;
+    const filtered = rows.filter((row) => passFilter(row));
+    const activeOrder = order?.filter((e) => e.direction) || [];
+    if (activeOrder.length) {
+      const compares: CompareFunction<StoreSectionRow>[] = [];
+      activeOrder.forEach((e) => {
+        const { field, direction } = e;
+        const compare = compareStoreSectionRow[field];
+        const compareFn = direction && compare && compare(direction);
+        compareFn && compares.push(compareFn);
+      });
+      isNonEmptyArray(compares) && filtered.sort(concatCompares(compares));
+    }
+    return filtered;
+  }, [rows, order, passFilter]);
+
+  const filteredRowsDisplay =
+    rows?.length &&
+    filteredOrderedRows &&
+    rows.length !== filteredOrderedRows.length
+      ? `${filteredOrderedRows.length} Datenzeilen von ${rows.length} gefiltert`
+      : undefined;
+
+  const storeApiResponse = useStoreSelect(
     backendApiUrl,
     "%",
-    updateIndicator
+    updateIndicator,
+    handleExpiredToken
   );
+  const { response: storeResponse } = storeApiResponse;
   const { result: storeResult } = storeResponse || {};
   const storeRows = useMemo(() => {
     if (storeResult) {
@@ -81,6 +174,13 @@ export const Page = () => {
     }
     return undefined;
   }, [storeResult]);
+
+  const errorData = useMemo(() => {
+    const newData: Record<string, ErrorData> = {};
+    newData.store = storeApiResponse;
+    newData.section = sectionApiResponse;
+    return newData;
+  }, [storeApiResponse, sectionApiResponse]);
 
   const [actionState, dispatch] = useReducer<
     typeof ActionStateReducer<StoreSectionRow>,
@@ -152,13 +252,21 @@ export const Page = () => {
   }, [initialAction, params, rows]);
   const handleDuplicate = useCallback(
     (row: StoreSectionRow) => {
-      navigate(`${pageUrl}?action=new&sectionId=${row.sectionId}`);
+      navigate(
+        `${
+          allRoutes().masterdataStoreSection.path
+        }?action=duplicate&sectionId=${row.sectionId}`
+      );
     },
     [navigate]
   );
   const handleEdit = useCallback(
     (row: StoreSectionRow) => {
-      navigate(`${pageUrl}?action=edit&sectionId=${row.sectionId}`);
+      navigate(
+        `${allRoutes().masterdataStoreSection.path}?action=edit&sectionId=${
+          row.sectionId
+        }`
+      );
     },
     [navigate]
   );
@@ -254,19 +362,36 @@ export const Page = () => {
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
-      label: (
-        <Tooltip title="Daten aktualisieren">
-          <RefreshIcon />
-        </Tooltip>
-      ),
+      label: <RefreshIcon />,
+      tooltip: "Daten aktualisieren",
       onClick: refreshStatus,
     });
     newActions.push({
-      label: <AddBoxIcon />,
-      onClick: () => navigate(`${pageUrl}?action=new`),
+      label: isFilterComponentVisible ? <FilterAltOff /> : <FilterAlt />,
+      tooltip: isFilterComponentVisible
+        ? "Filter ausblenden"
+        : "Filter einblenden",
+      onClick: isFilterComponentVisible
+        ? handleHideFilterComponent
+        : handleShowFilterComponent,
+    });
+    newActions.push({
+      label: (
+        <Tooltip title="Neuen Datensatz anlegen">
+          <AddBoxIcon />
+        </Tooltip>
+      ),
+      onClick: () =>
+        navigate(`${allRoutes().masterdataStoreSection.path}?action=new`),
     });
     return newActions;
-  }, [refreshStatus, navigate]);
+  }, [
+    refreshStatus,
+    handleHideFilterComponent,
+    handleShowFilterComponent,
+    isFilterComponentVisible,
+    navigate,
+  ]);
 
   return (
     <>
@@ -303,18 +428,25 @@ export const Page = () => {
             <AppActions actions={actions} />
           </Paper>
         </Grid>
-        {selectError && (
+        <Grid item>
+          <ErrorDisplays results={errorData} />
+        </Grid>
+        {isFilterComponentVisible && (
           <Grid item>
-            <Paper>
-              <Typography>{selectError}</Typography>
+            <Paper style={{ marginBottom: 5, padding: 5 }}>
+              <ArbitraryFilterComponent
+                filter={filter}
+                onChange={handleFilterChange}
+                aspects={filterAspects}
+                helpNameFragment={"Sucht in der ID und im Namen."}
+                handleExpiredToken={handleExpiredToken}
+              />
             </Paper>
           </Grid>
         )}
-        {storeError && (
+        {filteredRowsDisplay && (
           <Grid item>
-            <Paper>
-              <Typography>{storeError}</Typography>
-            </Paper>
+            <Typography>{filteredRowsDisplay}</Typography>
           </Grid>
         )}
         <Grid item>
@@ -323,7 +455,9 @@ export const Page = () => {
               <Paper style={{ padding: 5 }}>
                 <StoreSectionsTable
                   editable
-                  data={rows || []}
+                  data={filteredOrderedRows || []}
+                  order={order}
+                  onOrderChange={setOrder}
                   onEdit={handleEdit}
                   onDuplicate={handleDuplicate}
                   sizeVariant={tableSize}

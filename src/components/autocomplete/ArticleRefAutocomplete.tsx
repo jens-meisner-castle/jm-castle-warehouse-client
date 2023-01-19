@@ -1,24 +1,28 @@
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField, { TextFieldProps } from "@mui/material/TextField";
-import { useState } from "react";
-import { ArticleRow } from "../types/RowTypes";
+import { useMemo, useState } from "react";
+import { ArticleRow } from "../../types/RowTypes";
 
-export type ArticleRefEditorProps = {
+export type ArticleRefAutocompleteProps = {
   value: ArticleRow | undefined;
   onChange: (article: ArticleRow | null) => void;
   articles: ArticleRow[];
 } & Omit<Omit<TextFieldProps, "value">, "onChange">;
 
-export const ArticleRefEditor = (props: ArticleRefEditorProps) => {
-  const { articles, value, onChange, ...textFieldProps } = props;
+export const ArticleRefAutocomplete = (props: ArticleRefAutocompleteProps) => {
+  const { articles, value, onChange, label, ...textFieldProps } = props;
   const [inputValue, setInputValue] = useState(value?.articleId);
+
+  const orderedArticles = useMemo(() => {
+    return [...articles].sort((a, b) => a.articleId.localeCompare(b.articleId));
+  }, [articles]);
 
   return (
     <Autocomplete
       disablePortal
       id="articleRefEditor"
       getOptionLabel={(row) => row.articleId}
-      options={articles}
+      options={orderedArticles}
       value={value || null}
       onChange={(event, row) => {
         onChange(row);
@@ -27,7 +31,7 @@ export const ArticleRefEditor = (props: ArticleRefEditorProps) => {
       onInputChange={(event, value) => setInputValue(value)}
       fullWidth
       renderInput={(params) => (
-        <TextField {...textFieldProps} {...params} label="Artikel" />
+        <TextField {...textFieldProps} {...params} label={label || "Artikel"} />
       )}
     />
   );

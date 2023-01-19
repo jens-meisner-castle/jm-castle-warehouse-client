@@ -14,8 +14,8 @@ import {
 } from "@mui/material";
 import TextField from "@mui/material/TextField";
 import { useCallback, useEffect, useState } from "react";
-import { ImageSelectionDialog } from "./ImageSelectionDialog";
-import { ImagesSlide } from "./ImagesSlide";
+import { ImageSelectionDialog } from "../dialog/ImageSelectionDialog";
+import { ImagesSlide } from "../ImagesSlide";
 
 export interface ImageRefsEditorProps {
   imageRefs: string[] | undefined;

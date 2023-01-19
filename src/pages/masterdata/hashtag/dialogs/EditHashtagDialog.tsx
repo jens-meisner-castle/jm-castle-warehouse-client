@@ -38,7 +38,7 @@ export const EditHashtagDialog = (props: EditHashtagDialogProps) => {
           disabled
           margin="dense"
           id="tagId"
-          label="Artikel"
+          label="Hashtag"
           value={tagId}
           type="text"
           fullWidth
