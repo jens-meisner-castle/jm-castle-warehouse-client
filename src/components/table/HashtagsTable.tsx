@@ -1,7 +1,7 @@
 import Paper from "@mui/material/Paper";
 import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
-import { CSSProperties, useCallback, useMemo } from "react";
+import { CSSProperties, Fragment, useCallback, useMemo } from "react";
 import { HashtagRow } from "../../types/RowTypes";
 import { newOrderForChangedElement, OrderElement } from "../../types/Types";
 import { getDateFormat, getDateFormatter } from "../../utils/Format";
@@ -71,7 +71,7 @@ export const HashtagsTable = (props: HashtagsTableProps) => {
     useCallback(
       (reduceColumns, cellStyle) => {
         return (
-          <>
+          <Fragment key="labelCells">
             <TableCell style={cellStyle}>
               <ColumnLabel
                 label="Hashtag"
@@ -97,7 +97,7 @@ export const HashtagsTable = (props: HashtagsTableProps) => {
             <TableCell style={cellStyle} align="right">
               {"Version"}
             </TableCell>
-          </>
+          </Fragment>
         );
       },
       [handleClickOnOrderElement, order, orderElements]
@@ -109,7 +109,7 @@ export const HashtagsTable = (props: HashtagsTableProps) => {
         const { tagId, name, datasetVersion, createdAt, editedAt } = row;
 
         return (
-          <>
+          <Fragment key="dataCells">
             <TableCell style={cellStyle} size={cellSize}>
               {tagId}
             </TableCell>
@@ -131,7 +131,7 @@ export const HashtagsTable = (props: HashtagsTableProps) => {
             <TableCell align="right" style={cellStyle} size={cellSize}>
               {datasetVersion}
             </TableCell>
-          </>
+          </Fragment>
         );
       },
       [atFormatFunction]

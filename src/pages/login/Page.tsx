@@ -1,84 +1,162 @@
-import { Alert, Grid, Paper, TextField, Typography } from "@mui/material";
-import { DateTime } from "luxon";
 import {
-  KeyboardEventHandler,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  Grid,
+  Paper,
+  Radio,
+  RadioGroup,
+  Typography,
+} from "@mui/material";
+import { useCallback, useEffect, useState } from "react";
 import {
+  useHandleChangedClientId,
   useHandleLoginResult,
   useHandleLogoutResult,
   useTokenHasExpired,
   useVerifiedUser,
 } from "../../auth/AuthorizationProvider";
-import { AppAction, AppActions } from "../../components/AppActions";
-import { ErrorDisplay } from "../../components/ErrorDisplay";
+import { ErrorData, ErrorDisplays } from "../../components/ErrorDisplays";
 import { backendApiUrl } from "../../configuration/Urls";
-import { LoginData, useLogin } from "../../hooks/useLogin";
+import { LoginData, useLoginBasic } from "../../hooks/useLoginBasic";
+import { useLoginClient } from "../../hooks/useLoginClient";
+import { loadClientId, storeClientId } from "../../utils/LocalStorage";
+import { LoggedIn } from "./parts/LoggedIn";
+import { LoginBasic } from "./parts/LoginBasic";
+import { LoginClientId } from "./parts/LoginClientId";
 
 export const Page = () => {
-  const [loginData, setLoginData] = useState<
+  const [basicLoginData, setBasicLoginData] = useState<
     LoginData & { updateTrigger: number }
   >({ user: "", password: "", updateTrigger: 0 });
-  const { updateTrigger } = loginData;
-  const loginResponse = useLogin(
+
+  const [clientLoginData, setClientLoginData] = useState<{
+    clientId: string | undefined;
+    updateTrigger: number;
+  }>({ clientId: loadClientId(), updateTrigger: 0 });
+
+  const [authType, setAuthType] = useState<"basic" | "client">("basic");
+
+  const handleChangedAuthType = useCallback((value: string) => {
+    setAuthType(value === "basic" ? "basic" : "client");
+    setErrorData({});
+  }, []);
+
+  const { updateTrigger: basicLoginTrigger } = basicLoginData;
+  const { clientId } = clientLoginData;
+
+  const basicLoginApiResponse = useLoginBasic(
     backendApiUrl,
-    loginData.updateTrigger ? loginData : undefined
+    basicLoginTrigger ? basicLoginData : undefined
   );
-  const {
-    response: loginResult,
-    error: loginError,
-    errorCode: loginErrorCode,
-  } = loginResponse || {};
-  const tryLogin = useCallback(
+  const { response: basicLoginResult } = basicLoginApiResponse || {};
+
+  const tryBasicLogin = useCallback(
     () =>
-      setLoginData((previous) => ({
+      setBasicLoginData((previous) => ({
         ...previous,
         updateTrigger: previous.updateTrigger + 1,
       })),
     []
   );
+
+  const { updateTrigger: clientLoginTrigger } = clientLoginData;
+  const clientLoginApiResponse = useLoginClient(
+    backendApiUrl,
+    clientLoginData.clientId,
+    clientLoginTrigger
+  );
+
+  const { response: clientLoginResult } = clientLoginApiResponse;
+  const tryClientLogin = useCallback(
+    () =>
+      setClientLoginData((previous) => ({
+        ...previous,
+        updateTrigger: previous.updateTrigger + 1,
+      })),
+    []
+  );
+
+  const [errorData, setErrorData] = useState<Record<string, ErrorData>>({});
+
+  useEffect(() => {
+    if (
+      (basicLoginTrigger > 0 &&
+        !basicLoginApiResponse.error &&
+        !basicLoginApiResponse.response) ||
+      (clientLoginTrigger > 0 &&
+        !clientLoginApiResponse.error &&
+        !clientLoginApiResponse.response)
+    ) {
+      // if api request in progress => cleanup errorData
+      return setErrorData({});
+    }
+    if (basicLoginTrigger > 0 || clientLoginTrigger > 0) {
+      // api request finished
+      const newData: Record<string, ErrorData> = {};
+      newData.basicLogin = basicLoginApiResponse;
+      newData.clientLogin = clientLoginApiResponse;
+      setErrorData(newData);
+    }
+  }, [
+    basicLoginApiResponse,
+    clientLoginApiResponse,
+    basicLoginTrigger,
+    clientLoginTrigger,
+  ]);
+
+  const handleChangedClientId = useHandleChangedClientId();
   const handleLoginResult = useHandleLoginResult();
   const handleLogoutResult = useHandleLogoutResult();
   const tryLogout = handleLogoutResult;
+
   const verifiedUser = useVerifiedUser();
   const tokenHasExpired = useTokenHasExpired();
   const { username: contextUser, expiresAtMs } = verifiedUser || {};
-  const handlePasswordKeyDown: KeyboardEventHandler<HTMLInputElement> = (
-    event
-  ) => {
-    if (event.key === "Enter") {
-      tryLogin();
-    }
-  };
+
+  const handleChangedBasicLoginData = useCallback((data: LoginData) => {
+    setBasicLoginData({ ...data, updateTrigger: 0 });
+  }, []);
+
+  const handleChangedLocalClientId = useCallback((clientId: string) => {
+    setClientLoginData({ clientId, updateTrigger: 0 });
+  }, []);
+
+  const handleResetClientId = useCallback(() => {
+    storeClientId(undefined);
+    setClientLoginData({ clientId: undefined, updateTrigger: 0 });
+  }, []);
 
   useEffect(() => {
-    if (loginResult && loginResult.token) {
-      setLoginData({ user: "", password: "", updateTrigger: 0 });
-      handleLoginResult(loginResult);
+    if (basicLoginApiResponse.error) {
+      setBasicLoginData((previous) => ({ ...previous, updateTrigger: 0 }));
+    } else if (basicLoginResult && basicLoginResult.token) {
+      setBasicLoginData({ user: "", password: "", updateTrigger: 0 });
+      handleLoginResult(basicLoginResult);
     }
-  }, [loginResult, handleLoginResult]);
+  }, [basicLoginResult, handleLoginResult, basicLoginApiResponse]);
 
-  const actions = useMemo(() => {
-    const newActions: AppAction[] = [];
-    !contextUser &&
-      newActions.push({
-        label: "Login",
-        onClick: tryLogin,
-        disabled: updateTrigger !== 0,
+  useEffect(() => {
+    if (clientLoginApiResponse.error) {
+      setClientLoginData((previous) => ({ ...previous, updateTrigger: 0 }));
+    }
+    if (clientLoginResult && clientLoginResult.token) {
+      setClientLoginData((previous) => {
+        return { ...previous, updateTrigger: 0 };
       });
-    contextUser &&
-      newActions.push({
-        label: "Logout",
-        onClick: tryLogout,
-        disabled: updateTrigger !== 0,
-      });
-    return newActions;
-  }, [tryLogin, tryLogout, updateTrigger, contextUser]);
+      handleChangedClientId(clientId);
+      handleLoginResult(clientLoginResult);
+    }
+  }, [
+    clientLoginResult,
+    handleChangedClientId,
+    handleLoginResult,
+    clientId,
+    clientLoginApiResponse,
+  ]);
 
-  const { token, username, roles } = loginResult || {};
+  const disableLogout = basicLoginTrigger !== 0;
+  const disableLogin = basicLoginTrigger !== 0;
 
   return (
     <Grid container direction="column">
@@ -88,80 +166,69 @@ export const Page = () => {
       <Grid item>
         <Paper>
           <Grid container direction="column">
-            {contextUser && (
+            {contextUser && expiresAtMs && (
               <Grid item>
-                <Typography>{`Eingeloggt als ${contextUser}`}</Typography>
-              </Grid>
-            )}
-            {expiresAtMs && (
-              <Grid item>
-                <Typography>{`Gültig bis: ${DateTime.fromMillis(
-                  expiresAtMs
-                ).toFormat("yyyy-LL-dd HH:mm:ss")}`}</Typography>
-              </Grid>
-            )}
-            {tokenHasExpired && (
-              <Grid item>
-                <Typography>{`Das Token ist abgelaufen. Bitte loggen Sie sich erneut ein.`}</Typography>
-              </Grid>
-            )}
-            {!contextUser && (
-              <Grid item>
-                <TextField
-                  autoFocus
-                  margin="dense"
-                  id="username"
-                  label="Benutzer"
-                  value={loginData.user}
-                  onChange={(event) =>
-                    setLoginData((previous) => ({
-                      ...previous,
-                      updateTrigger: 0,
-                      user: event.target.value,
-                    }))
-                  }
-                  type="text"
-                  fullWidth
-                  variant="standard"
+                <LoggedIn
+                  user={contextUser}
+                  onLogout={tryLogout}
+                  disableLogout={disableLogout}
+                  tokenHasExpired={tokenHasExpired}
+                  expiresAtMs={expiresAtMs}
                 />
               </Grid>
             )}
             {!contextUser && (
               <Grid item>
-                <TextField
-                  margin="dense"
-                  id="password"
-                  label="Passwort"
-                  value={loginData.password}
-                  onKeyDown={handlePasswordKeyDown}
-                  onChange={(event) =>
-                    setLoginData((previous) => ({
-                      ...previous,
-                      updateTrigger: 0,
-                      password: event.target.value,
-                    }))
-                  }
-                  type="password"
-                  fullWidth
-                  variant="standard"
-                />
+                <FormControl>
+                  <FormLabel id="demo-radio-buttons-group-label">
+                    {"Authentifizierungsart"}
+                  </FormLabel>
+                  <RadioGroup
+                    aria-labelledby="demo-radio-buttons-group-label"
+                    defaultValue="female"
+                    name="radio-buttons-group"
+                    row
+                    value={authType}
+                    onChange={(event, value) => handleChangedAuthType(value)}
+                  >
+                    <FormControlLabel
+                      value="basic"
+                      control={<Radio />}
+                      label="Name und Passwort"
+                    />
+                    <FormControlLabel
+                      value="client"
+                      control={<Radio />}
+                      label="Client ID"
+                    />
+                  </RadioGroup>
+                </FormControl>
               </Grid>
             )}
+            {!contextUser &&
+              (authType === "basic" ? (
+                <Grid item>
+                  <LoginBasic
+                    loginData={basicLoginData}
+                    onChangeLoginData={handleChangedBasicLoginData}
+                    disableLogin={disableLogin}
+                    onLogin={tryBasicLogin}
+                  />
+                </Grid>
+              ) : (
+                <Grid item>
+                  <LoginClientId
+                    clientId={clientLoginData.clientId || ""}
+                    onChangeClientId={handleChangedLocalClientId}
+                    disableLogin={disableLogin}
+                    onLogin={tryClientLogin}
+                    onResetClientId={handleResetClientId}
+                  />
+                </Grid>
+              ))}
             <Grid item>
-              <div style={{ padding: 5, marginBottom: 5 }}>
-                <AppActions actions={actions} />
-              </div>
+              <ErrorDisplays results={errorData} />
             </Grid>
-            <Grid item>
-              <ErrorDisplay error={loginError} errorCode={loginErrorCode} />
-            </Grid>
-            {token && username && roles && (
-              <Grid item>
-                <Alert severity="success">{`Sie haben sich erfolgreich eingeloggt.
-                User: ${username},
-                Roles: ${roles.join(", ")}`}</Alert>
-              </Grid>
-            )}
           </Grid>
         </Paper>
       </Grid>

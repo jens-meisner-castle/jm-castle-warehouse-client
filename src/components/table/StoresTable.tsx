@@ -1,7 +1,7 @@
 import Paper from "@mui/material/Paper";
 import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
-import { CSSProperties, useCallback, useMemo } from "react";
+import { CSSProperties, Fragment, useCallback, useMemo } from "react";
 import { backendApiUrl, getImageDisplayUrl } from "../../configuration/Urls";
 import { StoreRow } from "../../types/RowTypes";
 import { newOrderForChangedElement, OrderElement } from "../../types/Types";
@@ -75,7 +75,7 @@ export const StoresTable = (props: StoresTableProps) => {
     useCallback(
       (reduceColumns, cellStyle) => {
         return (
-          <>
+          <Fragment key="labelCells">
             <TableCell style={cellStyle}>
               <ColumnLabel
                 label="Lager"
@@ -104,7 +104,7 @@ export const StoresTable = (props: StoresTableProps) => {
             {displayImage === "small" && (
               <TableCell style={cellStyle}>{"Bilder"}</TableCell>
             )}
-          </>
+          </Fragment>
         );
       },
       [handleClickOnOrderElement, order, orderElements, displayImage]
@@ -127,7 +127,7 @@ export const StoresTable = (props: StoresTableProps) => {
         );
 
         return (
-          <>
+          <Fragment key="dataCells">
             <TableCell style={cellStyle} size={cellSize}>
               {storeId}
             </TableCell>
@@ -162,7 +162,7 @@ export const StoresTable = (props: StoresTableProps) => {
                 )}
               </TableCell>
             )}
-          </>
+          </Fragment>
         );
       },
       [atFormatFunction, displayImage]

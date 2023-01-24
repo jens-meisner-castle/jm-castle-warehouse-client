@@ -7,7 +7,7 @@ import {
   TextField,
   useTheme,
 } from "@mui/material";
-import { useCallback, useMemo, useState } from "react";
+import { CSSProperties, useCallback, useMemo, useState } from "react";
 import { HashtagRow } from "../../types/RowTypes";
 import { HashtagMultiselectionDialog } from "../dialog/HashtagMultiselectionDialog";
 
@@ -20,6 +20,8 @@ export interface HashtagsRefEditorProps {
 export const HashtagsRefEditor = (props: HashtagsRefEditorProps) => {
   const { hashtags, onChange, value } = props;
   const theme = useTheme();
+
+  const iconButtonStyle: CSSProperties = { padding: 4 };
   const [editorWarning, setEditorWarning] = useState<string | undefined>(
     undefined
   );
@@ -93,12 +95,14 @@ export const HashtagsRefEditor = (props: HashtagsRefEditorProps) => {
           endAdornment: (
             <>
               <IconButton
+                style={iconButtonStyle}
                 disabled={!value}
                 onClick={() => setIsHashtagRemoveOpen(true)}
               >
                 <RemoveIcon />
               </IconButton>
               <IconButton
+                style={iconButtonStyle}
                 disabled={notSelectedHashtagRows.length < 1}
                 onClick={() => setIsHashtagAddOpen(true)}
               >

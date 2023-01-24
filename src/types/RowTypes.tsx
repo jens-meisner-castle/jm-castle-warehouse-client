@@ -131,6 +131,12 @@ export type StockArticleRowExt = StockArticleRow & {
   sectionsWithCount: StoreSectionRow[];
 };
 
+export const isSavingArticleAllowed = (row: Partial<ArticleRow>) =>
+  !!row.articleId && !!row.name && !!row.countUnit;
+
+export const isArticleRow = (row: Partial<ArticleRow>): row is ArticleRow =>
+  isSavingArticleAllowed(row);
+
 export const stockArticleExtRowsFromStockState = (
   stock: Record<string, ArticleStockState>
 ) => {

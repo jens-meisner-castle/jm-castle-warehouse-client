@@ -10,8 +10,8 @@ import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../../components/AppActions";
-import { sizeVariantForWidth } from "../../../components/table/EmissionsTable";
 import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
+import { sizeVariantForWidth } from "../../../components/table/EmissionsTable";
 import { StockArticlesTable } from "../../../components/table/StockArticlesTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import {
@@ -24,7 +24,6 @@ import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
 import { allRoutes } from "../../../navigation/AppRoutes";
 import {
-  ArticleRow,
   compareStockArticleRow,
   stockArticleExtRowsFromStockState,
   StockArticleRowExt,
@@ -37,7 +36,11 @@ import {
 } from "../../../utils/Compare";
 import { getValidInitialAction } from "../utils/Reducer";
 
-const filterAspects: FilterAspect[] = ["hashtag", "nameFragment"];
+const filterAspects: FilterAspect[] = [
+  "hashtag",
+  "nameFragment",
+  "storeSection",
+];
 
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
@@ -72,8 +75,8 @@ export const Page = () => {
   );
 
   const passFilter = useCallback(
-    (article: ArticleRow) => {
-      const { hashtags, nameFragment } = filter;
+    (article: StockArticleRowExt) => {
+      const { hashtags, nameFragment, sectionId } = filter;
       if (hashtags) {
         const articleTags = article.hashtags;
         if (
@@ -88,6 +91,17 @@ export const Page = () => {
           article.name.indexOf(nameFragment) < 0
         )
           return false;
+      }
+      if (sectionId?.length) {
+        if (
+          !article.sectionStates.find(
+            (state) =>
+              (state.physicalCount > 0 || state.availableCount > 0) &&
+              state.section.sectionId === sectionId
+          )
+        ) {
+          return false;
+        }
       }
       return true;
     },

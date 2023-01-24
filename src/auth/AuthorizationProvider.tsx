@@ -15,7 +15,9 @@ import {
   useState,
 } from "react";
 import { backendApiUrl } from "../configuration/Urls";
+import { useLoginClient } from "../hooks/useLoginClient";
 import { useVerifyToken } from "../hooks/useVerifyToken";
+import { loadClientId, storeClientId } from "../utils/LocalStorage";
 
 interface Authorization {
   verifiedUser?: {
@@ -27,24 +29,16 @@ interface Authorization {
   withServiceWorker: boolean;
   token?: string;
   tokenHasExpired: boolean;
-  handleLoginResult: (loginResult: LoginResult) => void;
-  handleLogoutResult: () => void;
-  handleExpiredToken: (errorCode: ErrorCode | undefined) => void;
+  clientId?: string;
+  handleLoginResult?: (loginResult: LoginResult) => void;
+  handleLogoutResult?: () => void;
+  handleExpiredToken?: (errorCode: ErrorCode | undefined) => void;
+  handleChangedClientId?: (clientId: string | undefined) => void;
 }
 
 const initialValue: Authorization = {
   tokenHasExpired: false,
   withServiceWorker: false,
-  token: undefined,
-  handleLoginResult: (loginResult: LoginResult) => {
-    console.error("Empty handleLoginResult function. Result is", loginResult);
-  },
-  handleLogoutResult: () => {
-    console.error("Empty handleLogoutResult function.");
-  },
-  handleExpiredToken(errorCode) {
-    console.error("Empty handleExpiredToken function.", errorCode);
-  },
 };
 
 const context = createContext(initialValue);
@@ -58,6 +52,13 @@ export type AuthorizationProviderProps = {
 export const AuthorizationProvider = (props: AuthorizationProviderProps) => {
   const { children, withServiceWorker } = props;
   const [isTokenExpired, setIsTokenExpired] = useState(false);
+  const [stateId, setStateId] = useState<
+    "initial" | "try-login-client" | "try-verify-token" | "done"
+  >("initial");
+  const [clientId, setClientId] = useState<string | undefined>(loadClientId());
+
+  console.log("state", stateId);
+
   const handleExpiredToken = useCallback((errorCode: ErrorCode | undefined) => {
     if (
       errorCode === TokenExpiredErrorCode ||
@@ -67,6 +68,12 @@ export const AuthorizationProvider = (props: AuthorizationProviderProps) => {
       setIsTokenExpired(true);
     }
   }, []);
+
+  const handleChangedClientId = useCallback((clientId: string | undefined) => {
+    storeClientId(clientId);
+    setClientId(clientId);
+  }, []);
+
   const handleLoginResult = useCallback(
     (loginResult: LoginResult) => {
       const { token, username, roles, expiresAtDisplay, expiresAtMs } =
@@ -98,6 +105,7 @@ export const AuthorizationProvider = (props: AuthorizationProviderProps) => {
     },
     [withServiceWorker]
   );
+
   useEffect(
     () =>
       setProviderValue((previous) => ({
@@ -106,6 +114,7 @@ export const AuthorizationProvider = (props: AuthorizationProviderProps) => {
       })),
     [handleLoginResult]
   );
+
   useEffect(
     () =>
       setProviderValue((previous) =>
@@ -136,25 +145,70 @@ export const AuthorizationProvider = (props: AuthorizationProviderProps) => {
   const [providerValue, setProviderValue] = useState<Authorization>({
     tokenHasExpired: isTokenExpired,
     withServiceWorker,
+    clientId,
     handleLoginResult,
     handleLogoutResult,
     handleExpiredToken,
+    handleChangedClientId,
   });
 
-  // check once if the service worker has already a valid token
-  const verifyResult = useVerifyToken(backendApiUrl, withServiceWorker ? 1 : 0);
+  // try once to login by clientId (if present) or verify token
+  useEffect(() => {
+    if (stateId === "initial") {
+      if (clientId) {
+        setStateId("try-login-client");
+      } else {
+        setStateId("try-verify-token");
+      }
+    }
+  }, [stateId, clientId]);
+
+  const { response: clientLoginResult, error: clientLoginError } =
+    useLoginClient(
+      backendApiUrl,
+      clientId,
+      stateId === "try-login-client" ? 1 : 0
+    );
 
   useEffect(() => {
-    // check once if the service worker has already (or still) a valid token
-    const { response } = verifyResult;
-    const { username, roles, expiresAtDisplay, expiresAtMs } = response || {};
-    if (username && roles && expiresAtDisplay && expiresAtMs) {
-      setProviderValue((previous) => ({
-        ...previous,
-        verifiedUser: { username, roles, expiresAtDisplay, expiresAtMs },
-      }));
+    if (clientLoginResult) {
+      setStateId("done");
+      handleLoginResult(clientLoginResult);
+    }
+  }, [clientLoginResult, handleLoginResult]);
+
+  useEffect(() => {
+    if (clientLoginError) {
+      setStateId("done");
+    }
+  }, [clientLoginError]);
+
+  const verifyApiResponse = useVerifyToken(
+    backendApiUrl,
+    stateId === "try-verify-token" ? 1 : 0
+  );
+  const { response: verifyResult, error: verifyError } = verifyApiResponse;
+
+  useEffect(() => {
+    if (verifyResult) {
+      setStateId("done");
+      const { username, roles, expiresAtDisplay, expiresAtMs } = verifyResult;
+      username &&
+        roles &&
+        expiresAtDisplay &&
+        expiresAtMs &&
+        setProviderValue((previous) => ({
+          ...previous,
+          verifiedUser: { ...verifyResult },
+        }));
     }
   }, [verifyResult]);
+
+  useEffect(() => {
+    if (verifyError) {
+      setStateId("done");
+    }
+  }, [verifyError]);
 
   useEffect(() => {
     if (
@@ -171,6 +225,13 @@ export const AuthorizationProvider = (props: AuthorizationProviderProps) => {
       tokenHasExpired: isTokenExpired,
     }));
   }, [withServiceWorker, isTokenExpired]);
+
+  useEffect(() => {
+    setProviderValue((previous) => ({
+      ...previous,
+      clientId,
+    }));
+  }, [clientId]);
 
   return <Provider value={providerValue}>{children}</Provider>;
 };
@@ -213,28 +274,33 @@ export const useTokenHasExpired = () => {
 };
 
 export const useHandleLoginResult = () => {
-  const contextValue = useContext(context);
-  if (!contextValue) {
+  const { handleLoginResult } = useContext(context);
+  if (!handleLoginResult) {
     throw new Error("AuthorizationProvider is needed in react hierarchy.");
   }
-  const { handleLoginResult } = contextValue;
   return handleLoginResult;
 };
 
 export const useHandleLogoutResult = () => {
-  const contextValue = useContext(context);
-  if (!contextValue) {
+  const { handleLogoutResult } = useContext(context);
+  if (!handleLogoutResult) {
     throw new Error("AuthorizationProvider is needed in react hierarchy.");
   }
-  const { handleLogoutResult } = contextValue;
   return handleLogoutResult;
 };
 
 export const useHandleExpiredToken = () => {
-  const contextValue = useContext(context);
-  if (!contextValue) {
+  const { handleExpiredToken } = useContext(context);
+  if (!handleExpiredToken) {
     throw new Error("AuthorizationProvider is needed in react hierarchy.");
   }
-  const { handleExpiredToken } = contextValue;
   return handleExpiredToken;
+};
+
+export const useHandleChangedClientId = () => {
+  const { handleChangedClientId } = useContext(context);
+  if (!handleChangedClientId) {
+    throw new Error("AuthorizationProvider is needed in react hierarchy.");
+  }
+  return handleChangedClientId;
 };

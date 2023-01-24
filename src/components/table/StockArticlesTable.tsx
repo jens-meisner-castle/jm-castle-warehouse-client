@@ -2,7 +2,7 @@ import Paper from "@mui/material/Paper";
 import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import { CountUnits } from "jm-castle-warehouse-types/build";
-import { CSSProperties, useCallback, useMemo } from "react";
+import { CSSProperties, Fragment, useCallback, useMemo } from "react";
 import { backendApiUrl, getImageDisplayUrl } from "../../configuration/Urls";
 import { WwwLink } from "../../navigation/WwwLink";
 import { ArticleRow, StockArticleRowExt } from "../../types/RowTypes";
@@ -76,7 +76,7 @@ export const StockArticlesTable = (props: StockArticlesTableProps) => {
     useCallback(
       (reduceColumns, cellStyle) => {
         return (
-          <>
+          <Fragment key="labelCells">
             <TableCell style={cellStyle}>
               <ColumnLabel
                 label="Artikel"
@@ -85,17 +85,19 @@ export const StockArticlesTable = (props: StockArticlesTableProps) => {
                 onClick={handleClickOnOrderElement}
               />
             </TableCell>
-            <TableCell style={cellStyle}>
-              <ColumnLabel
-                label="Name"
-                order={order}
-                orderElement={orderElements.name}
-                onClick={handleClickOnOrderElement}
-              />
-            </TableCell>
+            {reduceColumns < 2 && (
+              <TableCell style={cellStyle}>
+                <ColumnLabel
+                  label="Name"
+                  order={order}
+                  orderElement={orderElements.name}
+                  onClick={handleClickOnOrderElement}
+                />
+              </TableCell>
+            )}
             <TableCell align="center" style={cellStyle}>
               <ColumnLabel
-                label="Lagermenge"
+                label="Lager"
                 order={order}
                 orderElement={orderElements.physicalCount}
                 onClick={handleClickOnOrderElement}
@@ -124,7 +126,7 @@ export const StockArticlesTable = (props: StockArticlesTableProps) => {
             {displayImage === "small" && (
               <TableCell style={cellStyle}>{"Bilder"}</TableCell>
             )}
-          </>
+          </Fragment>
         );
       },
       [handleClickOnOrderElement, order, orderElements, displayImage]
@@ -151,13 +153,15 @@ export const StockArticlesTable = (props: StockArticlesTableProps) => {
         );
 
         return (
-          <>
+          <Fragment key="dataCells">
             <TableCell style={cellStyle} size={cellSize}>
               {articleId}
             </TableCell>
-            <TableCell style={cellStyle} size={cellSize}>
-              {name}
-            </TableCell>
+            {reduceColumns < 2 && (
+              <TableCell style={cellStyle} size={cellSize}>
+                {name}
+              </TableCell>
+            )}
             <TableCell align="center" style={cellStyle} size={cellSize}>
               {`${physicalCount}`}
             </TableCell>
@@ -203,7 +207,7 @@ export const StockArticlesTable = (props: StockArticlesTableProps) => {
                 )}
               </TableCell>
             )}
-          </>
+          </Fragment>
         );
       },
       [displayImage]

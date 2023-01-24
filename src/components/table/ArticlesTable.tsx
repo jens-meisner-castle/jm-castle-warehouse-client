@@ -1,7 +1,7 @@
 import Paper from "@mui/material/Paper";
 import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
-import { CSSProperties, useCallback, useMemo } from "react";
+import { CSSProperties, Fragment, useCallback, useMemo } from "react";
 import { backendApiUrl, getImageDisplayUrl } from "../../configuration/Urls";
 import { WwwLink } from "../../navigation/WwwLink";
 import { ArticleRow } from "../../types/RowTypes";
@@ -75,8 +75,8 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
     useCallback(
       (reduceColumns, cellStyle) => {
         return (
-          <>
-            <TableCell style={cellStyle}>
+          <Fragment key="labelCells">
+            <TableCell key={"article"} style={cellStyle}>
               <ColumnLabel
                 label="Artikel"
                 order={order}
@@ -84,7 +84,7 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
                 onClick={handleClickOnOrderElement}
               />
             </TableCell>
-            <TableCell style={cellStyle}>
+            <TableCell key={"name"} style={cellStyle}>
               <ColumnLabel
                 label="Name"
                 order={order}
@@ -93,29 +93,41 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
               />
             </TableCell>
             {reduceColumns < 2 && (
-              <TableCell style={cellStyle}>{"Link (www)"}</TableCell>
+              <TableCell key={"link"} style={cellStyle}>
+                {"Link (www)"}
+              </TableCell>
             )}
             {reduceColumns < 2 && (
-              <TableCell style={cellStyle}>{"Zähleinheit"}</TableCell>
+              <TableCell key={"countUnit"} style={cellStyle}>
+                {"Zähleinheit"}
+              </TableCell>
             )}
             {reduceColumns < 2 && (
-              <TableCell style={cellStyle}>{"Hashtags"}</TableCell>
+              <TableCell key={"hashtag"} style={cellStyle}>
+                {"Hashtags"}
+              </TableCell>
             )}
             {reduceColumns < 1 && (
-              <TableCell style={cellStyle}>{"erzeugt"}</TableCell>
+              <TableCell key={"createdAt"} style={cellStyle}>
+                {"erzeugt"}
+              </TableCell>
             )}
             {reduceColumns < 1 && (
-              <TableCell style={cellStyle}>{"bearbeitet"}</TableCell>
+              <TableCell key={"editedAt"} style={cellStyle}>
+                {"bearbeitet"}
+              </TableCell>
             )}
             {reduceColumns < 1 && (
-              <TableCell style={cellStyle} align="right">
+              <TableCell key={"version"} style={cellStyle} align="right">
                 {"Version"}
               </TableCell>
             )}
             {displayImage === "small" && (
-              <TableCell style={cellStyle}>{"Bilder"}</TableCell>
+              <TableCell key={"image"} style={cellStyle}>
+                {"Bilder"}
+              </TableCell>
             )}
-          </>
+          </Fragment>
         );
       },
       [handleClickOnOrderElement, order, orderElements, displayImage]
@@ -141,15 +153,15 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
           imageRefs ? imageRefs[0] : undefined
         );
         return (
-          <>
-            <TableCell style={cellStyle} size={cellSize}>
+          <Fragment key={"dataCells"}>
+            <TableCell key={"article"} style={cellStyle} size={cellSize}>
               {articleId}
             </TableCell>
-            <TableCell style={cellStyle} size={cellSize}>
+            <TableCell key={"name"} style={cellStyle} size={cellSize}>
               {name}
             </TableCell>
             {reduceColumns < 2 && (
-              <TableCell style={cellStyle} size={cellSize}>
+              <TableCell key={"link"} style={cellStyle} size={cellSize}>
                 {wwwLinkUrl && wwwLink && (
                   <WwwLink
                     to={wwwLink}
@@ -160,34 +172,49 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
               </TableCell>
             )}
             {reduceColumns < 2 && (
-              <TableCell style={cellStyle} size={cellSize}>
+              <TableCell key={"countUnit"} style={cellStyle} size={cellSize}>
                 {countUnit}
               </TableCell>
             )}
             {reduceColumns < 2 && (
-              <TableCell style={cellStyle} size={cellSize}>
+              <TableCell key={"hashtag"} style={cellStyle} size={cellSize}>
                 {hashtags ? hashtags.join(", ") : ""}
               </TableCell>
             )}
             {reduceColumns < 1 && (
-              <TableCell style={cellStyle} size={cellSize}>
+              <TableCell key={"createdAt"} style={cellStyle} size={cellSize}>
                 {atFormatFunction(createdAt)}
               </TableCell>
             )}
             {reduceColumns < 1 && (
-              <TableCell align="center" style={cellStyle} size={cellSize}>
+              <TableCell
+                key={"editedAt"}
+                align="center"
+                style={cellStyle}
+                size={cellSize}
+              >
                 {createdAt.getTime() === editedAt.getTime()
                   ? "-"
                   : atFormatFunction(editedAt)}
               </TableCell>
             )}
             {reduceColumns < 1 && (
-              <TableCell align="right" style={cellStyle} size={cellSize}>
+              <TableCell
+                key={"version"}
+                align="right"
+                style={cellStyle}
+                size={cellSize}
+              >
                 {datasetVersion}
               </TableCell>
             )}
             {displayImage === "small" && (
-              <TableCell align="right" style={cellStyle} size={cellSize}>
+              <TableCell
+                key={"image"}
+                align="right"
+                style={cellStyle}
+                size={cellSize}
+              >
                 {imageUrl ? (
                   <img
                     src={imageUrl}
@@ -198,8 +225,8 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
                   "-"
                 )}
               </TableCell>
-            )}{" "}
-          </>
+            )}
+          </Fragment>
         );
       },
       [atFormatFunction, displayImage]

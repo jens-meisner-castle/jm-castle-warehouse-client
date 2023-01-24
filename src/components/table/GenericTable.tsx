@@ -1,5 +1,6 @@
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import EditIcon from "@mui/icons-material/Edit";
+import QrCode2Icon from "@mui/icons-material/QrCode2";
 import { IconButton, Tooltip } from "@mui/material";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -34,6 +35,7 @@ export interface GenericTableProps<T> {
   sizeVariant: SizeVariant;
   onEdit?: (row: T) => void;
   onDuplicate?: (row: T) => void;
+  onShowQrCode?: (row: T) => void;
 }
 
 export const GenericTable = <T,>(props: GenericTableProps<T>) => {
@@ -44,6 +46,7 @@ export const GenericTable = <T,>(props: GenericTableProps<T>) => {
     editable,
     onEdit,
     onDuplicate,
+    onShowQrCode,
     sizeVariant,
   } = props;
   const [tableSettings, setTableSettings] = useState<TableSettings>({
@@ -87,18 +90,24 @@ export const GenericTable = <T,>(props: GenericTableProps<T>) => {
     editable &&
       onDuplicate &&
       cells.push(
-        <TableCell style={cellStyle} align="center">
+        <TableCell key={"duplicate"} style={cellStyle} align="center">
           {""}
         </TableCell>
       );
     editable &&
       onEdit &&
       cells.push(
-        <TableCell style={cellStyle} align="center">
+        <TableCell key={"edit"} style={cellStyle} align="center">
           {""}
         </TableCell>
       );
     cells.push(renderLabelCells(reduceColumns, cellStyle));
+    onShowQrCode &&
+      cells.push(
+        <TableCell key={"qrCode"} style={cellStyle} align="center">
+          {""}
+        </TableCell>
+      );
     return cells;
   }, [
     reduceColumns,
@@ -106,6 +115,7 @@ export const GenericTable = <T,>(props: GenericTableProps<T>) => {
     editable,
     onDuplicate,
     onEdit,
+    onShowQrCode,
     renderLabelCells,
   ]);
 
@@ -159,7 +169,7 @@ export const GenericTable = <T,>(props: GenericTableProps<T>) => {
           editable &&
             onDuplicate &&
             cells.push(
-              <TableCell align="center" style={cellStyle}>
+              <TableCell key={"duplicate"} align="center" style={cellStyle}>
                 {
                   <IconButton onClick={() => onDuplicate(row)}>
                     <Tooltip title="Datensatz duplizieren">
@@ -172,7 +182,7 @@ export const GenericTable = <T,>(props: GenericTableProps<T>) => {
           editable &&
             onEdit &&
             cells.push(
-              <TableCell align="center" style={cellStyle}>
+              <TableCell key={"edit"} align="center" style={cellStyle}>
                 {
                   <IconButton onClick={() => onEdit(row)}>
                     <Tooltip title="Datensatz bearbeiten">
@@ -183,6 +193,18 @@ export const GenericTable = <T,>(props: GenericTableProps<T>) => {
               </TableCell>
             );
           cells.push(renderDataCells(row, reduceColumns, cellStyle, cellSize));
+          onShowQrCode &&
+            cells.push(
+              <TableCell key={"qrCode"} align="center" style={cellStyle}>
+                {
+                  <IconButton onClick={() => onShowQrCode(row)}>
+                    <Tooltip title="QR Code anzeigen">
+                      <QrCode2Icon />
+                    </Tooltip>
+                  </IconButton>
+                }
+              </TableCell>
+            );
           return <TableRow key={i}>{cells}</TableRow>;
         })}
       </TableBody>

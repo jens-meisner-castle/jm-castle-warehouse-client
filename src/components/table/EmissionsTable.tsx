@@ -1,7 +1,7 @@
 import Paper from "@mui/material/Paper";
 import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
-import { CSSProperties, useCallback, useMemo } from "react";
+import { CSSProperties, Fragment, useCallback, useMemo } from "react";
 import { EmissionRow } from "../../types/RowTypes";
 import { newOrderForChangedElement, OrderElement } from "../../types/Types";
 import { getDateFormat, getDateFormatter } from "../../utils/Format";
@@ -70,8 +70,8 @@ export const EmissionsTable = (props: EmissionsTableProps) => {
     useCallback(
       (reduceColumns, cellStyle) => {
         return (
-          <>
-            <TableCell style={cellStyle}>
+          <Fragment key="labelCells">
+            <TableCell key="article" style={cellStyle}>
               <ColumnLabel
                 label="Artikel"
                 order={order}
@@ -79,7 +79,7 @@ export const EmissionsTable = (props: EmissionsTableProps) => {
                 onClick={handleClickOnOrderElement}
               />
             </TableCell>
-            <TableCell style={cellStyle} align="right">
+            <TableCell key="emittedAt" style={cellStyle} align="right">
               <ColumnLabel
                 label="gebucht um"
                 order={order}
@@ -87,25 +87,25 @@ export const EmissionsTable = (props: EmissionsTableProps) => {
                 onClick={handleClickOnOrderElement}
               />
             </TableCell>
-            <TableCell style={cellStyle} align="right">
+            <TableCell key="articleCount" style={cellStyle} align="right">
               {"Anzahl"}
             </TableCell>
             {reduceColumns < 2 && (
-              <TableCell style={cellStyle} align="center">
+              <TableCell key="byUser" style={cellStyle} align="center">
                 {"gebucht von"}
               </TableCell>
             )}
             {reduceColumns < 2 && (
-              <TableCell style={cellStyle} align="center">
+              <TableCell key="section" style={cellStyle} align="center">
                 {"Lagerbereich"}
               </TableCell>
             )}
             {reduceColumns < 1 && (
-              <TableCell style={cellStyle} align="center">
+              <TableCell key="datasetId" style={cellStyle} align="center">
                 {"Datensatz ID"}
               </TableCell>
             )}
-          </>
+          </Fragment>
         );
       },
       [handleClickOnOrderElement, order, orderElements]
@@ -123,32 +123,57 @@ export const EmissionsTable = (props: EmissionsTableProps) => {
           datasetId,
         } = row;
         return (
-          <>
-            <TableCell style={cellStyle} size={cellSize}>
+          <Fragment key="dataCells">
+            <TableCell key="article" style={cellStyle} size={cellSize}>
               {articleId}
             </TableCell>
-            <TableCell style={cellStyle} size={cellSize} align="right">
+            <TableCell
+              key="emittedAt"
+              style={cellStyle}
+              size={cellSize}
+              align="right"
+            >
               {atFormatFunction(emittedAt)}
             </TableCell>
-            <TableCell style={cellStyle} size={cellSize} align="right">
+            <TableCell
+              key="articleCount"
+              style={cellStyle}
+              size={cellSize}
+              align="right"
+            >
               {articleCount}
             </TableCell>
             {reduceColumns < 2 && (
-              <TableCell style={cellStyle} size={cellSize} align="center">
+              <TableCell
+                key="byUser"
+                style={cellStyle}
+                size={cellSize}
+                align="center"
+              >
                 {byUser}
               </TableCell>
             )}
             {reduceColumns < 2 && (
-              <TableCell style={cellStyle} size={cellSize} align="center">
+              <TableCell
+                key="sectionId"
+                style={cellStyle}
+                size={cellSize}
+                align="center"
+              >
                 {sectionId}
               </TableCell>
             )}
             {reduceColumns < 1 && (
-              <TableCell style={cellStyle} size={cellSize} align="center">
+              <TableCell
+                key="datasetId"
+                style={cellStyle}
+                size={cellSize}
+                align="center"
+              >
                 {datasetId}
               </TableCell>
             )}
-          </>
+          </Fragment>
         );
       },
       [atFormatFunction]

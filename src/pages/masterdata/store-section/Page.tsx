@@ -7,12 +7,13 @@ import { useNavigate } from "react-router-dom";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
+import { ShowQrCodeDialog } from "../../../components/dialog/ShowQrCodeDialog";
 import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
 import {
   sizeVariantForWidth,
   StoreSectionsTable,
 } from "../../../components/table/StoreSectionsTable";
-import { backendApiUrl } from "../../../configuration/Urls";
+import { backendApiUrl, enterUrl } from "../../../configuration/Urls";
 import {
   ArbitraryFilterComponent,
   FilterAspect,
@@ -101,6 +102,10 @@ export const Page = () => {
   const initialAction = getValidInitialAction(action);
   const { width } = useWindowSize() || {};
   const tableSize = width ? sizeVariantForWidth(width) : "tiny";
+
+  const [showQrCode, setShowQrCode] = useState<StoreSectionRow | undefined>(
+    undefined
+  );
 
   const resetInitialAction = useCallback(
     () =>
@@ -419,6 +424,14 @@ export const Page = () => {
           handleAccept={handleAcceptNew}
         />
       )}
+      {showQrCode && (
+        <ShowQrCodeDialog
+          heading={"QR Code"}
+          description={`QR Code für Lagerbereich: ${showQrCode.sectionId}`}
+          codeContent={`${enterUrl}`}
+          handleClose={() => setShowQrCode(undefined)}
+        />
+      )}
       <Grid container direction="column">
         <Grid item>
           <Typography variant="h5">{"Lagerbereich"}</Typography>
@@ -460,6 +473,7 @@ export const Page = () => {
                   onOrderChange={setOrder}
                   onEdit={handleEdit}
                   onDuplicate={handleDuplicate}
+                  onShowQrCode={setShowQrCode}
                   sizeVariant={tableSize}
                   displayImage="small"
                 />

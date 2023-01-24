@@ -38,6 +38,24 @@ export const loadFilterForPage = (
   }
 };
 
+export const loadClientId = (): string | undefined => {
+  const key = `client.id`;
+  const value = window.localStorage.getItem(key);
+  if (!value) {
+    return undefined;
+  }
+  return value;
+};
+
+export const storeClientId = (value: string | undefined) => {
+  const key = `client.id`;
+  if (value) {
+    window.localStorage.setItem(key, value);
+  } else {
+    window.localStorage.removeItem(key);
+  }
+};
+
 export const storeOptionsForPage = (options: PageOptions, page: string) => {
   const key = `${page}.options`;
   const value = JSON.stringify(options);

@@ -31,7 +31,7 @@ export const StoreSectionRefAutocomplete = <T extends StoreSectionRow>(
     <Autocomplete
       disablePortal
       id="storeRefEditor"
-      getOptionLabel={getOptionLabel || ((row) => row.storeId)}
+      getOptionLabel={getOptionLabel || ((row) => row.sectionId)}
       options={orderedStoreSections}
       value={value || null}
       onChange={(event, row) => {

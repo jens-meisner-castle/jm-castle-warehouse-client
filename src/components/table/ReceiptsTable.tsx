@@ -1,7 +1,7 @@
 import Paper from "@mui/material/Paper";
 import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
-import { CSSProperties, useCallback, useMemo } from "react";
+import { CSSProperties, Fragment, useCallback, useMemo } from "react";
 import { backendApiUrl, getImageDisplayUrl } from "../../configuration/Urls";
 import { ReceiptRow } from "../../types/RowTypes";
 import { newOrderForChangedElement, OrderElement } from "../../types/Types";
@@ -72,7 +72,7 @@ export const ReceiptsTable = (props: ReceiptsTableProps) => {
     useCallback(
       (reduceColumns, cellStyle) => {
         return (
-          <>
+          <Fragment key="labelCells">
             <TableCell>
               <ColumnLabel
                 label="Artikel"
@@ -102,7 +102,7 @@ export const ReceiptsTable = (props: ReceiptsTableProps) => {
             {displayImage === "small" && (
               <TableCell style={cellStyle}>{"Bilder"}</TableCell>
             )}
-          </>
+          </Fragment>
         );
       },
       [handleClickOnOrderElement, order, orderElements, displayImage]
@@ -126,7 +126,7 @@ export const ReceiptsTable = (props: ReceiptsTableProps) => {
         );
 
         return (
-          <>
+          <Fragment key="dataCells">
             <TableCell style={cellStyle} size={cellSize}>
               {articleId}
             </TableCell>
@@ -164,7 +164,7 @@ export const ReceiptsTable = (props: ReceiptsTableProps) => {
                 )}
               </TableCell>
             )}
-          </>
+          </Fragment>
         );
       },
       [atFormatFunction, displayImage]

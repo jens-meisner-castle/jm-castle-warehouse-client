@@ -11,7 +11,10 @@ export interface LoginData {
   password: string;
 }
 
-export const useLogin = (apiUrl: string, loginData: LoginData | undefined) => {
+export const useLoginBasic = (
+  apiUrl: string,
+  loginData: LoginData | undefined
+) => {
   const [queryStatus, setQueryStatus] = useState<
     ApiServiceResponse<LoginResult> | ApiServiceResponse<undefined>
   >({ response: undefined });
@@ -43,7 +46,7 @@ export const useLogin = (apiUrl: string, loginData: LoginData | undefined) => {
               !username
             ) {
               return setQueryStatus({
-                error: `Fatal error: Received login response without error and withpout token.`,
+                error: `Fatal error: Received basic login response without error and withpout token.`,
                 errorCode: UnknownErrorCode,
               });
             }

@@ -11,7 +11,11 @@ import { useMemo, useState } from "react";
 import { HashtagsRefEditor } from "../../../../components/multi-ref/HashtagsRefEditor";
 import { ImageRefsEditor } from "../../../../components/multi-ref/ImageRefsEditor";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
-import { ArticleRow, HashtagRow } from "../../../../types/RowTypes";
+import {
+  ArticleRow,
+  HashtagRow,
+  isSavingArticleAllowed,
+} from "../../../../types/RowTypes";
 
 export interface CreateArticleDialogProps {
   article: ArticleRow;
@@ -38,7 +42,7 @@ export const CreateArticleDialog = (props: CreateArticleDialogProps) => {
   );
   const { articleId, name, countUnit, imageRefs, hashtags, wwwLink } = data;
 
-  const isSavingAllowed = !!articleId && !!name && !!countUnit;
+  const isSavingAllowed = isSavingArticleAllowed(article);
 
   const currentHashtags = useMemo(() => {
     const newHashtags: HashtagRow[] = [];

@@ -3,7 +3,7 @@ import { Typography } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
-import { CSSProperties, useCallback, useMemo } from "react";
+import { CSSProperties, Fragment, useCallback, useMemo } from "react";
 import { StockChangingRow } from "../../types/RowTypes";
 import { newOrderForChangedElement, OrderElement } from "../../types/Types";
 import { getDateFormat, getDateFormatter } from "../../utils/Format";
@@ -64,7 +64,7 @@ export const StockChangeTable = (props: StockChangeTableProps) => {
     useCallback(
       (reduceColumns, cellStyle) => {
         return (
-          <>
+          <Fragment key="labelCells">
             <TableCell style={cellStyle}>
               <ColumnLabel
                 label="Artikel"
@@ -113,7 +113,7 @@ export const StockChangeTable = (props: StockChangeTableProps) => {
                 {"Datensatz ID"}
               </TableCell>
             )}
-          </>
+          </Fragment>
         );
       },
       [handleClickOnOrderElement, order, orderElements]
@@ -125,7 +125,7 @@ export const StockChangeTable = (props: StockChangeTableProps) => {
         const { articleId, sectionId, by, count, type, at, datasetId } = row;
 
         return (
-          <>
+          <Fragment key="dataCells">
             <TableCell style={cellStyle} size={cellSize}>
               {articleId}
             </TableCell>
@@ -151,7 +151,7 @@ export const StockChangeTable = (props: StockChangeTableProps) => {
                 {datasetId}
               </TableCell>
             )}
-          </>
+          </Fragment>
         );
       },
       [atFormatFunction]

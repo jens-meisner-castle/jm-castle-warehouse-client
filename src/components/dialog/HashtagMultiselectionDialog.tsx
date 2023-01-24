@@ -36,7 +36,6 @@ export const HashtagMultiselectionDialog = (
               ...previous.slice(index + 1, previous.length),
             ]
           : [...previous, row];
-      console.log(newSelection);
       return newSelection;
     });
   }, []);

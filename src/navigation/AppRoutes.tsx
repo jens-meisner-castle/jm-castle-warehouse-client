@@ -4,6 +4,7 @@ import { Route, Routes } from "react-router-dom";
 import { useUserRoles } from "../auth/AuthorizationProvider";
 import { Page as DashboardPage } from "../pages/dashboard/Page";
 import { Page as DbTestPage } from "../pages/database-test/Page";
+import { Page as FallbackPage } from "../pages/fallback/Page";
 import { Page as HelpPage } from "../pages/help/Page";
 import { Page as HistoryPage } from "../pages/history/Page";
 import { Page as LoginPage } from "../pages/login/Page";
@@ -21,6 +22,7 @@ import { Page as StockPage } from "../pages/stock/main/Page";
 import { Page as ReceiptPage } from "../pages/stock/receipt/Page";
 import { Page as SystemSetupPage } from "../pages/system-setup/Page";
 import { Page as SystemStatusPage } from "../pages/system-status/Page";
+import { Page as UsecasePage } from "../pages/usecase/Page";
 import { allPages } from "./Pages";
 
 export interface AppRoute {
@@ -37,6 +39,11 @@ const home: AppRoute = {
 const dashboard: AppRoute = {
   path: allPages.dashboard.to,
   element: DashboardPage,
+  neededRole: "internal",
+};
+const usecase: AppRoute = {
+  path: allPages.usecase.to,
+  element: UsecasePage,
   neededRole: "internal",
 };
 const history: AppRoute = {
@@ -124,10 +131,16 @@ const masterdataReceiver: AppRoute = {
   path: "/masterdata/receiver",
   element: ReceiverPage,
 };
+const fallback: AppRoute = {
+  neededRole: "none",
+  path: "/fallback",
+  element: FallbackPage,
+};
 
 const AllRoutes = {
   home,
   login,
+  fallback,
   help,
   systemSetup,
   systemStatus,
@@ -145,13 +158,14 @@ const AllRoutes = {
   stockArticle,
   stockEmission,
   stockReceipt,
+  usecase,
 };
 
 export const allRoutes = () => AllRoutes;
 
 const FallbackRoute: AppRoute = {
   path: "*",
-  element: StartPage,
+  element: FallbackPage,
   neededRole: "none",
 };
 

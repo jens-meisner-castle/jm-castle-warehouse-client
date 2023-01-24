@@ -1,7 +1,7 @@
 import Paper from "@mui/material/Paper";
 import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
-import { CSSProperties, useCallback, useMemo } from "react";
+import { CSSProperties, Fragment, useCallback, useMemo } from "react";
 import { backendApiUrl, getImageDisplayUrl } from "../../configuration/Urls";
 import { StoreSectionRow } from "../../types/RowTypes";
 import { newOrderForChangedElement, OrderElement } from "../../types/Types";
@@ -35,6 +35,7 @@ export interface StoreSectionsTableProps {
   containerStyle?: CSSProperties;
   onEdit?: (row: StoreSectionRow) => void;
   onDuplicate?: (row: StoreSectionRow) => void;
+  onShowQrCode?: (row: StoreSectionRow) => void;
 }
 
 export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
@@ -48,6 +49,7 @@ export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
     onEdit,
     onDuplicate,
     displayImage,
+    onShowQrCode,
   } = props;
 
   const orderElements = useMemo(() => {
@@ -76,7 +78,7 @@ export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
     useCallback(
       (reduceColumns, cellStyle) => {
         return (
-          <>
+          <Fragment key="labelCells">
             <TableCell style={cellStyle}>
               <ColumnLabel
                 label="Bereich"
@@ -110,7 +112,7 @@ export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
             {displayImage === "small" && (
               <TableCell style={cellStyle}>{"Bilder"}</TableCell>
             )}
-          </>
+          </Fragment>
         );
       },
       [handleClickOnOrderElement, order, orderElements, displayImage]
@@ -134,7 +136,7 @@ export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
         );
 
         return (
-          <>
+          <Fragment key="dataCells">
             <TableCell style={cellStyle} size={cellSize}>
               {sectionId}
             </TableCell>
@@ -176,7 +178,7 @@ export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
                 )}
               </TableCell>
             )}
-          </>
+          </Fragment>
         );
       },
       [atFormatFunction, displayImage]
@@ -189,6 +191,7 @@ export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
         editable={editable}
         onEdit={onEdit}
         onDuplicate={onDuplicate}
+        onShowQrCode={onShowQrCode}
         sizeVariant={sizeVariant}
         renderLabelCells={renderLabelCells}
         renderDataCells={renderDataCells}
