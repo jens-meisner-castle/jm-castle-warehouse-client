@@ -94,9 +94,11 @@ export const HashtagsTable = (props: HashtagsTableProps) => {
             {reduceColumns < 2 && (
               <TableCell style={cellStyle}>{"bearbeitet"}</TableCell>
             )}
-            <TableCell style={cellStyle} align="right">
-              {"Version"}
-            </TableCell>
+            {reduceColumns < 2 && (
+              <TableCell style={cellStyle} align="right">
+                {"Version"}
+              </TableCell>
+            )}
           </Fragment>
         );
       },
@@ -128,9 +130,11 @@ export const HashtagsTable = (props: HashtagsTableProps) => {
                   : atFormatFunction(editedAt)}
               </TableCell>
             )}
-            <TableCell align="right" style={cellStyle} size={cellSize}>
-              {datasetVersion}
-            </TableCell>
+            {reduceColumns < 2 && (
+              <TableCell align="right" style={cellStyle} size={cellSize}>
+                {datasetVersion}
+              </TableCell>
+            )}
           </Fragment>
         );
       },

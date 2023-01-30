@@ -31,6 +31,8 @@ export const ArbitraryFilterComponent = (
     props;
   const { hashtags, nameFragment, storeId, sectionId } = filter;
 
+  console.log(sectionId);
+
   const { errors, rows } = useFilterData(
     backendApiUrl,
     aspects,

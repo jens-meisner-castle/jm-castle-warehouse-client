@@ -1,20 +1,30 @@
-import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
-import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import { Grid, IconButton, Paper, Tooltip, Typography } from "@mui/material";
+import { CloudDownload, FileDownload } from "@mui/icons-material";
+import { Grid, Paper, Typography } from "@mui/material";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
-import { TextareaComponent } from "../../../components/TextareaComponent";
-import { backendApiUrl } from "../../../configuration/Urls";
-import { useDbExport } from "../../../hooks/useDbExport";
-import { useDbExportFile } from "../../../hooks/useDbExportFile";
+import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
+import { AppAction, AppActions } from "../../components/AppActions";
+import { ErrorData, ErrorDisplays } from "../../components/ErrorDisplays";
+import { TextareaComponent } from "../../components/TextareaComponent";
+import { backendApiUrl } from "../../configuration/Urls";
+import { useDbExport } from "../../hooks/useDbExport";
+import { useDbExportFile } from "../../hooks/useDbExportFile";
 
-export const DbExportPart = () => {
+export const Page = () => {
+  const handleExpiredToken = useHandleExpiredToken();
   const [updateIndicator, setUpdateIndicator] = useState(0);
 
-  const dbExportApiResponse = useDbExport(backendApiUrl, updateIndicator);
+  const dbExportApiResponse = useDbExport(
+    backendApiUrl,
+    updateIndicator,
+    handleExpiredToken
+  );
   const { response: dbExportResponse } = dbExportApiResponse;
 
-  const exportFileApiResponse = useDbExportFile(backendApiUrl, updateIndicator);
+  const exportFileApiResponse = useDbExportFile(
+    backendApiUrl,
+    updateIndicator,
+    handleExpiredToken
+  );
   const { response: exportFileResponse } = exportFileApiResponse;
 
   const errorData = useMemo(() => {
@@ -37,34 +47,31 @@ export const DbExportPart = () => {
     setUpdateIndicator(0);
   }, [downloadUrl]);
 
-  const isButtonDisabled = !!updateIndicator && !dbExportResponse;
+  const actions = useMemo(() => {
+    const newActions: AppAction[] = [];
+    newActions.push({
+      label: <CloudDownload />,
+      tooltip: "Exportdaten erzeugen",
+      disabled: !!updateIndicator && !dbExportResponse,
+      onClick: () => setUpdateIndicator((previous) => previous + 1),
+    });
+    newActions.push({
+      label: <FileDownload />,
+      tooltip: "Datei herunterladen",
+      disabled: !filename,
+      onClick: download,
+    });
+    return newActions;
+  }, [download, filename, updateIndicator, dbExportResponse]);
 
   return (
     <Grid container direction="column">
       <Grid item>
-        <Typography variant="h6">{"Database export"}</Typography>
+        <Typography variant="h5">{"Database export"}</Typography>
       </Grid>
       <Grid item>
-        <Paper>
-          <Tooltip title={"Create new export file."}>
-            <IconButton
-              disabled={isButtonDisabled}
-              onClick={() => setUpdateIndicator((previous) => previous + 1)}
-            >
-              <CloudDownloadIcon />
-            </IconButton>
-          </Tooltip>
-          {filename && (
-            <Tooltip title={`Download the export ${filename}`}>
-              <IconButton
-                onClick={() => {
-                  download();
-                }}
-              >
-                <FileDownloadIcon />
-              </IconButton>
-            </Tooltip>
-          )}
+        <Paper style={{ padding: 5, marginBottom: 5 }}>
+          <AppActions actions={actions} />
         </Paper>
       </Grid>
       <Grid item>
@@ -85,7 +92,7 @@ export const DbExportPart = () => {
           <TextareaComponent
             value={dbExportResponse || ""}
             formatObject
-            maxRows={12}
+            maxRows={50}
             style={{
               width: "90%",
               resize: "none",

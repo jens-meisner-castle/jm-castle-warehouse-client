@@ -42,7 +42,7 @@ export const CreateArticleDialog = (props: CreateArticleDialogProps) => {
   );
   const { articleId, name, countUnit, imageRefs, hashtags, wwwLink } = data;
 
-  const isSavingAllowed = isSavingArticleAllowed(article);
+  const { isSavingAllowed, errorData } = isSavingArticleAllowed(data);
 
   const currentHashtags = useMemo(() => {
     const newHashtags: HashtagRow[] = [];
@@ -67,7 +67,8 @@ export const CreateArticleDialog = (props: CreateArticleDialogProps) => {
           margin="dense"
           id="articleId"
           label="Artikel"
-          value={articleId}
+          value={articleId || ""}
+          errorData={errorData.articleId}
           onChange={(s) => updateData({ articleId: s })}
           fullWidth
           variant="standard"
@@ -76,7 +77,8 @@ export const CreateArticleDialog = (props: CreateArticleDialogProps) => {
           margin="dense"
           id="name"
           label="Name"
-          value={name}
+          value={name || ""}
+          errorData={errorData.name}
           onChange={(s) => {
             updateData({ name: s });
           }}
@@ -94,7 +96,7 @@ export const CreateArticleDialog = (props: CreateArticleDialogProps) => {
           margin="dense"
           id="wwwLink"
           label="Link (www)"
-          value={wwwLink}
+          value={wwwLink || ""}
           onChange={(event) => updateData({ wwwLink: event.target.value })}
           type="text"
           fullWidth

@@ -90,6 +90,9 @@ export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
             {reduceColumns < 2 && (
               <TableCell style={cellStyle}>{"Name"}</TableCell>
             )}
+            {reduceColumns < 2 && (
+              <TableCell style={cellStyle}>{"Kurz"}</TableCell>
+            )}
             <TableCell style={cellStyle}>
               <ColumnLabel
                 label="Lager"
@@ -125,6 +128,7 @@ export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
           sectionId,
           storeId,
           name,
+          shortId,
           imageRefs,
           datasetVersion,
           createdAt,
@@ -143,6 +147,11 @@ export const StoreSectionsTable = (props: StoreSectionsTableProps) => {
             {reduceColumns < 2 && (
               <TableCell style={cellStyle} size={cellSize}>
                 {name}
+              </TableCell>
+            )}
+            {reduceColumns < 2 && (
+              <TableCell style={cellStyle} size={cellSize}>
+                {shortId}
               </TableCell>
             )}
             <TableCell style={cellStyle} size={cellSize}>

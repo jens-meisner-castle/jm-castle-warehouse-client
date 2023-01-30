@@ -76,3 +76,7 @@ export const compareDate = <T>(
     );
   };
 };
+
+export const includesOneOf = (s: string, test: string[]) => {
+  return !!test.find((t) => s.includes(t));
+};

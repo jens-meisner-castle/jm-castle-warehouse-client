@@ -13,7 +13,10 @@ import {
   sizeVariantForWidth,
   StoreSectionsTable,
 } from "../../../components/table/StoreSectionsTable";
-import { backendApiUrl, enterUrl } from "../../../configuration/Urls";
+import {
+  backendApiUrl,
+  getCompleteUrlForPath,
+} from "../../../configuration/Urls";
 import {
   ArbitraryFilterComponent,
   FilterAspect,
@@ -106,6 +109,12 @@ export const Page = () => {
   const [showQrCode, setShowQrCode] = useState<StoreSectionRow | undefined>(
     undefined
   );
+  const qrCodeContent = useMemo(() => {
+    if (!showQrCode) return undefined;
+    const url = getCompleteUrlForPath(allRoutes().stockSectionDetail.path);
+    const params = new URLSearchParams({ sectionId: showQrCode.sectionId });
+    return `${url}?${params.toString()}`;
+  }, [showQrCode]);
 
   const resetInitialAction = useCallback(
     () =>
@@ -214,6 +223,7 @@ export const Page = () => {
               sectionId: "",
               storeId: "",
               name: "",
+              shortId: "",
               imageRefs: undefined,
               datasetVersion: 1,
               createdAt: new Date(),
@@ -424,11 +434,11 @@ export const Page = () => {
           handleAccept={handleAcceptNew}
         />
       )}
-      {showQrCode && (
+      {showQrCode && qrCodeContent && (
         <ShowQrCodeDialog
           heading={"QR Code"}
           description={`QR Code für Lagerbereich: ${showQrCode.sectionId}`}
-          codeContent={`${enterUrl}`}
+          codeContent={qrCodeContent}
           handleClose={() => setShowQrCode(undefined)}
         />
       )}

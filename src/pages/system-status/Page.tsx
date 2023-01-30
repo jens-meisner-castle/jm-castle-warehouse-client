@@ -12,8 +12,8 @@ import {
   useSystemControls,
 } from "../../hooks/useSystemControls";
 import { useSystemStatus } from "../../hooks/useSystemStatus";
-import { DbExportPart } from "./parts/DbExportPart";
-import { DbImportPart } from "./parts/DbImportPart";
+import { ExportPart } from "./parts/ExportPart";
+import { ImportPart } from "./parts/ImportPart";
 
 export const Page = () => {
   const handleExpiredToken = useHandleExpiredToken();
@@ -105,12 +105,12 @@ export const Page = () => {
       </Grid>
       <Grid item>
         <Paper style={{ marginTop: 5 }}>
-          <DbExportPart />
+          <ExportPart />
         </Paper>
       </Grid>
       <Grid item>
         <Paper style={{ marginTop: 5 }}>
-          <DbImportPart />
+          <ImportPart />
         </Paper>
       </Grid>
     </Grid>

@@ -4,10 +4,9 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import TextField from "@mui/material/TextField";
 import { useState } from "react";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
-import { HashtagRow } from "../../../../types/RowTypes";
+import { HashtagRow, isSavingHashtagAllowed } from "../../../../types/RowTypes";
 
 export interface EditHashtagDialogProps {
   hashtag: HashtagRow;
@@ -23,7 +22,8 @@ export const EditHashtagDialog = (props: EditHashtagDialogProps) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
   const { tagId, name } = data;
-  const isSavingAllowed = !!tagId && !!name;
+
+  const { isSavingAllowed, errorData } = isSavingHashtagAllowed(data);
 
   return (
     <Dialog open={open} onClose={handleCancel}>
@@ -34,13 +34,14 @@ export const EditHashtagDialog = (props: EditHashtagDialogProps) => {
             "Führen Sie Ihre Änderungen durch und drücken Sie am Ende 'Speichern'."
           }
         </DialogContentText>
-        <TextField
+        <TextFieldWithSpeech
           disabled
           margin="dense"
           id="tagId"
-          label="Hashtag"
+          label="Tag ID"
           value={tagId}
-          type="text"
+          errorData={errorData.tagId}
+          onChange={(s) => updateData({ tagId: s })}
           fullWidth
           variant="standard"
         />
@@ -50,6 +51,7 @@ export const EditHashtagDialog = (props: EditHashtagDialogProps) => {
           id="name"
           label="Name"
           value={name}
+          errorData={errorData.name}
           onChange={(s) => updateData({ name: s })}
           fullWidth
           variant="standard"

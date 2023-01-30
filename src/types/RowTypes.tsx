@@ -6,6 +6,7 @@ import {
   ReceiptReason,
   ReceiptRequestReason,
   Row_Article,
+  Row_Costunit,
   Row_Emission,
   Row_Hashtag,
   Row_ImageContent,
@@ -16,11 +17,14 @@ import {
   Row_StoreSection,
   StockStateCounts,
 } from "jm-castle-warehouse-types/build";
+import { ErrorData } from "../components/ErrorDisplays";
+import { badCharsInSearchValue } from "../configuration/Urls";
 import {
   compareDate,
   CompareFunction,
   compareNumber,
   compareString,
+  includesOneOf,
 } from "../utils/Compare";
 import { OrderDirection } from "./Types";
 
@@ -40,6 +44,7 @@ export interface StoreSectionRow extends MasterdataRow {
   sectionId: string;
   storeId: string;
   name: string;
+  shortId: string;
   imageRefs: string[] | undefined;
 }
 
@@ -54,6 +59,10 @@ export interface ArticleRow extends MasterdataRow {
 
 export interface HashtagRow extends MasterdataRow {
   tagId: string;
+  name: string;
+}
+export interface CostunitRow extends MasterdataRow {
+  unitId: string;
   name: string;
 }
 
@@ -97,6 +106,8 @@ export interface ReceiptRow {
   guarantyTo: Date | undefined;
   imageRefs: string[] | undefined;
   reason: ReceiptReason;
+  costUnit: string;
+  price: number | undefined;
 }
 
 export interface EmissionRequestRow {
@@ -119,6 +130,9 @@ export interface EmissionRow {
   emittedAt: Date;
   reason: EmissionReason;
   receiver: string;
+  imageRefs: string[] | undefined;
+  costUnit: string;
+  price: number | undefined;
 }
 
 export type StockArticleRow = ArticleRow & {
@@ -131,11 +145,194 @@ export type StockArticleRowExt = StockArticleRow & {
   sectionsWithCount: StoreSectionRow[];
 };
 
-export const isSavingArticleAllowed = (row: Partial<ArticleRow>) =>
-  !!row.articleId && !!row.name && !!row.countUnit;
+const ckeckPositiveNumber = (n: number | undefined) => {
+  return typeof n === "number" && n > 0
+    ? undefined
+    : { error: "Dieser Wert muss größer 0 sein." };
+};
 
-export const isArticleRow = (row: Partial<ArticleRow>): row is ArticleRow =>
-  isSavingArticleAllowed(row);
+const checkMandatoryString = (s: string | undefined): ErrorData | undefined => {
+  if (!s) {
+    return { error: "Dieser Wert darf nicht undefiniert sein." };
+  }
+  const stripped = s.trim();
+  const startsOrEndsWithWhitespace = s.length !== stripped.length;
+
+  const includesBadChar = includesOneOf(stripped, badCharsInSearchValue);
+
+  return !startsOrEndsWithWhitespace && !includesBadChar
+    ? undefined
+    : {
+        error: includesBadChar
+          ? `Dieser Wert enthält unerlaubte Zeichen. Nicht erlaubt sind: ${badCharsInSearchValue.join(
+              ", "
+            )}`
+          : "Dieser Wert darf nicht mit Leerzeichen beginnen oder enden.",
+      };
+};
+
+export const isSavingArticleAllowed = (row: Partial<ArticleRow>) => {
+  const errorData: Partial<Record<keyof ArticleRow, ErrorData | undefined>> = {
+    articleId: checkMandatoryString(row.articleId),
+    name: checkMandatoryString(row.name),
+  };
+  return {
+    isSavingAllowed: !errorData.articleId && !errorData.name && !!row.countUnit,
+    errorData,
+  };
+};
+
+export const isArticleRow = (row: Partial<ArticleRow>): row is ArticleRow => {
+  const { isSavingAllowed } = isSavingArticleAllowed(row);
+  return isSavingAllowed;
+};
+
+export const isSavingHashtagAllowed = (row: Partial<HashtagRow>) => {
+  const errorData: Partial<Record<keyof HashtagRow, ErrorData | undefined>> = {
+    tagId: checkMandatoryString(row.tagId),
+    name: checkMandatoryString(row.name),
+  };
+  return {
+    isSavingAllowed: !errorData.tagId && !errorData.name,
+    errorData,
+  };
+};
+
+export const isHashtagRow = (row: Partial<HashtagRow>): row is HashtagRow => {
+  const { isSavingAllowed } = isSavingHashtagAllowed(row);
+  return isSavingAllowed;
+};
+
+export const isSavingCostunitAllowed = (row: Partial<CostunitRow>) => {
+  const errorData: Partial<Record<keyof CostunitRow, ErrorData | undefined>> = {
+    unitId: checkMandatoryString(row.unitId),
+    name: checkMandatoryString(row.name),
+  };
+  return {
+    isSavingAllowed: !errorData.unitId && !errorData.name,
+    errorData,
+  };
+};
+
+export const isCostunitRow = (
+  row: Partial<CostunitRow>
+): row is CostunitRow => {
+  const { isSavingAllowed } = isSavingCostunitAllowed(row);
+  return isSavingAllowed;
+};
+
+export const isSavingReceiverAllowed = (row: Partial<ReceiverRow>) => {
+  const errorData: Partial<Record<keyof ReceiverRow, ErrorData | undefined>> = {
+    receiverId: checkMandatoryString(row.receiverId),
+    name: checkMandatoryString(row.name),
+  };
+  return {
+    isSavingAllowed:
+      !errorData.receiverId && !errorData.name && !!row.mailAddress,
+    errorData,
+  };
+};
+
+export const isReceiverRow = (
+  row: Partial<ReceiverRow>
+): row is ReceiverRow => {
+  const { isSavingAllowed } = isSavingReceiverAllowed(row);
+  return isSavingAllowed;
+};
+
+export const isSavingStoreAllowed = (row: Partial<StoreRow>) => {
+  const errorData: Partial<Record<keyof StoreRow, ErrorData | undefined>> = {
+    storeId: checkMandatoryString(row.storeId),
+    name: checkMandatoryString(row.name),
+  };
+  return {
+    isSavingAllowed: !errorData.storeId && !errorData.name,
+    errorData,
+  };
+};
+
+export const isStoreRow = (row: Partial<StoreRow>): row is StoreRow => {
+  const { isSavingAllowed } = isSavingStoreAllowed(row);
+  return isSavingAllowed;
+};
+
+export const isSavingStoreSectionAllowed = (row: Partial<StoreSectionRow>) => {
+  const errorData: Partial<
+    Record<keyof StoreSectionRow, ErrorData | undefined>
+  > = {
+    sectionId: checkMandatoryString(row.sectionId),
+    storeId: checkMandatoryString(row.storeId),
+    name: checkMandatoryString(row.name),
+    shortId: checkMandatoryString(row.shortId),
+  };
+  return {
+    isSavingAllowed:
+      !errorData.sectionId &&
+      !errorData.name &&
+      !errorData.storeId &&
+      !errorData.shortId,
+    errorData,
+  };
+};
+
+export const isStoreSectionRow = (
+  row: Partial<StoreSectionRow>
+): row is StoreSectionRow => {
+  const { isSavingAllowed } = isSavingStoreSectionAllowed(row);
+  return isSavingAllowed;
+};
+
+export const isSavingReceiptAllowed = (row: Partial<ReceiptRow>) => {
+  const errorData: Partial<Record<keyof ReceiptRow, ErrorData | undefined>> = {
+    sectionId: checkMandatoryString(row.sectionId),
+    articleId: checkMandatoryString(row.articleId),
+    costUnit: checkMandatoryString(row.costUnit),
+    reason: checkMandatoryString(row.reason),
+    articleCount: ckeckPositiveNumber(row.articleCount),
+  };
+  return {
+    isSavingAllowed:
+      !errorData.sectionId &&
+      !errorData.articleId &&
+      !errorData.costUnit &&
+      !errorData.reason &&
+      !errorData.articleCount,
+    errorData,
+  };
+};
+
+export const isReceiptRow = (row: Partial<ReceiptRow>): row is ReceiptRow => {
+  const { isSavingAllowed } = isSavingReceiptAllowed(row);
+  return isSavingAllowed;
+};
+
+export const isSavingEmissionAllowed = (row: Partial<EmissionRow>) => {
+  const errorData: Partial<Record<keyof EmissionRow, ErrorData | undefined>> = {
+    sectionId: checkMandatoryString(row.sectionId),
+    articleId: checkMandatoryString(row.articleId),
+    costUnit: checkMandatoryString(row.costUnit),
+    reason: checkMandatoryString(row.reason),
+    receiver: checkMandatoryString(row.receiver),
+    articleCount: ckeckPositiveNumber(row.articleCount),
+  };
+  return {
+    isSavingAllowed:
+      !errorData.sectionId &&
+      !errorData.articleId &&
+      !errorData.costUnit &&
+      !errorData.reason &&
+      !errorData.articleCount &&
+      !errorData.receiver,
+    errorData,
+  };
+};
+
+export const isEmissionRow = (
+  row: Partial<EmissionRow>
+): row is EmissionRow => {
+  const { isSavingAllowed } = isSavingEmissionAllowed(row);
+  return isSavingAllowed;
+};
 
 export const stockArticleExtRowsFromStockState = (
   stock: Record<string, ArticleStockState>
@@ -244,6 +441,16 @@ export const compareHashtagRow: Record<
     compareString<HashtagRow>("name", direction),
 };
 
+export const compareCostunitRow: Record<
+  string,
+  (direction: OrderDirection) => CompareFunction<CostunitRow>
+> = {
+  tagId: (direction: OrderDirection) =>
+    compareString<CostunitRow>("unitId", direction),
+  name: (direction: OrderDirection) =>
+    compareString<CostunitRow>("name", direction),
+};
+
 export const compareEmissionRow: Record<
   string,
   (direction: OrderDirection) => CompareFunction<EmissionRow>
@@ -328,6 +535,22 @@ export const fromRawHashtag = (raw: Row_Hashtag): HashtagRow => {
   };
 };
 
+export const toRawCostunit = (row: CostunitRow): Row_Costunit => {
+  return {
+    unit_id: row.unitId,
+    name: row.name,
+    ...toRawMasterdataFields(row),
+  };
+};
+
+export const fromRawCostunit = (raw: Row_Costunit): CostunitRow => {
+  return {
+    unitId: raw.unit_id,
+    name: raw.name,
+    ...fromRawMasterdataFields(raw),
+  };
+};
+
 export const toRawReceiver = (row: ReceiverRow): Row_Receiver => {
   return {
     receiver_id: row.receiverId,
@@ -369,6 +592,7 @@ export const toRawStoreSection = (row: StoreSectionRow): Row_StoreSection => {
     section_id: row.sectionId,
     store_id: row.storeId,
     name: row.name,
+    short_id: row.shortId,
     image_refs: row.imageRefs ? JSON.stringify(row.imageRefs) : null,
     ...toRawMasterdataFields(row),
   };
@@ -379,6 +603,7 @@ export const fromRawStoreSection = (raw: Row_StoreSection): StoreSectionRow => {
     sectionId: raw.section_id,
     storeId: raw.store_id,
     name: raw.name,
+    shortId: raw.short_id,
     imageRefs: raw.image_refs ? JSON.parse(raw.image_refs) : undefined,
     ...fromRawMasterdataFields(raw),
   };
@@ -416,6 +641,9 @@ export const fromRawEmission = (raw: Row_Emission): EmissionRow => {
     emittedAt: new Date(raw.emitted_at * 1000),
     reason: raw.reason,
     receiver: raw.receiver,
+    imageRefs: raw.image_refs ? JSON.parse(raw.image_refs) : undefined,
+    costUnit: raw.cost_unit,
+    price: raw.price || undefined,
   };
 };
 
@@ -429,6 +657,9 @@ export const toRawEmission = (row: EmissionRow): Row_Emission => {
     emitted_at: Math.floor(row.emittedAt.getTime() / 1000),
     reason: row.reason,
     receiver: row.receiver,
+    cost_unit: row.costUnit,
+    image_refs: row.imageRefs ? JSON.stringify(row.imageRefs) : null,
+    price: typeof row.price === "number" ? row.price : null,
   };
 };
 
@@ -444,6 +675,8 @@ export const fromRawReceipt = (raw: Row_Receipt): ReceiptRow => {
     wwwLink: raw.www_link || undefined,
     guarantyTo: raw.guaranty_to ? new Date(raw.guaranty_to * 1000) : undefined,
     reason: raw.reason,
+    costUnit: raw.cost_unit,
+    price: typeof raw.price === "number" ? raw.price : undefined,
   };
 };
 
@@ -461,6 +694,8 @@ export const toRawReceipt = (row: ReceiptRow): Row_Receipt => {
       ? Math.floor(row.guarantyTo.getTime() / 1000)
       : null,
     reason: row.reason,
+    cost_unit: row.costUnit,
+    price: typeof row.price === "number" ? row.price : null,
   };
 };
 

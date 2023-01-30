@@ -4,7 +4,7 @@ export const muiThemeLight = responsiveFontSizes(
   createTheme({
     palette: {
       mode: "light",
-      primary: { main: "#f9a825" },
+      primary: { main: "#ab7865" },
       secondary: { main: "#1b5e20" },
     },
   })

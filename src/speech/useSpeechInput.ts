@@ -54,6 +54,7 @@ export const useSpeechInput = (topic: string, updateIndicator: number) => {
   });
 
   useEffect(() => {
+    setResult({ topic, recognitionInProgress: false, text: undefined });
     if (!updateIndicator) {
       return;
     }

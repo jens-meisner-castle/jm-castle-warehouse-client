@@ -4,6 +4,7 @@ import { Alert, IconButton, Snackbar } from "@mui/material";
 import TextField, { TextFieldProps } from "@mui/material/TextField";
 import { CSSProperties, useCallback, useEffect, useState } from "react";
 import { useSpeechInput } from "../speech/useSpeechInput";
+import { ErrorData } from "./ErrorDisplays";
 
 export type TextFieldWithSpeechProps = Omit<
   Omit<
@@ -18,10 +19,12 @@ export type TextFieldWithSpeechProps = Omit<
   label: string;
   value: string;
   onChange: (value: string) => void;
+  errorData?: ErrorData;
 };
 
 export const TextFieldWithSpeech = (props: TextFieldWithSpeechProps) => {
-  const { label, value, onChange, helperText, ...textFieldProps } = props;
+  const { label, value, onChange, errorData, helperText, ...textFieldProps } =
+    props;
 
   const iconButtonStyle: CSSProperties = { padding: 4 };
 
@@ -47,6 +50,7 @@ export const TextFieldWithSpeech = (props: TextFieldWithSpeechProps) => {
       return;
     }
     onChange(spokenInput);
+    setSpeechInput({ updateIndicator: 0 });
   }, [spokenInput, onChange]);
 
   const startSpeechInput = useCallback(() => {
@@ -54,6 +58,11 @@ export const TextFieldWithSpeech = (props: TextFieldWithSpeechProps) => {
       updateIndicator: previous.updateIndicator + 1,
     }));
   }, []);
+
+  const { error } = errorData || {};
+  const usedHelperText = recognitionInProgress
+    ? "Bitte sprechen Sie jetzt."
+    : error || helperText || "";
 
   return (
     <>
@@ -93,9 +102,8 @@ export const TextFieldWithSpeech = (props: TextFieldWithSpeechProps) => {
             </IconButton>
           ),
         }}
-        helperText={
-          recognitionInProgress ? "Bitte sprechen Sie jetzt." : helperText || ""
-        }
+        error={!!error}
+        helperText={usedHelperText}
       />
     </>
   );

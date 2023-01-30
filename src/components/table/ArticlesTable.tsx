@@ -84,14 +84,16 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
                 onClick={handleClickOnOrderElement}
               />
             </TableCell>
-            <TableCell key={"name"} style={cellStyle}>
-              <ColumnLabel
-                label="Name"
-                order={order}
-                orderElement={orderElements.name}
-                onClick={handleClickOnOrderElement}
-              />
-            </TableCell>
+            {reduceColumns < 2 && (
+              <TableCell key={"name"} style={cellStyle}>
+                <ColumnLabel
+                  label="Name"
+                  order={order}
+                  orderElement={orderElements.name}
+                  onClick={handleClickOnOrderElement}
+                />
+              </TableCell>
+            )}
             {reduceColumns < 2 && (
               <TableCell key={"link"} style={cellStyle}>
                 {"Link (www)"}
@@ -157,9 +159,11 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
             <TableCell key={"article"} style={cellStyle} size={cellSize}>
               {articleId}
             </TableCell>
-            <TableCell key={"name"} style={cellStyle} size={cellSize}>
-              {name}
-            </TableCell>
+            {reduceColumns < 2 && (
+              <TableCell key={"name"} style={cellStyle} size={cellSize}>
+                {name}
+              </TableCell>
+            )}
             {reduceColumns < 2 && (
               <TableCell key={"link"} style={cellStyle} size={cellSize}>
                 {wwwLinkUrl && wwwLink && (

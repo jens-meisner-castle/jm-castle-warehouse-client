@@ -12,7 +12,11 @@ import { HashtagsRefEditor } from "../../../../components/multi-ref/HashtagsRefE
 import { ImageRefsEditor } from "../../../../components/multi-ref/ImageRefsEditor";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
 
-import { ArticleRow, HashtagRow } from "../../../../types/RowTypes";
+import {
+  ArticleRow,
+  HashtagRow,
+  isSavingArticleAllowed,
+} from "../../../../types/RowTypes";
 
 export interface EditArticleDialogProps {
   article: ArticleRow;
@@ -39,7 +43,7 @@ export const EditArticleDialog = (props: EditArticleDialogProps) => {
   );
   const { articleId, name, countUnit, imageRefs, hashtags, wwwLink } = data;
 
-  const isSavingAllowed = !!articleId && !!name && !!countUnit;
+  const { isSavingAllowed, errorData } = isSavingArticleAllowed(data);
 
   const currentHashtags = useMemo(() => {
     const newHashtags: HashtagRow[] = [];
@@ -76,6 +80,7 @@ export const EditArticleDialog = (props: EditArticleDialogProps) => {
             id="name"
             label="Name"
             value={name}
+            errorData={errorData.name}
             onChange={(s) => {
               updateData({ name: s });
             }}

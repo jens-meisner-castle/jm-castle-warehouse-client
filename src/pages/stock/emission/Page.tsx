@@ -11,11 +11,11 @@ import {
 } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
+import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
 import {
   EmissionsTable,
   sizeVariantForWidth,
 } from "../../../components/table/EmissionsTable";
-import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { TimeFilterComponent } from "../../../filter/TimeFilterComponent";
 import { TimeintervalFilter } from "../../../filter/Types";
@@ -214,6 +214,9 @@ export const Page = () => {
               emittedAt: new Date(),
               reason: "loan",
               receiver: "",
+              costUnit: "",
+              imageRefs: undefined,
+              price: undefined,
             },
           });
           break;

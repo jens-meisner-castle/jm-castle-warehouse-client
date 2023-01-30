@@ -9,7 +9,11 @@ import { useMemo, useState } from "react";
 import { StoreRefAutocomplete } from "../../../../components/autocomplete/StoreRefAutocomplete";
 import { ImageRefsEditor } from "../../../../components/multi-ref/ImageRefsEditor";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
-import { StoreRow, StoreSectionRow } from "../../../../types/RowTypes";
+import {
+  isSavingStoreSectionAllowed,
+  StoreRow,
+  StoreSectionRow,
+} from "../../../../types/RowTypes";
 
 export interface EditStoreSectionDialogProps {
   section: StoreSectionRow;
@@ -27,12 +31,12 @@ export const EditStoreSectionDialog = (props: EditStoreSectionDialogProps) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
 
-  const { storeId, sectionId, name, imageRefs } = data;
+  const { storeId, sectionId, name, imageRefs, shortId } = data;
   const currentStore = useMemo(
     () => stores.find((r) => r.storeId === storeId),
     [stores, storeId]
   );
-  const isSavingAllowed = !!sectionId && !!storeId && !!name;
+  const { isSavingAllowed, errorData } = isSavingStoreSectionAllowed(data);
 
   return (
     <>
@@ -55,17 +59,29 @@ export const EditStoreSectionDialog = (props: EditStoreSectionDialogProps) => {
             variant="standard"
           />
           <TextFieldWithSpeech
+            margin="dense"
+            id="shortId"
+            label="Kurzname"
+            value={shortId}
+            errorData={errorData.shortId}
+            onChange={(s) => updateData({ shortId: s })}
+            fullWidth
+            variant="standard"
+          />
+          <TextFieldWithSpeech
             autoFocus
             margin="dense"
             id="name"
             label="Name"
             value={name}
+            errorData={errorData.name}
             onChange={(s) => updateData({ name: s })}
             fullWidth
             variant="standard"
           />
           <StoreRefAutocomplete
             value={currentStore}
+            errorData={errorData.storeId}
             stores={stores}
             onChange={(store) => updateData({ storeId: store?.storeId })}
             margin="dense"

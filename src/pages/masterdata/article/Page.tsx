@@ -1,16 +1,16 @@
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { Grid, Paper, Tooltip, Typography } from "@mui/material";
+import { Grid, Paper, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
+import { ErrorDisplays } from "../../../components/ErrorDisplays";
 import {
   ArticlesTable,
   sizeVariantForWidth,
 } from "../../../components/table/ArticlesTable";
-import { ErrorDisplays } from "../../../components/ErrorDisplays";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useArticleInsert } from "../../../hooks/useArticleInsert";
 import { useArticleUpdate } from "../../../hooks/useArticleUpdate";
@@ -283,11 +283,8 @@ export const Page = () => {
       onClick: refreshStatus,
     });
     newActions.push({
-      label: (
-        <Tooltip title="Neuen Datensatz anlegen">
-          <AddBoxIcon />
-        </Tooltip>
-      ),
+      tooltip: "Neuen Datensatz anlegen",
+      label: <AddBoxIcon />,
       onClick: () =>
         navigate(`${allRoutes().masterdataArticle.path}?action=new`),
     });

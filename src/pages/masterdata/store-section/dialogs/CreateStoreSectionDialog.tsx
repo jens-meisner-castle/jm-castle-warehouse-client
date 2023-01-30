@@ -8,7 +8,11 @@ import { useMemo, useState } from "react";
 import { StoreRefAutocomplete } from "../../../../components/autocomplete/StoreRefAutocomplete";
 import { ImageRefsEditor } from "../../../../components/multi-ref/ImageRefsEditor";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
-import { StoreRow, StoreSectionRow } from "../../../../types/RowTypes";
+import {
+  isSavingStoreSectionAllowed,
+  StoreRow,
+  StoreSectionRow,
+} from "../../../../types/RowTypes";
 
 export interface CreateStoreSectionDialogProps {
   section: StoreSectionRow;
@@ -29,12 +33,12 @@ export const CreateStoreSectionDialog = (
     setData((previous) => ({ ...previous, ...updates }));
   };
 
-  const { sectionId, storeId, imageRefs, name } = data;
+  const { sectionId, storeId, imageRefs, name, shortId } = data;
   const currentStore = useMemo(
     () => stores.find((r) => r.storeId === storeId),
     [stores, storeId]
   );
-  const isSavingAllowed = !!sectionId && !!storeId && !!name;
+  const { isSavingAllowed, errorData } = isSavingStoreSectionAllowed(data);
 
   return (
     <Dialog open={open} onClose={handleCancel}>
@@ -51,7 +55,18 @@ export const CreateStoreSectionDialog = (
           id="sectionId"
           label="Lagerbereich"
           value={sectionId}
+          errorData={errorData.sectionId}
           onChange={(s) => updateData({ sectionId: s })}
+          fullWidth
+          variant="standard"
+        />
+        <TextFieldWithSpeech
+          margin="dense"
+          id="shortId"
+          label="Kurzname"
+          value={shortId}
+          errorData={errorData.shortId}
+          onChange={(s) => updateData({ shortId: s })}
           fullWidth
           variant="standard"
         />
@@ -60,12 +75,14 @@ export const CreateStoreSectionDialog = (
           id="name"
           label="Name"
           value={name}
+          errorData={errorData.name}
           onChange={(s) => updateData({ name: s })}
           fullWidth
           variant="standard"
         />
         <StoreRefAutocomplete
           value={currentStore}
+          errorData={errorData.storeId}
           stores={stores}
           onChange={(store) => updateData({ storeId: store?.storeId })}
           margin="dense"

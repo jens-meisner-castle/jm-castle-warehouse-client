@@ -8,7 +8,7 @@ import {
   Grid,
   Typography,
 } from "@mui/material";
-import { QRCodeCanvas } from "qrcode.react";
+import { QRCodeSVG } from "qrcode.react";
 
 export interface ShowQrCodeDialogProps {
   handleClose: () => void;
@@ -27,7 +27,7 @@ export const ShowQrCodeDialog = (props: ShowQrCodeDialogProps) => {
         <DialogContentText>{description}</DialogContentText>
         <Grid container direction="column">
           <Grid item>
-            <QRCodeCanvas includeMargin value={codeContent} />
+            <QRCodeSVG includeMargin value={codeContent} />
           </Grid>
           <Grid item>
             <Typography>{codeContent}</Typography>

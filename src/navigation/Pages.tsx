@@ -11,7 +11,7 @@ export interface Page {
   label: string;
   icon?: (style?: React.CSSProperties) => React.ReactElement;
 }
-export const allPages: Record<string, Page> = {
+export const allMainPages: Record<string, Page> = {
   home: {
     to: "/",
     label: "Home",
@@ -78,13 +78,16 @@ export const allPages: Record<string, Page> = {
 };
 
 export const usePages = () => {
-  const [pages, setPages] = useState<Page[]>([allPages.home, allPages.login]);
+  const [pages, setPages] = useState<Page[]>([
+    allMainPages.home,
+    allMainPages.login,
+  ]);
   const roles = useUserRoles();
 
   useEffect(() => {
     if (roles) {
       setPages(
-        Object.values(allPages)
+        Object.values(allMainPages)
           .filter(
             (page) =>
               page.neededRole === "none" || roles.includes(page.neededRole)
@@ -92,7 +95,7 @@ export const usePages = () => {
           .sort((a, b) => a.index - b.index)
       );
     } else {
-      setPages([allPages.home, allPages.login]);
+      setPages([allMainPages.home, allMainPages.login]);
     }
   }, [roles]);
 

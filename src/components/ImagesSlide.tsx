@@ -76,43 +76,48 @@ export const ImagesSlide = (props: ImagesSlideProps) => {
         />
       </Grid>
       {imageRefs?.length ? (
-        <Grid item>
+        <Grid item style={{ maxWidth: maxSize, maxHeight: maxSize }}>
           <Grid container direction="row" alignItems="center">
+            {imageRefs.length > 1 && (
+              <>
+                <Grid item>
+                  <Typography>{index + 1}</Typography>
+                </Grid>
+                <Grid item>
+                  <Typography style={{ marginLeft: 5 }}>{" / "}</Typography>
+                </Grid>
+                <Grid item>
+                  <Typography style={{ marginLeft: 5 }}>
+                    {imageRefs.length}
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <Tooltip title="Vorheriges Bild.">
+                    <span>
+                      <IconButton disabled={index < 1} onClick={prevImage}>
+                        <NavigateBeforeIcon />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                </Grid>
+                <Grid item>
+                  <Tooltip title="Nächstes Bild.">
+                    <span>
+                      <IconButton
+                        style={{ marginLeft: 0 }}
+                        disabled={index >= imageRefs.length - 1}
+                        onClick={nextImage}
+                      >
+                        <NavigateNextIcon />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                </Grid>
+              </>
+            )}
             <Grid item>
-              <Typography>{index + 1}</Typography>
-            </Grid>
-            <Grid item>
-              <Typography style={{ marginLeft: 5 }}>{" von "}</Typography>
-            </Grid>
-            <Grid item>
-              <Typography style={{ marginLeft: 5 }}>
-                {imageRefs.length}
-              </Typography>
-            </Grid>
-            <Grid item>
-              <Tooltip title="Vorheriges Bild.">
-                <span>
-                  <IconButton disabled={index < 1} onClick={prevImage}>
-                    <NavigateBeforeIcon />
-                  </IconButton>
-                </span>
-              </Tooltip>
-            </Grid>
-            <Grid item>
-              <Tooltip title="Nächstes Bild.">
-                <span>
-                  <IconButton
-                    disabled={index >= imageRefs.length - 1}
-                    onClick={nextImage}
-                  >
-                    <NavigateNextIcon />
-                  </IconButton>
-                </span>
-              </Tooltip>
-            </Grid>
-            <Grid item>
-              <Typography style={{ marginLeft: 10 }} component="span">
-                {`(Bild ID: ${currentImageRef})`}
+              <Typography component="span">
+                {`(Bild: ${currentImageRef})`}
               </Typography>
             </Grid>
           </Grid>

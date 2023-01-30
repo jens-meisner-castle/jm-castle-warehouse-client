@@ -7,7 +7,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import { useState } from "react";
 import { ImageRefsEditor } from "../../../../components/multi-ref/ImageRefsEditor";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
-import { StoreRow } from "../../../../types/RowTypes";
+import { isSavingStoreAllowed, StoreRow } from "../../../../types/RowTypes";
 
 export interface CreateStoreDialogProps {
   store: StoreRow;
@@ -23,7 +23,8 @@ export const CreateStoreDialog = (props: CreateStoreDialogProps) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
   const { storeId, name, imageRefs } = data;
-  const isSavingAllowed = !!storeId && !!name;
+
+  const { isSavingAllowed, errorData } = isSavingStoreAllowed(data);
 
   return (
     <Dialog open={open} onClose={handleCancel}>
@@ -40,6 +41,7 @@ export const CreateStoreDialog = (props: CreateStoreDialogProps) => {
           id="storeId"
           label="Lager"
           value={storeId}
+          errorData={errorData.storeId}
           onChange={(s) => updateData({ storeId: s })}
           fullWidth
           variant="standard"
@@ -49,6 +51,7 @@ export const CreateStoreDialog = (props: CreateStoreDialogProps) => {
           id="name"
           label="Name"
           value={name}
+          errorData={errorData.name}
           onChange={(s) => updateData({ name: s })}
           fullWidth
           variant="standard"

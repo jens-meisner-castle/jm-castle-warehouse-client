@@ -20,6 +20,7 @@ import { backendApiUrl } from "../../../configuration/Urls";
 import { TimeFilterComponent } from "../../../filter/TimeFilterComponent";
 import { TimeintervalFilter } from "../../../filter/Types";
 import { useArticleSelect } from "../../../hooks/useArticleSelect";
+import { useCostunitSelect } from "../../../hooks/useCostunitSelect";
 import { useReceiptInsert } from "../../../hooks/useReceiptInsert";
 import { useReceiptSelect } from "../../../hooks/useReceiptSelect";
 import { useStoreSectionSelect } from "../../../hooks/useStoreSectionSelect";
@@ -29,7 +30,9 @@ import { allRoutes } from "../../../navigation/AppRoutes";
 import {
   ArticleRow,
   compareReceiptRow,
+  CostunitRow,
   fromRawArticle,
+  fromRawCostunit,
   fromRawReceipt,
   fromRawStoreSection,
   ReceiptRow,
@@ -168,6 +171,21 @@ export const Page = () => {
     return newRows;
   }, [sectionsResult]);
 
+  const costunitsApiResponse = useCostunitSelect(
+    backendApiUrl,
+    "%",
+    1,
+    handleExpiredToken
+  );
+  const { response: costunitsResponse } = costunitsApiResponse;
+  const { result: costunitsResult } = costunitsResponse || {};
+  const costunitRows = useMemo(() => {
+    const newRows: CostunitRow[] = [];
+    const { rows } = costunitsResult || {};
+    rows?.forEach((raw) => newRows.push(fromRawCostunit(raw)));
+    return newRows;
+  }, [costunitsResult]);
+
   const errorData = useMemo(() => {
     const newData: Record<string, ErrorData> = {};
     newData.storeSection = sectionsApiResponse;
@@ -184,23 +202,27 @@ export const Page = () => {
   useEffect(() => {
     if (initialAction && receiptRows) {
       switch (initialAction) {
-        case "new":
+        case "new": {
+          const { sectionId, articleId } = params || {};
           dispatch({
             type: "new",
             data: {
               datasetId: "new",
-              sectionId: "",
+              sectionId: sectionId || "",
               byUser: username || "",
-              articleId: "",
+              articleId: articleId || "",
               articleCount: 1,
               imageRefs: undefined,
               wwwLink: undefined,
               receiptAt: new Date(),
               guarantyTo: undefined,
               reason: "buy",
+              costUnit: "",
+              price: undefined,
             },
           });
           break;
+        }
         case "duplicate":
           {
             const datasetId = params?.datasetId;
@@ -343,6 +365,7 @@ export const Page = () => {
           receipt={actionState.data}
           articles={articleRows}
           storeSections={sectionRows}
+          costunits={costunitRows}
           open={true}
           handleCancel={handleCancel}
           handleAccept={handleAccept}

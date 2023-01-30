@@ -1,18 +1,25 @@
 import FileOpenIcon from "@mui/icons-material/FileOpen";
-import { Grid, IconButton, TextField } from "@mui/material";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Grid, IconButton, TextField, TextFieldProps } from "@mui/material";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { getFilename } from "../utils/File";
 
-export interface FileInputFieldProps {
+export type FileInputFieldProps = {
   label: string;
   acceptInput: string;
   onChange: (file: File | undefined) => void;
-}
+} & Omit<Omit<TextFieldProps, "value">, "onChange">;
 
 export const FileInputField = (props: FileInputFieldProps) => {
-  const { onChange, label, acceptInput } = props;
+  const { onChange, label, acceptInput, ...textFieldProps } = props;
 
   const fileInputRef = useRef<HTMLInputElement>();
+
   const [filePath, setFilePath] = useState<string | undefined>(undefined);
+
+  const filename = useMemo(() => {
+    return filePath ? getFilename(filePath) : undefined;
+  }, [filePath]);
+
   const clickOnInvisibleFileInput = useCallback(() => {
     fileInputRef.current && fileInputRef.current.click();
   }, [fileInputRef]);
@@ -30,11 +37,12 @@ export const FileInputField = (props: FileInputFieldProps) => {
     <Grid container>
       <Grid item>
         <TextField
+          {...textFieldProps}
           margin="dense"
           id="fileField"
           label={label}
           disabled
-          value={filePath || ""}
+          value={filename || ""}
           type="text"
           fullWidth
           variant="standard"

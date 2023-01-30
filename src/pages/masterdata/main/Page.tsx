@@ -6,12 +6,14 @@ import { AppAction, AppActions } from "../../../components/AppActions";
 import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useArticleSelect } from "../../../hooks/useArticleSelect";
+import { useCostunitSelect } from "../../../hooks/useCostunitSelect";
 import { useHashtagSelect } from "../../../hooks/useHashtagSelect";
 import { useImageContentRows } from "../../../hooks/useImageContentRows";
 import { useReceiverSelect } from "../../../hooks/useReceiverSelect";
 import { useStoreSectionSelect } from "../../../hooks/useStoreSectionSelect";
 import { useStoreSelect } from "../../../hooks/useStoreSelect";
 import { Articles } from "./parts/Articles";
+import { Costunits } from "./parts/Costunits";
 import { Hashtags } from "./parts/Hashtags";
 import { Images } from "./parts/Images";
 import { Receivers } from "./parts/Receivers";
@@ -66,6 +68,15 @@ export const Page = () => {
   const { response: hashtagResponse } = hashtagApiResponse;
   const { result: hashtagResult } = hashtagResponse || {};
 
+  const costunitApiResponse = useCostunitSelect(
+    backendApiUrl,
+    "%",
+    updateIndicator,
+    handleExpiredToken
+  );
+  const { response: costunitResponse } = costunitApiResponse;
+  const { result: costunitResult } = costunitResponse || {};
+
   const receiverApiResponse = useReceiverSelect(
     backendApiUrl,
     "%",
@@ -82,6 +93,7 @@ export const Page = () => {
     newErrors.storeSection = { ...storeSectionApiResponse };
     newErrors.imageContent = { ...imageContentApiResponse };
     newErrors.hashtag = { ...hashtagApiResponse };
+    newErrors.costunit = { ...costunitApiResponse };
     newErrors.receiver = { ...receiverApiResponse };
 
     return newErrors;
@@ -92,6 +104,7 @@ export const Page = () => {
     imageContentApiResponse,
     hashtagApiResponse,
     receiverApiResponse,
+    costunitApiResponse,
   ]);
 
   const actions = useMemo(() => {
@@ -165,6 +178,15 @@ export const Page = () => {
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
               <Hashtags hashtags={hashtagResult ? hashtagResult.rows : []} />
+            </Paper>
+          </Grid>
+          <Grid item>
+            <Paper
+              style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
+            >
+              <Costunits
+                costunits={costunitResult ? costunitResult.rows : []}
+              />
             </Paper>
           </Grid>
         </Grid>

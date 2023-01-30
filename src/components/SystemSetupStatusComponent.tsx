@@ -1,5 +1,6 @@
 import { Grid, Typography } from "@mui/material";
 import { SystemSetupStatus } from "jm-castle-warehouse-types/build";
+import { TableStatusComponent } from "./TableStatusComponent";
 
 export interface SystemSetupStatusComponentProps {
   status: SystemSetupStatus | undefined;
@@ -9,52 +10,51 @@ export const SystemSetupStatusComponent = (
   props: SystemSetupStatusComponentProps
 ) => {
   const { status } = props;
-  const { database } = status || {};
-  const { name, tables } = database || {};
+  const { database, software } = status || {};
+  const { name, tables: tablesInDatabase } = database || {};
+  const { tables: tablesInSoftware } = software || {};
   const leftColumnWidth = 200;
 
   return (
-    <Grid container direction="column">
-      <Grid item>
-        <Typography variant="h6">{"Status"}</Typography>
-      </Grid>
-      <Grid item>
-        <Grid container direction="row">
-          <Grid item style={{ width: leftColumnWidth }}>
-            <Typography>{"Database"}</Typography>
+    <>
+      <Grid container direction="column">
+        <Grid item>
+          <Typography variant="h6">{"Status"}</Typography>
+        </Grid>
+        <Grid item>
+          <Grid container direction="row">
+            <Grid item style={{ width: leftColumnWidth }}>
+              <Typography>{"Datenbank"}</Typography>
+            </Grid>
+            <Grid item>
+              <Typography>{name || "?"}</Typography>
+            </Grid>
           </Grid>
-          <Grid item>
-            <Typography>{name || "?"}</Typography>
+        </Grid>
+        <Grid item>
+          <Grid container direction="row">
+            <Grid item style={{ width: leftColumnWidth }}>
+              <Typography>{"Tabellen"}</Typography>
+            </Grid>
+            <Grid item>
+              <Typography>
+                {tablesInDatabase ? Object.keys(tablesInDatabase).length : "?"}
+              </Typography>
+            </Grid>
           </Grid>
         </Grid>
       </Grid>
-      <Grid item>
-        <Grid container direction="row">
-          <Grid item style={{ width: leftColumnWidth }}>
-            <Typography>{"Tables"}</Typography>
-          </Grid>
-          <Grid item>
-            <Typography>{tables ? Object.keys(tables).length : "?"}</Typography>
-          </Grid>
-        </Grid>
-      </Grid>
-      {tables &&
-        Object.keys(tables)
+      {tablesInDatabase &&
+        tablesInSoftware &&
+        Object.keys(tablesInDatabase)
           .sort()
           .map((table) => (
-            <Grid key={table} item>
-              <Grid container direction="row">
-                <Grid item style={{ width: leftColumnWidth }}>
-                  <Typography>{tables[table].name}</Typography>
-                </Grid>
-                <Grid item>
-                  <Typography>
-                    {tables[table].isCreated ? "Ok" : "missing"}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Grid>
+            <TableStatusComponent
+              key={table}
+              status={tablesInDatabase[table]}
+              targetStatus={tablesInSoftware[table]}
+            />
           ))}
-    </Grid>
+    </>
   );
 };

@@ -10,4 +10,5 @@ export interface ArbitraryFilter {
   nameFragment?: string;
   storeId?: string;
   sectionId?: string;
+  sectionIds?: string[];
 }

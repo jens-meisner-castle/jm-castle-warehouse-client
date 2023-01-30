@@ -40,7 +40,7 @@ export const ImageSelectionDialog = (props: ImageSelectionDialogProps) => {
       ? rows?.filter((row) => !hiddenImageIds.includes(row.image_id))
       : rows;
     return filteredRows
-      ? filteredRows.sort((a, b) => a.edited_at - b.edited_at)
+      ? filteredRows.sort((a, b) => b.edited_at - a.edited_at)
       : undefined;
   }, [rows, hiddenImageIds]);
 

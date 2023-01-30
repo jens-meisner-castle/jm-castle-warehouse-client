@@ -5,6 +5,9 @@ export const backendApiUrl =
 
 export const enterUrl = `${window.location.protocol}//${window.location.hostname}:${window.location.port}/landing-page`;
 
+export const getCompleteUrlForPath = (path: string) =>
+  `${window.location.protocol}//${window.location.hostname}:${window.location.port}${path}`;
+
 export const getImageDisplayUrl = (
   apiUrl: string,
   imageId: string | undefined,
@@ -15,3 +18,5 @@ export const getImageDisplayUrl = (
       ? `${apiUrl}/image-content/image?image_id=${imageId}&dataset_version=${dataset_version}`
       : `${apiUrl}/image-content/image?image_id=${imageId}`
     : undefined;
+
+export const badCharsInSearchValue = ["+"];

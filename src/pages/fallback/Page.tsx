@@ -29,20 +29,20 @@ const getText = (progress: ProgressState, path: string, isLegal: boolean) => {
 };
 
 export const Page = () => {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const navigate = useNavigate();
   const verifiedUser = useVerifiedUser();
 
-  const [initialPathname] = useState(pathname);
+  const [initialPath] = useState({ pathname, search });
 
   const isLegalPathname = useMemo(() => {
     const all = allRoutes();
     return !!Object.keys(all).find(
-      (k) => all[k as keyof typeof all].path === initialPathname
+      (k) => all[k as keyof typeof all].path === initialPath.pathname
     );
-  }, [initialPathname]);
+  }, [initialPath]);
 
-  console.log("initial", initialPathname);
+  console.log("initial", initialPath);
 
   const [progress, setProgress] = useState<ProgressState>({
     stateId: "initial",
@@ -54,7 +54,7 @@ export const Page = () => {
   useEffect(() => {
     stateId === "initial" &&
       navigate(allRoutes().fallback.path, { replace: true });
-  }, [navigate, initialPathname, stateId]);
+  }, [navigate, initialPath, stateId]);
 
   useEffect(() => {
     verifiedUser && setProgress({ stateId: "logged-in" });
@@ -83,8 +83,8 @@ export const Page = () => {
       case "try-navigate": {
         setProgress({ stateId: "finished" });
         navigate(
-          initialPathname !== allRoutes().fallback.path
-            ? initialPathname
+          initialPath.pathname !== allRoutes().fallback.path
+            ? `${initialPath.pathname}${initialPath.search}`
             : allRoutes().login.path,
           { replace: true }
         );
@@ -94,11 +94,11 @@ export const Page = () => {
         isLegalPathname && navigate(allRoutes().login.path, { replace: true });
       }
     }
-  }, [stateId, navigate, isLegalPathname, initialPathname]);
+  }, [stateId, navigate, isLegalPathname, initialPath]);
 
   console.log(progress);
 
-  const text = getText(progress, initialPathname, isLegalPathname);
+  const text = getText(progress, initialPath.pathname, isLegalPathname);
 
   return (
     <Grid container direction="column">

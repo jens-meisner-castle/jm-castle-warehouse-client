@@ -9,6 +9,7 @@ import { Page as HelpPage } from "../pages/help/Page";
 import { Page as HistoryPage } from "../pages/history/Page";
 import { Page as LoginPage } from "../pages/login/Page";
 import { Page as ArticlePage } from "../pages/masterdata/article/Page";
+import { Page as CostunitPage } from "../pages/masterdata/costunit/Page";
 import { Page as HashtagPage } from "../pages/masterdata/hashtag/Page";
 import { Page as ImageContentPage } from "../pages/masterdata/image/Page";
 import { Page as MasterdataPage } from "../pages/masterdata/main/Page";
@@ -20,10 +21,13 @@ import { Page as StockArticlePage } from "../pages/stock/article/Page";
 import { Page as EmissionPage } from "../pages/stock/emission/Page";
 import { Page as StockPage } from "../pages/stock/main/Page";
 import { Page as ReceiptPage } from "../pages/stock/receipt/Page";
+import { Page as StockSectionDetailPage } from "../pages/stock/section-detail/Page";
+import { Page as SystemExportPage } from "../pages/system-export/Page";
+import { Page as SystemImportPage } from "../pages/system-import/Page";
 import { Page as SystemSetupPage } from "../pages/system-setup/Page";
 import { Page as SystemStatusPage } from "../pages/system-status/Page";
 import { Page as UsecasePage } from "../pages/usecase/Page";
-import { allPages } from "./Pages";
+import { allMainPages } from "./Pages";
 
 export interface AppRoute {
   path: string;
@@ -32,57 +36,57 @@ export interface AppRoute {
 }
 
 const home: AppRoute = {
-  path: allPages.home.to,
+  path: allMainPages.home.to,
   element: StartPage,
   neededRole: "none",
 };
 const dashboard: AppRoute = {
-  path: allPages.dashboard.to,
+  path: allMainPages.dashboard.to,
   element: DashboardPage,
   neededRole: "internal",
 };
 const usecase: AppRoute = {
-  path: allPages.usecase.to,
+  path: allMainPages.usecase.to,
   element: UsecasePage,
   neededRole: "internal",
 };
 const history: AppRoute = {
-  path: allPages.history.to,
+  path: allMainPages.history.to,
   element: HistoryPage,
   neededRole: "internal",
 };
 const stock: AppRoute = {
-  path: allPages.stock.to,
+  path: allMainPages.stock.to,
   element: StockPage,
   neededRole: "internal",
 };
 const masterdata: AppRoute = {
-  path: allPages.masterdata.to,
+  path: allMainPages.masterdata.to,
   element: MasterdataPage,
   neededRole: "internal",
 };
 const databaseTest: AppRoute = {
-  path: allPages.databaseTest.to,
+  path: allMainPages.databaseTest.to,
   element: DbTestPage,
   neededRole: "admin",
 };
 const systemStatus: AppRoute = {
-  path: allPages.systemStatus.to,
+  path: allMainPages.systemStatus.to,
   element: SystemStatusPage,
   neededRole: "admin",
 };
 const systemSetup: AppRoute = {
-  path: allPages.systemSetup.to,
+  path: allMainPages.systemSetup.to,
   element: SystemSetupPage,
   neededRole: "admin",
 };
 const help: AppRoute = {
-  path: allPages.help.to,
+  path: allMainPages.help.to,
   element: HelpPage,
   neededRole: "external",
 };
 const login: AppRoute = {
-  path: allPages.login.to,
+  path: allMainPages.login.to,
   element: LoginPage,
   neededRole: "none",
 };
@@ -99,6 +103,11 @@ const stockEmission: AppRoute = {
 const stockArticle: AppRoute = {
   path: "/stock/article",
   element: StockArticlePage,
+  neededRole: "external",
+};
+const stockSectionDetail: AppRoute = {
+  path: "/stock/section-detail",
+  element: StockSectionDetailPage,
   neededRole: "external",
 };
 const masterdataArticle: AppRoute = {
@@ -126,10 +135,25 @@ const masterdataHashtag: AppRoute = {
   path: "/masterdata/hashtag",
   element: HashtagPage,
 };
+const masterdataCostunit: AppRoute = {
+  neededRole: "internal",
+  path: "/masterdata/costunit",
+  element: CostunitPage,
+};
 const masterdataReceiver: AppRoute = {
   neededRole: "internal",
   path: "/masterdata/receiver",
   element: ReceiverPage,
+};
+const systemExport: AppRoute = {
+  neededRole: "admin",
+  path: "/system-export",
+  element: SystemExportPage,
+};
+const systemImport: AppRoute = {
+  neededRole: "admin",
+  path: "/system-import",
+  element: SystemImportPage,
 };
 const fallback: AppRoute = {
   neededRole: "none",
@@ -150,15 +174,19 @@ const AllRoutes = {
   stock,
   masterdata,
   masterdataArticle,
+  masterdataCostunit,
   masterdataHashtag,
   masterdataImageContent,
   masterdataReceiver,
   masterdataStore,
   masterdataStoreSection,
   stockArticle,
+  stockSectionDetail,
   stockEmission,
   stockReceipt,
   usecase,
+  systemExport,
+  systemImport,
 };
 
 export const allRoutes = () => AllRoutes;

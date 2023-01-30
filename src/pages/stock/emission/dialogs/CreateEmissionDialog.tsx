@@ -14,15 +14,19 @@ import {
 import { useMemo, useState } from "react";
 import { useHandleExpiredToken } from "../../../../auth/AuthorizationProvider";
 import { ArticleRefAutocomplete } from "../../../../components/autocomplete/ArticleRefAutocomplete";
-import { ReceiverRefEditor } from "../../../../components/autocomplete/ReceiverRefAutocomplete";
+import { ReceiverRefAutocomplete } from "../../../../components/autocomplete/ReceiverRefAutocomplete";
 import { StoreSectionRefAutocomplete } from "../../../../components/autocomplete/StoreSectionRefAutocomplete";
+import { CountField } from "../../../../components/CountField";
 import { DateField } from "../../../../components/DateField";
 import { ErrorData, ErrorDisplays } from "../../../../components/ErrorDisplays";
+import { ImageRefsEditor } from "../../../../components/multi-ref/ImageRefsEditor";
+import { PriceField } from "../../../../components/PriceField";
 import { backendApiUrl } from "../../../../configuration/Urls";
 import { useStockArticleSelect } from "../../../../hooks/useStockArticleSelect";
 import {
   ArticleRow,
   EmissionRow,
+  isSavingEmissionAllowed,
   ReceiverRow,
   StoreSectionRow,
 } from "../../../../types/RowTypes";
@@ -52,8 +56,16 @@ export const CreateEmissionDialog = (props: CreateEmissionDialogProps) => {
   const updateData = (updates: Partial<EmissionRow>) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
-  const { articleId, articleCount, sectionId, reason, receiver, emittedAt } =
-    data;
+  const {
+    articleId,
+    articleCount,
+    sectionId,
+    reason,
+    receiver,
+    emittedAt,
+    price,
+    imageRefs,
+  } = data;
 
   const handleExpiredToken = useHandleExpiredToken();
 
@@ -159,18 +171,14 @@ export const CreateEmissionDialog = (props: CreateEmissionDialogProps) => {
     return ordered;
   }, []);
 
+  const { isSavingAllowed, errorData: fieldErrorData } =
+    isSavingEmissionAllowed(data);
+
   const errorData = useMemo(() => {
     const newData: Record<string, ErrorData> = {};
     newData.stockState = stockApiResponse;
     return newData;
   }, [stockApiResponse]);
-
-  const isSavingAllowed =
-    articleId?.length &&
-    articleCount > 0 &&
-    sectionId.length &&
-    reason?.length &&
-    receiver?.length;
 
   return (
     <Dialog open={open} onClose={handleCancel}>
@@ -189,30 +197,42 @@ export const CreateEmissionDialog = (props: CreateEmissionDialogProps) => {
           label="Artikel"
           articles={articles}
           value={currentArticle}
+          errorData={fieldErrorData.articleId}
           onChange={(row) => updateData({ articleId: row?.articleId })}
           fullWidth
           variant="standard"
         />
-        <TextField
+        <CountField
           margin="dense"
           id="articleCount"
           label={countLabel}
-          value={articleCount}
-          onChange={(event) => {
-            const articleCount = Number.parseInt(event.target.value);
-            typeof articleCount === "number" && updateData({ articleCount });
+          value={articleCount || null}
+          errorData={fieldErrorData.articleCount}
+          onChange={(value) => {
+            updateData({ articleCount: value || undefined });
           }}
-          type="number"
           fullWidth
           variant="standard"
         />
-        <ReceiverRefEditor
+        <PriceField
+          margin="dense"
+          id="price"
+          label={"Preis (€)"}
+          value={price || null}
+          onChange={(value) => {
+            updateData({ price: value || undefined });
+          }}
+          fullWidth
+          variant="standard"
+        />
+        <ReceiverRefAutocomplete
           autoFocus
           margin="dense"
           id="receiver"
           label="Empfänger"
           receivers={receivers}
           value={currentReceiver}
+          errorData={fieldErrorData.receiver}
           onChange={(row) => updateData({ receiver: row?.receiverId })}
           fullWidth
           variant="standard"
@@ -230,6 +250,7 @@ export const CreateEmissionDialog = (props: CreateEmissionDialogProps) => {
         />
         <StoreSectionRefAutocomplete
           value={currentSection}
+          errorData={fieldErrorData.sectionId}
           getOptionLabel={getSectionLabel}
           sections={orderedSections}
           onChange={(section) => updateData({ sectionId: section?.sectionId })}
@@ -266,6 +287,12 @@ export const CreateEmissionDialog = (props: CreateEmissionDialogProps) => {
             </MenuItem>
           ))}
         </TextField>
+        <ImageRefsEditor
+          imageRefs={imageRefs}
+          onChange={(imageRefs) =>
+            setData((previous) => ({ ...previous, imageRefs }))
+          }
+        />
       </DialogContent>
       <DialogActions>
         <Button disabled={!isSavingAllowed} onClick={() => handleAccept(data)}>

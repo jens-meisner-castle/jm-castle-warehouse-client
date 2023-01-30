@@ -46,19 +46,21 @@ export const AppActions = (props: AppActionProps) => {
             {action.onClick ? (
               action.tooltip ? (
                 <Tooltip title={action.tooltip}>
-                  <Button
-                    ref={action.elementRef}
-                    style={{
-                      marginLeft: i > 0 ? 10 : 0,
-                      display: action.hidden ? "none" : undefined,
-                      textTransform: "none",
-                    }}
-                    variant="contained"
-                    onClick={action.onClick}
-                    disabled={action.disabled}
-                  >
-                    {action.icon || action.label}
-                  </Button>
+                  <span>
+                    <Button
+                      ref={action.elementRef}
+                      style={{
+                        marginLeft: i > 0 ? 10 : 0,
+                        display: action.hidden ? "none" : undefined,
+                        textTransform: "none",
+                      }}
+                      variant="contained"
+                      onClick={action.onClick}
+                      disabled={action.disabled}
+                    >
+                      {action.icon || action.label}
+                    </Button>
+                  </span>
                 </Tooltip>
               ) : (
                 <Button

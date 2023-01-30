@@ -7,7 +7,10 @@ import DialogTitle from "@mui/material/DialogTitle";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
-import { ReceiverRow } from "../../../../types/RowTypes";
+import {
+  isSavingReceiverAllowed,
+  ReceiverRow,
+} from "../../../../types/RowTypes";
 
 export interface EditReceiverDialogProps {
   receiver: ReceiverRow;
@@ -23,8 +26,8 @@ export const EditReceiverDialog = (props: EditReceiverDialogProps) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
   const { receiverId, name, mailAddress } = data;
-  const isSavingAllowed =
-    !!receiverId?.length && !!name?.length && !!mailAddress?.length;
+
+  const { isSavingAllowed, errorData } = isSavingReceiverAllowed(data);
 
   return (
     <Dialog open={open} onClose={handleCancel}>
@@ -51,6 +54,7 @@ export const EditReceiverDialog = (props: EditReceiverDialogProps) => {
           id="name"
           label="Name"
           value={name}
+          errorData={errorData.name}
           onChange={(s) => updateData({ name: s })}
           fullWidth
           variant="standard"
