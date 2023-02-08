@@ -22,7 +22,7 @@ import { TimeintervalFilter } from "../../../filter/Types";
 import { useArticleSelect } from "../../../hooks/useArticleSelect";
 import { useCostunitSelect } from "../../../hooks/useCostunitSelect";
 import { useReceiptInsert } from "../../../hooks/useReceiptInsert";
-import { useReceiptSelect } from "../../../hooks/useReceiptSelect";
+import { useReceiptSelectByInterval } from "../../../hooks/useReceiptSelectByInterval";
 import { useStoreSectionSelect } from "../../../hooks/useStoreSectionSelect";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
@@ -93,7 +93,7 @@ export const Page = () => {
     [initialAction, navigate]
   );
 
-  const receiptApiResponse = useReceiptSelect(
+  const receiptApiResponse = useReceiptSelectByInterval(
     backendApiUrl,
     filter.from,
     filter.to,
@@ -216,7 +216,7 @@ export const Page = () => {
               wwwLink: undefined,
               receiptAt: new Date(),
               guarantyTo: undefined,
-              reason: "buy",
+              reason: "inventory",
               costUnit: "",
               price: undefined,
             },

@@ -29,13 +29,15 @@ export const StoreRefAutocomplete = (props: StoreRefAutocompleteProps) => {
 
   const { error } = errorData || {};
 
-  const usedHelperText = error || helperText || "";
+  const usedHelperText =
+    error && helperText ? `${helperText}. ${error}` : error || helperText || "";
 
   return (
     <Autocomplete
       disablePortal
       id="storeRefEditor"
       getOptionLabel={(row) => row.storeId}
+      isOptionEqualToValue={(a, b) => a.storeId === b.storeId}
       options={orderedStores}
       value={value || null}
       onChange={(event, row) => {

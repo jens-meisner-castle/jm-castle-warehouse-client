@@ -19,4 +19,4 @@ export const getImageDisplayUrl = (
       : `${apiUrl}/image-content/image?image_id=${imageId}`
     : undefined;
 
-export const badCharsInSearchValue = ["+"];
+export const badCharsInSearchValue = ["+", "&"];

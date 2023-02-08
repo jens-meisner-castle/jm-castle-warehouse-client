@@ -1,11 +1,11 @@
-import Paper from "@mui/material/Paper";
 import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import { CSSProperties, Fragment, useCallback, useMemo } from "react";
 import { backendApiUrl, getImageDisplayUrl } from "../../configuration/Urls";
 import { WwwLink } from "../../navigation/WwwLink";
-import { ArticleRow } from "../../types/RowTypes";
+import { ArticleRow, AttributeRow } from "../../types/RowTypes";
 import { newOrderForChangedElement, OrderElement } from "../../types/Types";
+import { displayValueForValues } from "../../utils/Attribute";
 import { getDateFormat, getDateFormatter } from "../../utils/Format";
 import { SizeVariant } from "../SizeVariant";
 import { ColumnLabel } from "./ColumnLabel";
@@ -20,13 +20,14 @@ export const availableOrderElements: Partial<
 
 export const sizeVariantForWidth = (width: number): SizeVariant => {
   if (width < 600) return "tiny";
-  if (width < 800) return "small";
-  if (width < 1100) return "medium";
+  if (width < 1000) return "small";
+  if (width < 1400) return "medium";
   return "large";
 };
 
 export interface ArticlesTableProps {
   data: ArticleRow[];
+  availableAttributes: AttributeRow[];
   order?: OrderElement<ArticleRow>[];
   onOrderChange?: (order: OrderElement<ArticleRow>[]) => void;
   editable?: boolean;
@@ -40,6 +41,7 @@ export interface ArticlesTableProps {
 export const ArticlesTable = (props: ArticlesTableProps) => {
   const {
     data,
+    availableAttributes,
     order,
     onOrderChange,
     containerStyle,
@@ -56,6 +58,14 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
     order?.forEach((e) => (newHash[e.field] = e));
     return newHash;
   }, [order]);
+
+  const attributesHash = useMemo(() => {
+    const hash: Record<string, AttributeRow> = {};
+    availableAttributes.forEach(
+      (attribute) => (hash[attribute.attributeId] = attribute)
+    );
+    return hash;
+  }, [availableAttributes]);
 
   const handleClickOnOrderElement = useCallback(
     (field: keyof ArticleRow) => {
@@ -95,6 +105,16 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
               </TableCell>
             )}
             {reduceColumns < 2 && (
+              <TableCell key={"manufacturer"} style={cellStyle}>
+                <ColumnLabel
+                  label="Hersteller"
+                  order={order}
+                  orderElement={orderElements.manufacturer}
+                  onClick={handleClickOnOrderElement}
+                />
+              </TableCell>
+            )}
+            {reduceColumns < 2 && (
               <TableCell key={"link"} style={cellStyle}>
                 {"Link (www)"}
               </TableCell>
@@ -104,7 +124,7 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
                 {"Zähleinheit"}
               </TableCell>
             )}
-            {reduceColumns < 2 && (
+            {reduceColumns < 1 && (
               <TableCell key={"hashtag"} style={cellStyle}>
                 {"Hashtags"}
               </TableCell>
@@ -129,6 +149,11 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
                 {"Bilder"}
               </TableCell>
             )}
+            {reduceColumns < 1 && (
+              <TableCell key={"attributes"} style={cellStyle} align="left">
+                {"Attribute"}
+              </TableCell>
+            )}
           </Fragment>
         );
       },
@@ -142,9 +167,11 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
           articleId,
           imageRefs,
           name,
+          manufacturer,
           countUnit,
           hashtags,
           wwwLink,
+          attributes,
           datasetVersion,
           createdAt,
           editedAt,
@@ -165,6 +192,11 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
               </TableCell>
             )}
             {reduceColumns < 2 && (
+              <TableCell key={"manufacturer"} style={cellStyle} size={cellSize}>
+                {manufacturer}
+              </TableCell>
+            )}
+            {reduceColumns < 2 && (
               <TableCell key={"link"} style={cellStyle} size={cellSize}>
                 {wwwLinkUrl && wwwLink && (
                   <WwwLink
@@ -180,13 +212,18 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
                 {countUnit}
               </TableCell>
             )}
-            {reduceColumns < 2 && (
+            {reduceColumns < 1 && (
               <TableCell key={"hashtag"} style={cellStyle} size={cellSize}>
                 {hashtags ? hashtags.join(", ") : ""}
               </TableCell>
             )}
             {reduceColumns < 1 && (
-              <TableCell key={"createdAt"} style={cellStyle} size={cellSize}>
+              <TableCell
+                key={"createdAt"}
+                style={cellStyle}
+                align="center"
+                size={cellSize}
+              >
                 {atFormatFunction(createdAt)}
               </TableCell>
             )}
@@ -230,14 +267,26 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
                 )}
               </TableCell>
             )}
+            {reduceColumns < 1 && (
+              <TableCell
+                key={"attributes"}
+                align="left"
+                style={cellStyle}
+                size={cellSize}
+              >
+                {attributes
+                  ? displayValueForValues(attributes, 3, attributesHash)
+                  : ""}
+              </TableCell>
+            )}
           </Fragment>
         );
       },
-      [atFormatFunction, displayImage]
+      [atFormatFunction, displayImage, attributesHash]
     );
 
   return (
-    <TableContainer style={containerStyle} component={Paper}>
+    <TableContainer style={containerStyle} component={"div"}>
       <GenericTable
         data={data}
         editable={editable}

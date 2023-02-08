@@ -14,11 +14,8 @@ import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
 import { sizeVariantForWidth } from "../../../components/table/EmissionsTable";
 import { StockArticlesTable } from "../../../components/table/StockArticlesTable";
 import { backendApiUrl } from "../../../configuration/Urls";
-import {
-  ArbitraryFilterComponent,
-  FilterAspect,
-} from "../../../filter/ArbitraryFilterComponent";
-import { ArbitraryFilter } from "../../../filter/Types";
+import { ArbitraryFilterComponent } from "../../../filter/ArbitraryFilterComponent";
+import { ArbitraryFilter, FilterAspect } from "../../../filter/Types";
 import { useStockArticleAll } from "../../../hooks/useStockArticleAll";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
@@ -37,7 +34,7 @@ import {
 import { getValidInitialAction } from "../utils/Reducer";
 
 const filterAspects: FilterAspect[] = [
-  "hashtag",
+  "hashtags",
   "nameFragment",
   "storeSection",
 ];

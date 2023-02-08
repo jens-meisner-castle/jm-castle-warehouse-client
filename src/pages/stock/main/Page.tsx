@@ -8,7 +8,7 @@ import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { TimeintervalFilter } from "../../../filter/Types";
 import { useEmissionSelect } from "../../../hooks/useEmissionSelect";
-import { useReceiptSelect } from "../../../hooks/useReceiptSelect";
+import { useReceiptSelectByInterval } from "../../../hooks/useReceiptSelectByInterval";
 import { useStockSectionAll } from "../../../hooks/useStockSectionAll";
 import { getNewFilter } from "../../../utils/Filter";
 import { Emissions } from "./parts/Emissions";
@@ -27,7 +27,7 @@ export const Page = () => {
   const refreshStatus = useCallback(() => {
     setUpdateIndicator((previous) => previous + 1);
   }, []);
-  const receiptApiResponse = useReceiptSelect(
+  const receiptApiResponse = useReceiptSelectByInterval(
     backendApiUrl,
     filter.from,
     filter.to,

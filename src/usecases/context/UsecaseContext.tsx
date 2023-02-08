@@ -1,19 +1,25 @@
 import {
   createContext,
-  Dispatch,
   PropsWithChildren,
-  SetStateAction,
   useCallback,
   useContext,
   useEffect,
   useState,
 } from "react";
-import { UsecaseState } from "../Types";
+import {
+  isInventoryState,
+  isRelocateState,
+  UsecaseData,
+  UsecaseState,
+} from "../Types";
 
 interface ContextState {
   startUsecase?: (initialState: UsecaseState) => void;
+  cancelUsecase?: () => void;
   usecaseState?: UsecaseState;
-  setUsecaseState?: Dispatch<SetStateAction<UsecaseState>>;
+  updateUsecaseData?: (
+    updates: { data: Partial<UsecaseData> } & { id: UsecaseState["id"] }
+  ) => void;
 }
 
 const initialValue: ContextState = {};
@@ -32,10 +38,39 @@ export const UsecaseContextProvider = (props: PropsWithChildren) => {
     setUsecaseState(initialState);
   }, []);
 
+  const updateUsecaseData = useCallback(
+    (updates: { data: Partial<UsecaseData> } & { id: UsecaseState["id"] }) => {
+      setUsecaseState((previous) => {
+        const { id: previousId } = previous;
+        if (previousId !== updates.id) return previous;
+        switch (previousId) {
+          case "inventory":
+            return isInventoryState(updates)
+              ? { id: previousId, data: { ...previous.data, ...updates.data } }
+              : previous;
+          case "relocate":
+            return isRelocateState(updates)
+              ? { id: previousId, data: { ...previous.data, ...updates.data } }
+              : previous;
+          default: {
+            console.error("Bad updateUsecaseData call with: ", updates);
+            return previous;
+          }
+        }
+      });
+    },
+    []
+  );
+
+  const cancelUsecase = useCallback(() => {
+    setUsecaseState({ id: "empty" });
+  }, []);
+
   const [contextValue, setContextValue] = useState<ContextState>({
     startUsecase,
+    cancelUsecase,
     usecaseState,
-    setUsecaseState,
+    updateUsecaseData,
   });
 
   useEffect(() => {
@@ -70,17 +105,30 @@ export const useStartUsecase = () => {
   return startUsecase;
 };
 
-export const useSetUsecaseState = () => {
-  const { setUsecaseState } = useContext(usecaseContext);
-  if (!setUsecaseState) {
+export const useCancelUsecase = () => {
+  const { cancelUsecase } = useContext(usecaseContext);
+  if (!cancelUsecase) {
     console.error(
-      "No UsecaseContextProvider in parent hierarchy. Unable to use useSetUsecaseState."
+      "No UsecaseContextProvider in parent hierarchy. Unable to use useCancelUsecase."
     );
     throw new Error(
-      "No UsecaseContextProvider in parent hierarchy. Unable to use useSetUsecaseState."
+      "No UsecaseContextProvider in parent hierarchy. Unable to use useCancelUsecase."
     );
   }
-  return setUsecaseState;
+  return cancelUsecase;
+};
+
+export const useUpdateUsecaseData = () => {
+  const { updateUsecaseData } = useContext(usecaseContext);
+  if (!updateUsecaseData) {
+    console.error(
+      "No UsecaseContextProvider in parent hierarchy. Unable to use useUpdateUsecaseData."
+    );
+    throw new Error(
+      "No UsecaseContextProvider in parent hierarchy. Unable to use useUpdateUsecaseData."
+    );
+  }
+  return updateUsecaseData;
 };
 
 export const useUsecaseState = () => {

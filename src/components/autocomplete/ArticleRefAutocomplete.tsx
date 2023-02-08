@@ -29,13 +29,15 @@ export const ArticleRefAutocomplete = (props: ArticleRefAutocompleteProps) => {
 
   const { error } = errorData || {};
 
-  const usedHelperText = error || helperText || "";
+  const usedHelperText =
+    error && helperText ? `${helperText}. ${error}` : error || helperText || "";
 
   return (
     <Autocomplete
       disablePortal
       id="articleRefEditor"
       getOptionLabel={(row) => row.articleId}
+      isOptionEqualToValue={(a, b) => a.articleId === b.articleId}
       options={orderedArticles}
       value={value || null}
       onChange={(event, row) => {

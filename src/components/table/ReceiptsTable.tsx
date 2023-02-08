@@ -5,7 +5,11 @@ import { CSSProperties, Fragment, useCallback, useMemo } from "react";
 import { backendApiUrl, getImageDisplayUrl } from "../../configuration/Urls";
 import { ReceiptRow } from "../../types/RowTypes";
 import { newOrderForChangedElement, OrderElement } from "../../types/Types";
-import { getDateFormat, getDateFormatter } from "../../utils/Format";
+import {
+  formatPrice,
+  getDateFormat,
+  getDateFormatter,
+} from "../../utils/Format";
 import { SizeVariant } from "../SizeVariant";
 import { ColumnLabel } from "./ColumnLabel";
 import { GenericTable, GenericTableProps } from "./GenericTable";
@@ -33,6 +37,7 @@ export interface ReceiptsTableProps {
   displayImage?: "small" | "none";
   sizeVariant: SizeVariant;
   containerStyle?: CSSProperties;
+  hidePagination?: boolean;
 }
 
 export const ReceiptsTable = (props: ReceiptsTableProps) => {
@@ -45,6 +50,7 @@ export const ReceiptsTable = (props: ReceiptsTableProps) => {
     onDuplicate,
     displayImage,
     sizeVariant,
+    hidePagination,
   } = props;
 
   const orderElements = useMemo(() => {
@@ -73,7 +79,7 @@ export const ReceiptsTable = (props: ReceiptsTableProps) => {
       (reduceColumns, cellStyle) => {
         return (
           <Fragment key="labelCells">
-            <TableCell>
+            <TableCell style={cellStyle}>
               <ColumnLabel
                 label="Artikel"
                 order={order}
@@ -81,7 +87,7 @@ export const ReceiptsTable = (props: ReceiptsTableProps) => {
                 onClick={handleClickOnOrderElement}
               />
             </TableCell>
-            <TableCell align="right">
+            <TableCell align="center" style={cellStyle}>
               <ColumnLabel
                 label="gebucht um"
                 order={order}
@@ -89,15 +95,33 @@ export const ReceiptsTable = (props: ReceiptsTableProps) => {
                 onClick={handleClickOnOrderElement}
               />
             </TableCell>
-            <TableCell align="right">{"Anzahl"}</TableCell>
-            {reduceColumns < 1 && (
-              <TableCell align="center">{"gebucht von"}</TableCell>
+            <TableCell style={cellStyle} align="right">
+              {"Anzahl"}
+            </TableCell>
+            {reduceColumns < 2 && (
+              <TableCell style={cellStyle} align="center">
+                {"Kostenstelle"}
+              </TableCell>
             )}
             {reduceColumns < 2 && (
-              <TableCell align="center">{"Lagerbereich"}</TableCell>
+              <TableCell key="price" style={cellStyle} align="right">
+                {"Preis"}
+              </TableCell>
             )}
             {reduceColumns < 1 && (
-              <TableCell align="center">{"Datensatz ID"}</TableCell>
+              <TableCell style={cellStyle} align="center">
+                {"gebucht von"}
+              </TableCell>
+            )}
+            {reduceColumns < 2 && (
+              <TableCell style={cellStyle} align="center">
+                {"Lagerbereich"}
+              </TableCell>
+            )}
+            {reduceColumns < 1 && (
+              <TableCell style={cellStyle} align="center">
+                {"Datensatz ID"}
+              </TableCell>
             )}
             {displayImage === "small" && (
               <TableCell style={cellStyle}>{"Bilder"}</TableCell>
@@ -119,6 +143,8 @@ export const ReceiptsTable = (props: ReceiptsTableProps) => {
           receiptAt,
           datasetId,
           imageRefs,
+          costUnit,
+          price,
         } = row;
         const imageUrl = getImageDisplayUrl(
           backendApiUrl,
@@ -130,12 +156,22 @@ export const ReceiptsTable = (props: ReceiptsTableProps) => {
             <TableCell style={cellStyle} size={cellSize}>
               {articleId}
             </TableCell>
-            <TableCell style={cellStyle} size={cellSize} align="right">
+            <TableCell style={cellStyle} size={cellSize} align="center">
               {atFormatFunction(receiptAt)}
             </TableCell>
             <TableCell style={cellStyle} size={cellSize} align="right">
               {articleCount}
             </TableCell>
+            {reduceColumns < 2 && (
+              <TableCell style={cellStyle} size={cellSize} align="center">
+                {costUnit}
+              </TableCell>
+            )}
+            {reduceColumns < 2 && (
+              <TableCell style={cellStyle} size={cellSize} align="center">
+                {formatPrice(price)}
+              </TableCell>
+            )}
             {reduceColumns < 1 && (
               <TableCell style={cellStyle} size={cellSize} align="center">
                 {byUser}
@@ -179,6 +215,7 @@ export const ReceiptsTable = (props: ReceiptsTableProps) => {
         sizeVariant={sizeVariant}
         renderLabelCells={renderLabelCells}
         renderDataCells={renderDataCells}
+        hidePagination={hidePagination}
       />
     </TableContainer>
   );

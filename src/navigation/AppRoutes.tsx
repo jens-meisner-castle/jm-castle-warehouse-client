@@ -9,10 +9,12 @@ import { Page as HelpPage } from "../pages/help/Page";
 import { Page as HistoryPage } from "../pages/history/Page";
 import { Page as LoginPage } from "../pages/login/Page";
 import { Page as ArticlePage } from "../pages/masterdata/article/Page";
+import { Page as AttributePage } from "../pages/masterdata/attribute/Page";
 import { Page as CostunitPage } from "../pages/masterdata/costunit/Page";
 import { Page as HashtagPage } from "../pages/masterdata/hashtag/Page";
 import { Page as ImageContentPage } from "../pages/masterdata/image/Page";
 import { Page as MasterdataPage } from "../pages/masterdata/main/Page";
+import { Page as ManufacturerPage } from "../pages/masterdata/manufacturer/Page";
 import { Page as ReceiverPage } from "../pages/masterdata/receiver/Page";
 import { Page as StoreSectionPage } from "../pages/masterdata/store-section/Page";
 import { Page as StorePage } from "../pages/masterdata/store/Page";
@@ -120,6 +122,11 @@ const masterdataStore: AppRoute = {
   element: StorePage,
   neededRole: "internal",
 };
+const masterdataAttribute: AppRoute = {
+  path: "/masterdata/attribute",
+  element: AttributePage,
+  neededRole: "internal",
+};
 const masterdataStoreSection: AppRoute = {
   neededRole: "internal",
   path: "/masterdata/store-section",
@@ -144,6 +151,11 @@ const masterdataReceiver: AppRoute = {
   neededRole: "internal",
   path: "/masterdata/receiver",
   element: ReceiverPage,
+};
+const masterdataManufacturer: AppRoute = {
+  neededRole: "internal",
+  path: "/masterdata/manufacturer",
+  element: ManufacturerPage,
 };
 const systemExport: AppRoute = {
   neededRole: "admin",
@@ -178,6 +190,8 @@ const AllRoutes = {
   masterdataHashtag,
   masterdataImageContent,
   masterdataReceiver,
+  masterdataManufacturer,
+  masterdataAttribute,
   masterdataStore,
   masterdataStoreSection,
   stockArticle,

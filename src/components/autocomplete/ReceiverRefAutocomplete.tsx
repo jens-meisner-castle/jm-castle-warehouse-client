@@ -33,13 +33,15 @@ export const ReceiverRefAutocomplete = (
 
   const { error } = errorData || {};
 
-  const usedHelperText = error || helperText || "";
+  const usedHelperText =
+    error && helperText ? `${helperText}. ${error}` : error || helperText || "";
 
   return (
     <Autocomplete
       disablePortal
       id="receiverRefEditor"
       getOptionLabel={(row) => row.receiverId}
+      isOptionEqualToValue={(a, b) => a.receiverId === b.receiverId}
       options={orderedReceivers}
       value={value || null}
       onChange={(event, row) => {

@@ -185,7 +185,7 @@ export const ImageRefsEditor = (props: ImageRefsEditorProps) => {
         <Grid item>
           <ImagesSlide
             imageRefs={imageRefs}
-            maxSize="30vw"
+            sizeVariant="large"
             index={imageIndex}
             onIndexChange={setImageIndex}
           />

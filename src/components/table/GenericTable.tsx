@@ -33,6 +33,7 @@ export interface GenericTableProps<T> {
   ) => ReactNode;
   editable?: boolean;
   sizeVariant: SizeVariant;
+  hidePagination?: boolean;
   onEdit?: (row: T) => void;
   onDuplicate?: (row: T) => void;
   onShowQrCode?: (row: T) => void;
@@ -48,6 +49,7 @@ export const GenericTable = <T,>(props: GenericTableProps<T>) => {
     onDuplicate,
     onShowQrCode,
     sizeVariant,
+    hidePagination,
   } = props;
   const [tableSettings, setTableSettings] = useState<TableSettings>({
     rowsPerPage: 20,
@@ -135,32 +137,34 @@ export const GenericTable = <T,>(props: GenericTableProps<T>) => {
   return (
     <Table>
       <TableHead>
-        <TableRow>
-          <TablePagination
-            labelRowsPerPage={labelRowsPerPage(sizeVariant)}
-            style={{ paddingLeft: sizeVariant === "tiny" ? 2 : undefined }}
-            rowsPerPageOptions={[
-              10,
-              20,
-              30,
-              40,
-              50,
-              { label: "All", value: -1 },
-            ]}
-            count={data.length}
-            rowsPerPage={rowsPerPage}
-            page={usedPage}
-            SelectProps={{
-              inputProps: {
-                "aria-label": "rows per page",
-              },
-              native: true,
-            }}
-            onPageChange={handlePageChange}
-            onRowsPerPageChange={handleRowsPerPageChange}
-            ActionsComponent={TablePaginationActions}
-          />
-        </TableRow>
+        {!hidePagination && (
+          <TableRow>
+            <TablePagination
+              labelRowsPerPage={labelRowsPerPage(sizeVariant)}
+              style={{ paddingLeft: sizeVariant === "tiny" ? 2 : undefined }}
+              rowsPerPageOptions={[
+                10,
+                20,
+                30,
+                40,
+                50,
+                { label: "All", value: -1 },
+              ]}
+              count={data.length}
+              rowsPerPage={rowsPerPage}
+              page={usedPage}
+              SelectProps={{
+                inputProps: {
+                  "aria-label": "rows per page",
+                },
+                native: true,
+              }}
+              onPageChange={handlePageChange}
+              onRowsPerPageChange={handleRowsPerPageChange}
+              ActionsComponent={TablePaginationActions}
+            />
+          </TableRow>
+        )}
         <TableRow>{labelCells}</TableRow>
       </TableHead>
       <TableBody>

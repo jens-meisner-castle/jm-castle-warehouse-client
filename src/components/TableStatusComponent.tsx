@@ -59,7 +59,7 @@ export const TableStatusComponent = (props: TableStatusComponentProps) => {
             <div key={c.name}>
               <Typography
                 component={"span"}
-              >{`{name: "${c.name}",`}</Typography>{" "}
+              >{`{name: "${c.name}",`}</Typography>
               <Typography
                 sx={{ color: "text.secondary", marginLeft: 1 }}
                 component={"span"}

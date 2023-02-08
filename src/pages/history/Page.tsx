@@ -14,7 +14,7 @@ import { backendApiUrl } from "../../configuration/Urls";
 import { TimeFilterComponent } from "../../filter/TimeFilterComponent";
 import { TimeintervalFilter } from "../../filter/Types";
 import { useEmissionSelect } from "../../hooks/useEmissionSelect";
-import { useReceiptSelect } from "../../hooks/useReceiptSelect";
+import { useReceiptSelectByInterval } from "../../hooks/useReceiptSelectByInterval";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import { allRoutes } from "../../navigation/AppRoutes";
 import {
@@ -74,7 +74,7 @@ export const Page = () => {
 
   const [updateIndicator, setUpdateIndicator] = useState(1);
 
-  const receiptApiResponse = useReceiptSelect(
+  const receiptApiResponse = useReceiptSelectByInterval(
     backendApiUrl,
     filter.from,
     filter.to,

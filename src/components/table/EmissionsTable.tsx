@@ -4,7 +4,11 @@ import TableContainer from "@mui/material/TableContainer";
 import { CSSProperties, Fragment, useCallback, useMemo } from "react";
 import { EmissionRow } from "../../types/RowTypes";
 import { newOrderForChangedElement, OrderElement } from "../../types/Types";
-import { getDateFormat, getDateFormatter } from "../../utils/Format";
+import {
+  formatPrice,
+  getDateFormat,
+  getDateFormatter,
+} from "../../utils/Format";
 import { SizeVariant } from "../SizeVariant";
 import { ColumnLabel } from "./ColumnLabel";
 import { GenericTable, GenericTableProps } from "./GenericTable";
@@ -31,6 +35,7 @@ export interface EmissionsTableProps {
   onDuplicate?: (row: EmissionRow) => void;
   sizeVariant: SizeVariant;
   containerStyle?: CSSProperties;
+  hidePagination?: boolean;
 }
 
 export const EmissionsTable = (props: EmissionsTableProps) => {
@@ -42,6 +47,7 @@ export const EmissionsTable = (props: EmissionsTableProps) => {
     containerStyle,
     editable,
     onDuplicate,
+    hidePagination,
   } = props;
 
   const orderElements = useMemo(() => {
@@ -79,7 +85,7 @@ export const EmissionsTable = (props: EmissionsTableProps) => {
                 onClick={handleClickOnOrderElement}
               />
             </TableCell>
-            <TableCell key="emittedAt" style={cellStyle} align="right">
+            <TableCell key="emittedAt" style={cellStyle} align="center">
               <ColumnLabel
                 label="gebucht um"
                 order={order}
@@ -90,6 +96,16 @@ export const EmissionsTable = (props: EmissionsTableProps) => {
             <TableCell key="articleCount" style={cellStyle} align="right">
               {"Anzahl"}
             </TableCell>
+            {reduceColumns < 2 && (
+              <TableCell key="costunit" style={cellStyle} align="center">
+                {"Kostenstelle"}
+              </TableCell>
+            )}
+            {reduceColumns < 2 && (
+              <TableCell key="price" style={cellStyle} align="right">
+                {"Preis"}
+              </TableCell>
+            )}
             {reduceColumns < 2 && (
               <TableCell key="byUser" style={cellStyle} align="center">
                 {"gebucht von"}
@@ -119,6 +135,8 @@ export const EmissionsTable = (props: EmissionsTableProps) => {
           sectionId,
           byUser,
           articleCount,
+          price,
+          costUnit,
           emittedAt,
           datasetId,
         } = row;
@@ -131,7 +149,7 @@ export const EmissionsTable = (props: EmissionsTableProps) => {
               key="emittedAt"
               style={cellStyle}
               size={cellSize}
-              align="right"
+              align="center"
             >
               {atFormatFunction(emittedAt)}
             </TableCell>
@@ -143,6 +161,26 @@ export const EmissionsTable = (props: EmissionsTableProps) => {
             >
               {articleCount}
             </TableCell>
+            {reduceColumns < 2 && (
+              <TableCell
+                key="costunit"
+                style={cellStyle}
+                size={cellSize}
+                align="center"
+              >
+                {costUnit}
+              </TableCell>
+            )}
+            {reduceColumns < 2 && (
+              <TableCell
+                key="price"
+                style={cellStyle}
+                size={cellSize}
+                align="center"
+              >
+                {formatPrice(price)}
+              </TableCell>
+            )}
             {reduceColumns < 2 && (
               <TableCell
                 key="byUser"
@@ -188,6 +226,7 @@ export const EmissionsTable = (props: EmissionsTableProps) => {
         onDuplicate={onDuplicate}
         renderLabelCells={renderLabelCells}
         renderDataCells={renderDataCells}
+        hidePagination={hidePagination}
       />
     </TableContainer>
   );

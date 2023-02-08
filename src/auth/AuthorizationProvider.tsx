@@ -57,8 +57,6 @@ export const AuthorizationProvider = (props: AuthorizationProviderProps) => {
   >("initial");
   const [clientId, setClientId] = useState<string | undefined>(loadClientId());
 
-  console.log("state", stateId);
-
   const handleExpiredToken = useCallback((errorCode: ErrorCode | undefined) => {
     if (
       errorCode === TokenExpiredErrorCode ||
@@ -76,9 +74,8 @@ export const AuthorizationProvider = (props: AuthorizationProviderProps) => {
 
   const handleLoginResult = useCallback(
     (loginResult: LoginResult) => {
-            const { token, username, roles, expiresAtDisplay, expiresAtMs } =
+      const { token, username, roles, expiresAtDisplay, expiresAtMs } =
         loginResult || {};
-        console.log("handle login result", token)
       if (navigator.serviceWorker?.controller) {
         if (token && withServiceWorker) {
           navigator.serviceWorker.controller.postMessage({

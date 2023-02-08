@@ -37,6 +37,7 @@ export interface StockArticlesTableProps {
   containerStyle?: CSSProperties;
   onEdit?: (row: ArticleRow) => void;
   onDuplicate?: (row: ArticleRow) => void;
+  hidePagination?: boolean;
 }
 
 export const StockArticlesTable = (props: StockArticlesTableProps) => {
@@ -50,6 +51,7 @@ export const StockArticlesTable = (props: StockArticlesTableProps) => {
     onDuplicate,
     displayImage,
     sizeVariant,
+    hidePagination,
   } = props;
 
   const handleClickOnOrderElement = useCallback(
@@ -223,6 +225,7 @@ export const StockArticlesTable = (props: StockArticlesTableProps) => {
         sizeVariant={sizeVariant}
         renderLabelCells={renderLabelCells}
         renderDataCells={renderDataCells}
+        hidePagination={hidePagination}
       />
     </TableContainer>
   );

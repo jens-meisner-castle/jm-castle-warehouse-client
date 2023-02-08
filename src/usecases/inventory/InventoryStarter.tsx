@@ -1,10 +1,10 @@
 import { Button, Grid, Typography } from "@mui/material";
-import { InventoryState } from "../Types";
 import { useStartUsecase } from "../context/UsecaseContext";
+import { InventoryState } from "../Types";
 
 const usecaseState: InventoryState = {
   id: "inventory",
-  data: { temp: {} },
+  data: {},
 };
 
 export const InventoryStarter = () => {

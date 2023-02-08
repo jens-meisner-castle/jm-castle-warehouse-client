@@ -1,57 +1,45 @@
-import { MenuItem } from "@mui/material";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import TextField from "@mui/material/TextField";
-import { CountUnits, isCountUnit } from "jm-castle-warehouse-types/build";
-import { useMemo, useState } from "react";
-import { HashtagsRefEditor } from "../../../../components/multi-ref/HashtagsRefEditor";
-import { ImageRefsEditor } from "../../../../components/multi-ref/ImageRefsEditor";
-import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
+import { useState } from "react";
+import { ArticleEditor } from "../../../../components/row-editor/ArticleEditor";
 import {
   ArticleRow,
+  AttributeRow,
   HashtagRow,
   isSavingArticleAllowed,
+  ManufacturerRow,
 } from "../../../../types/RowTypes";
 
 export interface CreateArticleDialogProps {
   article: ArticleRow;
   availableHashtags: HashtagRow[];
+  availableManufacturers: ManufacturerRow[];
+  availableAttributes: AttributeRow[];
   open: boolean;
   handleCancel: () => void;
   handleAccept: (article: ArticleRow) => void;
 }
 
 export const CreateArticleDialog = (props: CreateArticleDialogProps) => {
-  const { article, availableHashtags, handleAccept, handleCancel, open } =
-    props;
+  const {
+    article,
+    availableHashtags,
+    availableManufacturers,
+    availableAttributes,
+    handleAccept,
+    handleCancel,
+    open,
+  } = props;
   const [data, setData] = useState(article);
   const updateData = (updates: Partial<ArticleRow>) => {
     setData((previous) => ({ ...previous, ...updates }));
   };
-  const countUnits = useMemo(
-    () =>
-      Object.keys(CountUnits).map((k) => ({
-        id: k,
-        name: CountUnits[k as keyof typeof CountUnits].name,
-      })),
-    []
-  );
-  const { articleId, name, countUnit, imageRefs, hashtags, wwwLink } = data;
 
-  const { isSavingAllowed, errorData } = isSavingArticleAllowed(data);
-
-  const currentHashtags = useMemo(() => {
-    const newHashtags: HashtagRow[] = [];
-    hashtags?.forEach((tagId) => {
-      const hashtag = availableHashtags.find((r) => r.tagId === tagId);
-      hashtag && newHashtags.push(hashtag);
-    });
-    return newHashtags;
-  }, [hashtags, availableHashtags]);
+  const { isSavingAllowed } = isSavingArticleAllowed(data);
 
   return (
     <Dialog open={open} onClose={handleCancel}>
@@ -62,71 +50,13 @@ export const CreateArticleDialog = (props: CreateArticleDialogProps) => {
             "Füllen Sie die notwendigen Felder aus und drücken Sie am Ende 'Speichern'."
           }
         </DialogContentText>
-        <TextFieldWithSpeech
-          autoFocus
-          margin="dense"
-          id="articleId"
-          label="Artikel"
-          value={articleId || ""}
-          errorData={errorData.articleId}
-          onChange={(s) => updateData({ articleId: s })}
-          fullWidth
-          variant="standard"
-        />
-        <TextFieldWithSpeech
-          margin="dense"
-          id="name"
-          label="Name"
-          value={name || ""}
-          errorData={errorData.name}
-          onChange={(s) => {
-            updateData({ name: s });
-          }}
-          fullWidth
-          variant="standard"
-        />
-        <HashtagsRefEditor
-          value={currentHashtags}
-          hashtags={availableHashtags}
-          onChange={(hashtags) =>
-            updateData({ hashtags: hashtags?.map((r) => r.tagId) })
-          }
-        />
-        <TextField
-          margin="dense"
-          id="wwwLink"
-          label="Link (www)"
-          value={wwwLink || ""}
-          onChange={(event) => updateData({ wwwLink: event.target.value })}
-          type="text"
-          fullWidth
-          variant="standard"
-        />
-        <TextField
-          margin="dense"
-          id="countUnit"
-          select
-          label="Zähleinheit"
-          value={countUnit}
-          onChange={(event) => {
-            isCountUnit(event.target.value) &&
-              updateData({ countUnit: event.target.value });
-          }}
-          helperText="Bitte wählen Sie eine Zähleinheit aus"
-          fullWidth
-          variant="standard"
-        >
-          {countUnits.map((unit) => (
-            <MenuItem key={unit.id} value={unit.id}>
-              {`${unit.id} (${unit.name})`}
-            </MenuItem>
-          ))}
-        </TextField>
-        <ImageRefsEditor
-          imageRefs={imageRefs}
-          onChange={(imageRefs) =>
-            setData((previous) => ({ ...previous, imageRefs }))
-          }
+        <ArticleEditor
+          mode="create"
+          row={data || {}}
+          onChange={updateData}
+          availableManufacturers={availableManufacturers}
+          availableHashtags={availableHashtags}
+          availableAttributes={availableAttributes}
         />
       </DialogContent>
       <DialogActions>

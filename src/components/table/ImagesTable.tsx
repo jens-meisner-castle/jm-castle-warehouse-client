@@ -152,7 +152,7 @@ export const ImagesTable = (props: ImagesTableProps) => {
               {height}
             </TableCell>
             {reduceColumns < 1 && (
-              <TableCell style={cellStyle} size={cellSize}>
+              <TableCell style={cellStyle} align="center" size={cellSize}>
                 {atFormatFunction(createdAt)}
               </TableCell>
             )}

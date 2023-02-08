@@ -1,5 +1,12 @@
 import { DateTime } from "luxon";
 
+export type FilterAspect =
+  | "hashtags"
+  | "nameFragment"
+  | "store"
+  | "storeSection"
+  | "storeSections";
+
 export interface TimeintervalFilter {
   from: DateTime;
   to: DateTime;

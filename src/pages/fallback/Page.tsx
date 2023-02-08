@@ -42,8 +42,6 @@ export const Page = () => {
     );
   }, [initialPath]);
 
-  console.log("initial", initialPath);
-
   const [progress, setProgress] = useState<ProgressState>({
     stateId: "initial",
   });
@@ -95,8 +93,6 @@ export const Page = () => {
       }
     }
   }, [stateId, navigate, isLegalPathname, initialPath]);
-
-  console.log(progress);
 
   const text = getText(progress, initialPath.pathname, isLegalPathname);
 

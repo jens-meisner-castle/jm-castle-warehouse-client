@@ -1,15 +1,19 @@
+import { ValueType, ValueUnit } from "jm-castle-types/build";
 import {
   ArticleStockState,
+  AttributeValue,
   CountUnit,
   EmissionReason,
   EmissionRequestReason,
   ReceiptReason,
   ReceiptRequestReason,
   Row_Article,
+  Row_Attribute,
   Row_Costunit,
   Row_Emission,
   Row_Hashtag,
   Row_ImageContent,
+  Row_Manufacturer,
   Row_Masterdata,
   Row_Receipt,
   Row_Receiver,
@@ -48,6 +52,8 @@ export interface StoreSectionRow extends MasterdataRow {
   imageRefs: string[] | undefined;
 }
 
+export type AttributeValues = Record<string, AttributeValue>;
+
 export interface ArticleRow extends MasterdataRow {
   articleId: string;
   name: string;
@@ -55,6 +61,15 @@ export interface ArticleRow extends MasterdataRow {
   imageRefs: string[] | undefined;
   hashtags: string[] | undefined;
   wwwLink: string | undefined;
+  manufacturer: string;
+  attributes: AttributeValues | undefined;
+}
+
+export interface AttributeRow extends MasterdataRow {
+  attributeId: string;
+  name: string;
+  valueType: ValueType;
+  valueUnit: ValueUnit | undefined;
 }
 
 export interface HashtagRow extends MasterdataRow {
@@ -70,6 +85,11 @@ export interface ReceiverRow extends MasterdataRow {
   receiverId: string;
   name: string;
   mailAddress: string;
+}
+
+export interface ManufacturerRow extends MasterdataRow {
+  manufacturerId: string;
+  name: string;
 }
 
 export interface ImageContentRow extends MasterdataRow {
@@ -175,15 +195,40 @@ export const isSavingArticleAllowed = (row: Partial<ArticleRow>) => {
   const errorData: Partial<Record<keyof ArticleRow, ErrorData | undefined>> = {
     articleId: checkMandatoryString(row.articleId),
     name: checkMandatoryString(row.name),
+    manufacturer: checkMandatoryString(row.manufacturer),
   };
   return {
-    isSavingAllowed: !errorData.articleId && !errorData.name && !!row.countUnit,
+    isSavingAllowed:
+      !errorData.articleId &&
+      !errorData.name &&
+      !errorData.manufacturer &&
+      !!row.countUnit,
     errorData,
   };
 };
 
 export const isArticleRow = (row: Partial<ArticleRow>): row is ArticleRow => {
   const { isSavingAllowed } = isSavingArticleAllowed(row);
+  return isSavingAllowed;
+};
+
+export const isSavingAttributeAllowed = (row: Partial<AttributeRow>) => {
+  const errorData: Partial<Record<keyof AttributeRow, ErrorData | undefined>> =
+    {
+      attributeId: checkMandatoryString(row.attributeId),
+      name: checkMandatoryString(row.name),
+    };
+  return {
+    isSavingAllowed:
+      !errorData.attributeId && !errorData.name && !!row.valueType,
+    errorData,
+  };
+};
+
+export const isAttributeRow = (
+  row: Partial<AttributeRow>
+): row is AttributeRow => {
+  const { isSavingAllowed } = isSavingAttributeAllowed(row);
   return isSavingAllowed;
 };
 
@@ -237,6 +282,26 @@ export const isReceiverRow = (
   row: Partial<ReceiverRow>
 ): row is ReceiverRow => {
   const { isSavingAllowed } = isSavingReceiverAllowed(row);
+  return isSavingAllowed;
+};
+
+export const isSavingManufacturerAllowed = (row: Partial<ManufacturerRow>) => {
+  const errorData: Partial<
+    Record<keyof ManufacturerRow, ErrorData | undefined>
+  > = {
+    manufacturerId: checkMandatoryString(row.manufacturerId),
+    name: checkMandatoryString(row.name),
+  };
+  return {
+    isSavingAllowed: !errorData.manufacturerId && !errorData.name,
+    errorData,
+  };
+};
+
+export const isManufacturerRow = (
+  row: Partial<ManufacturerRow>
+): row is ManufacturerRow => {
+  const { isSavingAllowed } = isSavingManufacturerAllowed(row);
   return isSavingAllowed;
 };
 
@@ -391,6 +456,16 @@ export const compareArticleRow: Record<
     compareString<ArticleRow>("name", direction),
 };
 
+export const compareAttributeRow: Record<
+  string,
+  (direction: OrderDirection) => CompareFunction<AttributeRow>
+> = {
+  attributeId: (direction: OrderDirection) =>
+    compareString<AttributeRow>("attributeId", direction),
+  name: (direction: OrderDirection) =>
+    compareString<AttributeRow>("name", direction),
+};
+
 export const compareImageRow: Record<
   string,
   (direction: OrderDirection) => CompareFunction<ImageContentRow>
@@ -407,6 +482,16 @@ export const compareReceiverRow: Record<
     compareString<ReceiverRow>("receiverId", direction),
   name: (direction: OrderDirection) =>
     compareString<ReceiverRow>("name", direction),
+};
+
+export const compareManufacturerRow: Record<
+  string,
+  (direction: OrderDirection) => CompareFunction<ManufacturerRow>
+> = {
+  manufacturerId: (direction: OrderDirection) =>
+    compareString<ManufacturerRow>("manufacturerId", direction),
+  name: (direction: OrderDirection) =>
+    compareString<ManufacturerRow>("name", direction),
 };
 
 export const compareStoreRow: Record<
@@ -495,6 +580,26 @@ export const fromRawMasterdataFields = (raw: Row_Masterdata): MasterdataRow => {
   };
 };
 
+export const toRawAttribute = (row: AttributeRow): Row_Attribute => {
+  return {
+    attribute_id: row.attributeId,
+    name: row.name,
+    value_type: row.valueType,
+    value_unit: row.valueUnit || null,
+    ...toRawMasterdataFields(row),
+  };
+};
+
+export const fromRawAttribute = (raw: Row_Attribute): AttributeRow => {
+  return {
+    attributeId: raw.attribute_id,
+    name: raw.name,
+    valueType: raw.value_type,
+    valueUnit: raw.value_unit || undefined,
+    ...fromRawMasterdataFields(raw),
+  };
+};
+
 export const toRawArticle = (row: ArticleRow): Row_Article => {
   return {
     article_id: row.articleId,
@@ -503,6 +608,8 @@ export const toRawArticle = (row: ArticleRow): Row_Article => {
     hashtags: row.hashtags ? JSON.stringify(row.hashtags) : null,
     count_unit: row.countUnit,
     www_link: row.wwwLink || null,
+    manufacturer: row.manufacturer,
+    attributes: row.attributes ? JSON.stringify(row.attributes) : null,
     ...toRawMasterdataFields(row),
   };
 };
@@ -515,6 +622,8 @@ export const fromRawArticle = (raw: Row_Article): ArticleRow => {
     hashtags: raw.hashtags ? JSON.parse(raw.hashtags) : undefined,
     countUnit: raw.count_unit,
     wwwLink: raw.www_link || undefined,
+    manufacturer: raw.manufacturer,
+    attributes: raw.attributes ? JSON.parse(raw.attributes) : undefined,
     ...fromRawMasterdataFields(raw),
   };
 };
@@ -565,6 +674,22 @@ export const fromRawReceiver = (raw: Row_Receiver): ReceiverRow => {
     receiverId: raw.receiver_id,
     name: raw.name,
     mailAddress: raw.mail_address,
+    ...fromRawMasterdataFields(raw),
+  };
+};
+
+export const toRawManufacturer = (row: ManufacturerRow): Row_Manufacturer => {
+  return {
+    manufacturer_id: row.manufacturerId,
+    name: row.name,
+    ...toRawMasterdataFields(row),
+  };
+};
+
+export const fromRawManufacturer = (raw: Row_Manufacturer): ManufacturerRow => {
+  return {
+    manufacturerId: raw.manufacturer_id,
+    name: raw.name,
     ...fromRawMasterdataFields(raw),
   };
 };

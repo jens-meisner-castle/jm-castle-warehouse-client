@@ -1,24 +1,22 @@
 import {
   ApiServiceResponse,
   ErrorCode,
-  Row_Receipt,
+  Row_Attribute,
   SelectResponse,
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
-import { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
-export const useReceiptSelect = (
+export const useAttributeSelect = (
   apiUrl: string,
-  from: DateTime,
-  to: DateTime,
+  nameFragment: string | undefined,
   updateIndicator: number,
   handleExpiredToken?: (errorCode: ErrorCode | undefined) => void
 ) => {
   const [queryStatus, setQueryStatus] = useState<
-    | ApiServiceResponse<SelectResponse<Row_Receipt>>
+    | ApiServiceResponse<SelectResponse<Row_Attribute>>
     | ApiServiceResponse<undefined>
   >({
     response: undefined,
@@ -28,14 +26,12 @@ export const useReceiptSelect = (
   useEffect(() => {
     if (updateIndicator) {
       const options = defaultFetchOptions(token);
-      const at_from = Math.floor(from.toMillis() / 1000);
-      const at_to = Math.ceil(to.toMillis() / 1000);
-      const url = `${apiUrl}/receipt/select?at_from=${at_from}&at_to=${at_to}`;
+      const url = `${apiUrl}/attribute/select?name=${nameFragment || "%"}`;
       fetch(url, options)
         .then((response) => {
           response
             .json()
-            .then((obj: ApiServiceResponse<SelectResponse<Row_Receipt>>) => {
+            .then((obj: ApiServiceResponse<SelectResponse<Row_Attribute>>) => {
               const { response, error, errorDetails, errorCode } = obj || {};
               if (handleExpiredToken) {
                 handleExpiredToken(errorCode);
@@ -62,6 +58,6 @@ export const useReceiptSelect = (
           });
         });
     }
-  }, [apiUrl, updateIndicator, from, to, token, handleExpiredToken]);
+  }, [apiUrl, updateIndicator, nameFragment, token, handleExpiredToken]);
   return queryStatus;
 };

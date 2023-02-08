@@ -1,12 +1,6 @@
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
-import {
-  Alert,
-  IconButton,
-  Snackbar,
-  TextField,
-  useTheme,
-} from "@mui/material";
+import { IconButton, TextField, useTheme } from "@mui/material";
 import { CSSProperties, useCallback, useMemo, useState } from "react";
 import { HashtagRow } from "../../types/RowTypes";
 import { HashtagMultiselectionDialog } from "../dialog/HashtagMultiselectionDialog";
@@ -22,9 +16,7 @@ export const HashtagsRefEditor = (props: HashtagsRefEditorProps) => {
   const theme = useTheme();
 
   const iconButtonStyle: CSSProperties = { padding: 4 };
-  const [editorWarning, setEditorWarning] = useState<string | undefined>(
-    undefined
-  );
+
   const [isHashtagAddOpen, setIsHashtagAddOpen] = useState(false);
   const [isHashtagRemoveOpen, setIsHashtagRemoveOpen] = useState(false);
 
@@ -57,16 +49,6 @@ export const HashtagsRefEditor = (props: HashtagsRefEditorProps) => {
 
   return (
     <>
-      {editorWarning && (
-        <Snackbar
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          open={true}
-          autoHideDuration={6000}
-          onClose={() => setEditorWarning(undefined)}
-        >
-          <Alert severity="warning">{editorWarning}</Alert>
-        </Snackbar>
-      )}
       {isHashtagAddOpen && (
         <HashtagMultiselectionDialog
           visibleHashtags={notSelectedHashtagRows}

@@ -5,7 +5,7 @@ import { StoreSectionRow } from "../../types/RowTypes";
 import { ErrorData } from "../ErrorDisplays";
 
 export type StoreSectionRefAutocompleteProps<T extends StoreSectionRow> = {
-  value: T | undefined;
+  value: T | undefined | null;
   onChange: (section: T | null) => void;
   sections: T[];
   errorData?: ErrorData;
@@ -33,13 +33,15 @@ export const StoreSectionRefAutocomplete = <T extends StoreSectionRow>(
 
   const { error } = errorData || {};
 
-  const usedHelperText = error || helperText || "";
+  const usedHelperText =
+    error && helperText ? `${helperText}. ${error}` : error || helperText || "";
 
   return (
     <Autocomplete
       disablePortal
       id="storeRefEditor"
       getOptionLabel={getOptionLabel || ((row) => row.sectionId)}
+      isOptionEqualToValue={(a, b) => a.sectionId === b.sectionId}
       options={orderedStoreSections}
       value={value || null}
       onChange={(event, row) => {

@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
+import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
 import {
   CostunitsTable,
   sizeVariantForWidth,
@@ -56,12 +57,20 @@ export const Page = () => {
     [initialAction, navigate]
   );
 
-  const { response: selectResponse, error: selectError } = useCostunitSelect(
+  const costunitApiResponse = useCostunitSelect(
     backendApiUrl,
     "%",
     updateIndicator
   );
+  const { response: selectResponse } = costunitApiResponse;
   const { result: selectResult } = selectResponse || {};
+
+  const errorData = useMemo(() => {
+    const newData: Record<string, ErrorData> = {};
+    newData.costunit = costunitApiResponse;
+    return newData;
+  }, [costunitApiResponse]);
+
   const rows = useMemo(() => {
     if (selectResult) {
       const newRows: CostunitRow[] = [];
@@ -330,13 +339,9 @@ export const Page = () => {
             <AppActions actions={actions} />
           </Paper>
         </Grid>
-        {selectError && (
-          <Grid item>
-            <Paper style={{ padding: 5, marginBottom: 5 }}>
-              <Typography>{selectError}</Typography>
-            </Paper>
-          </Grid>
-        )}
+        <Grid item>
+          <ErrorDisplays results={errorData} />
+        </Grid>
         <Grid item>
           <Grid container direction="row">
             <Grid item>

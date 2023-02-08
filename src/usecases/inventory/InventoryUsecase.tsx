@@ -1,90 +1,198 @@
 import { Grid, Paper, Typography } from "@mui/material";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
 import { AppAction } from "../../components/AppActions";
-import { ErrorData, ErrorDisplays } from "../../components/ErrorDisplays";
+import { ErrorData } from "../../components/ErrorDisplays";
+import { backendApiUrl } from "../../configuration/Urls";
+import { useArticleSelect } from "../../hooks/useArticleSelect";
+import { useCostunitSelect } from "../../hooks/useCostunitSelect";
+import { useStoreSectionSelect } from "../../hooks/useStoreSectionSelect";
 import {
   ArticleRow,
+  EmissionRow,
+  fromRawArticle,
+  fromRawCostunit,
+  fromRawStoreSection,
   isArticleRow,
   isSavingArticleAllowed,
+  ReceiptRow,
 } from "../../types/RowTypes";
-import { GeneralUsecaseProps, InventoryState } from "../Types";
-import { CompareArticleStock } from "./views/CompareArticleStock";
+import { ErrorView } from "../general-views/ErrorView";
+import { Execution } from "../general-views/Execution";
+import { WellDone } from "../general-views/WellDone";
+import {
+  GeneralUsecaseProps,
+  InventoryState,
+  SectionDifference,
+} from "../Types";
 import { CreateArticle } from "./views/CreateArticle";
+import { EditArticleStockStates } from "./views/EditArticleStockStates";
 import { FindArticle } from "./views/FindArticle";
-import { WellDone } from "./views/WellDone";
+import { Summary } from "./views/Summary";
 
 export type InventoryUsecaseProps = GeneralUsecaseProps & InventoryState;
 
 const views = {
   "find-article": {
     description:
-      "Wählen Sie einen Artikel aus und drücken 'Weiter'. Oder drücken Sie 'Neuen Artikel anlegen'.",
+      "Wählen Sie einen Artikel aus und drücken 'Weiter'. Oder drücken Sie 'Neuer Artikel'.",
   },
   "add-article": {
-    description:
-      "Füllen Sie alle notwendigen Felder aus und drücken 'Weiter'. Oder drücken Sie 'Zurück'.",
+    description: "Füllen Sie alle notwendigen Felder aus und drücken 'Weiter'.",
   },
-  "compare-stock": {
+  "edit-article-stock-states": {
     description:
-      "Tragen Sie die tatsächlich vorhandene Menge für einen oder mehrere Lagerbereiche ein und drücken 'Weiter'. Oder drücken Sie 'Zurück'.",
+      "Tragen Sie die tatsächlich vorhandene Menge für einen oder mehrere Lagerbereiche ein. Sie können auch für weitere Lagerbereiche hinzufügen.",
   },
-  finished: { description: "Well done!" },
+  summary: { description: "Zusammenfassung" },
+  execution: { description: "Die Buchungen werden durchgeführt..." },
+  "well-done": { description: "Die Buchungen waren erfolgreich." },
+  error: { description: "Da ist etwas schief gelaufen." },
 };
 
 export const InventoryUsecase = (props: InventoryUsecaseProps) => {
-  const { data, id, setUsecaseState, sizeVariant } = props;
-  const { article, temp, newArticle } = data;
-  const { article: partialArticle } = temp;
+  const { data, id, updateUsecaseData, cancelUsecase, sizeVariant } = props;
+  const {
+    article,
+    temporaryArticle,
+    newArticle,
+    sectionDifferences,
+    emissions,
+    receipts,
+  } = data;
   const [errorData, setErrorData] = useState<Record<string, ErrorData>>({});
+
+  const updateErrorData = useCallback(
+    (updates: Record<string, ErrorData>) =>
+      setErrorData((previous) => ({ ...previous, ...updates })),
+    []
+  );
+
   const [view, setView] = useState<keyof typeof views>("find-article");
 
   const handleExpiredToken = useHandleExpiredToken();
 
+  const articleApiResponse = useArticleSelect(
+    backendApiUrl,
+    "%",
+    1,
+    handleExpiredToken
+  );
+
+  const availableArticles = useMemo(
+    () =>
+      articleApiResponse.response?.result?.rows?.map((r) => fromRawArticle(r)),
+    [articleApiResponse]
+  );
+
+  const sectionApiResponse = useStoreSectionSelect(
+    backendApiUrl,
+    "%",
+    1,
+    handleExpiredToken
+  );
+
+  const allSections = useMemo(
+    () =>
+      sectionApiResponse.response?.result?.rows?.map((r) =>
+        fromRawStoreSection(r)
+      ),
+    [sectionApiResponse]
+  );
+
+  const costunitApiResponse = useCostunitSelect(
+    backendApiUrl,
+    "%",
+    1,
+    handleExpiredToken
+  );
+
+  const allCostunits = useMemo(
+    () =>
+      costunitApiResponse.response?.result?.rows?.map((r) =>
+        fromRawCostunit(r)
+      ),
+    [costunitApiResponse]
+  );
+
+  useEffect(() => {
+    if (articleApiResponse.error) {
+      updateErrorData({ article: articleApiResponse });
+    }
+  }, [articleApiResponse, updateErrorData]);
+
+  useEffect(() => {
+    if (sectionApiResponse.error) {
+      updateErrorData({ section: sectionApiResponse });
+    }
+  }, [sectionApiResponse, updateErrorData]);
+
   const handleChangedSelectedArticle = useCallback(
     (article: ArticleRow | null) => {
-      setUsecaseState({
+      updateUsecaseData({
         id,
-        data: { temp, article: article || undefined },
+        data: { article: article || undefined, sectionDifferences: undefined },
       });
     },
-    [id, temp, setUsecaseState]
+    [id, updateUsecaseData]
   );
 
   const handleChangedPartialArticle = useCallback(
-    (partialArticle: Partial<ArticleRow>) => {
-      setUsecaseState({
+    (temporaryArticle: Partial<ArticleRow>) => {
+      updateUsecaseData({
         id,
-        data: { temp: { article: partialArticle }, article },
+        data: { temporaryArticle },
       });
     },
-    [id, article, setUsecaseState]
+    [id, updateUsecaseData]
+  );
+
+  const handleChangedSectionDifferences = useCallback(
+    (sectionDifferences: SectionDifference[]) => {
+      updateUsecaseData({
+        id,
+        data: { sectionDifferences },
+      });
+    },
+    [id, updateUsecaseData]
+  );
+
+  const handleChangedSummary = useCallback(
+    (moves: { emissions: EmissionRow[]; receipts: ReceiptRow[] }) => {
+      updateUsecaseData({ id, data: moves });
+    },
+    [updateUsecaseData, id]
   );
 
   /** view: find-article */
   const findArticleActions = useMemo(() => {
     const actions: AppAction[] = [];
     actions.push({
+      label: "Neuer Artikel",
+      onClick: () => setView("add-article"),
+    });
+    actions.push({
+      label: "Abbrechen",
+      onClick: cancelUsecase,
+    });
+    actions.push({
       label: "Weiter",
       disabled: !article,
       onClick: () => {
-        setUsecaseState({
+        updateUsecaseData({
           id,
           data: {
             article,
             newArticle: undefined,
-            temp: {},
+            temporaryArticle: undefined,
           },
         });
-        setView("compare-stock");
+        setView("edit-article-stock-states");
       },
     });
-    actions.push({
-      label: "Neuen Artikel anlegen",
-      onClick: () => setView("add-article"),
-    });
+
     return actions;
-  }, [article, setUsecaseState, id]);
+  }, [article, updateUsecaseData, cancelUsecase, id]);
   /** view: add-article */
   const addArticleActions = useMemo(() => {
     const actions: AppAction[] = [];
@@ -93,58 +201,123 @@ export const InventoryUsecase = (props: InventoryUsecaseProps) => {
       onClick: () => setView("find-article"),
     });
     actions.push({
+      label: "Abbrechen",
+      onClick: cancelUsecase,
+    });
+    actions.push({
       label: "Weiter",
-      disabled: !partialArticle || !isSavingArticleAllowed(partialArticle),
+      disabled: !temporaryArticle || !isSavingArticleAllowed(temporaryArticle),
       onClick: () => {
-        if (partialArticle && isArticleRow(partialArticle)) {
-          setUsecaseState({
+        if (temporaryArticle && isArticleRow(temporaryArticle)) {
+          updateUsecaseData({
             id,
             data: {
-              article: partialArticle,
-              newArticle: partialArticle,
-              temp: { article: partialArticle },
+              article: temporaryArticle,
+              newArticle: temporaryArticle,
+              temporaryArticle,
             },
           });
-          setView("finished");
+          setView("edit-article-stock-states");
         }
       },
     });
+
     return actions;
-  }, [partialArticle, setUsecaseState, id]);
-  /** view: compare-stock */
-  const compareStockActions = useMemo(() => {
+  }, [temporaryArticle, updateUsecaseData, cancelUsecase, id]);
+  /** view: edit-article-stock-states */
+  const isAnyInventoryChanged = !!sectionDifferences?.find(
+    (d) =>
+      typeof d.newValue === "number" &&
+      d.currentValue !== d.newValue &&
+      d.costUnit
+  );
+
+  const editStockActions = useMemo(() => {
     const actions: AppAction[] = [];
     actions.push({
       label: "Zurück",
       onClick: () => setView("find-article"),
     });
     actions.push({
+      label: "Abbrechen",
+      onClick: cancelUsecase,
+    });
+    actions.push({
       label: "Weiter",
+      disabled: !isAnyInventoryChanged,
       onClick: () => {
-        setView("finished");
+        setView("summary");
       },
     });
+
     return actions;
-  }, []);
+  }, [cancelUsecase, isAnyInventoryChanged]);
+  /** view: summary */
+  const summaryActions = useMemo(() => {
+    const actions: AppAction[] = [];
+    actions.push({
+      label: "Zurück",
+      onClick: () => setView("edit-article-stock-states"),
+    });
+    actions.push({
+      label: "Fertigstellen",
+      disabled: !emissions?.length && !receipts?.length,
+      onClick: () => {
+        setView("execution");
+      },
+    });
+    actions.push({
+      label: "Abbrechen",
+      onClick: cancelUsecase,
+    });
+    return actions;
+  }, [emissions, receipts, cancelUsecase]);
+  /** view: error */
+  const errorActions = useMemo(() => {
+    const actions: AppAction[] = [];
+    actions.push({
+      label: "Ok",
+      onClick: cancelUsecase,
+    });
+    return actions;
+  }, [cancelUsecase]);
+  /** view: well-done */
+  const wellDoneActions = useMemo(() => {
+    const actions: AppAction[] = [];
+    actions.push({
+      label: "Ok",
+      onClick: cancelUsecase,
+    });
+    return actions;
+  }, [cancelUsecase]);
+
+  useEffect(() => {
+    !!Object.keys(errorData).length && setView("error");
+  }, [errorData]);
 
   return (
     <Grid container direction="column">
       <Grid item>
         <Typography>{`Inventur (${id})`}</Typography>
       </Grid>
-      {!!Object.keys(errorData).length && (
+      {view === "error" && (
         <Grid item>
-          <ErrorDisplays results={errorData} />
+          <Paper style={{ padding: 5 }}>
+            <ErrorView
+              description={views["error"].description}
+              errorData={errorData}
+              actions={errorActions}
+            />
+          </Paper>
         </Grid>
       )}
-      {view === "find-article" && (
+      {view === "find-article" && availableArticles && (
         <Grid item>
           <Paper style={{ padding: 5 }}>
             <FindArticle
               actions={findArticleActions}
-              handleExpiredToken={handleExpiredToken}
-              onError={setErrorData}
               description={views["find-article"].description}
+              availableArticles={availableArticles}
               article={article}
               onChangeArticle={handleChangedSelectedArticle}
             />
@@ -157,32 +330,59 @@ export const InventoryUsecase = (props: InventoryUsecaseProps) => {
             <CreateArticle
               actions={addArticleActions}
               handleExpiredToken={handleExpiredToken}
-              onError={setErrorData}
+              onError={updateErrorData}
               description={views["add-article"].description}
-              article={partialArticle}
+              article={temporaryArticle}
               onChangeArticle={handleChangedPartialArticle}
             />
           </Paper>
         </Grid>
       )}
-      {view === "compare-stock" && (
+      {view === "edit-article-stock-states" && allSections && allCostunits && (
         <Grid item>
           <Paper style={{ padding: 5 }}>
-            <CompareArticleStock
+            <EditArticleStockStates
               sizeVariant={sizeVariant}
-              actions={compareStockActions}
+              actions={editStockActions}
               handleExpiredToken={handleExpiredToken}
-              onError={setErrorData}
-              description={views["compare-stock"].description}
+              onError={updateErrorData}
+              description={views["edit-article-stock-states"].description}
+              availableSections={allSections}
+              availableCostunits={allCostunits}
+              sectionDifferences={sectionDifferences || []}
+              onChangeSectionDifferences={handleChangedSectionDifferences}
               article={newArticle || article}
             />
           </Paper>
         </Grid>
       )}
-      {view === "finished" && (
+      {view === "summary" && (
         <Grid item>
           <Paper style={{ padding: 5 }}>
-            <WellDone />
+            <Summary
+              sizeVariant={sizeVariant}
+              actions={summaryActions}
+              description={views["summary"].description}
+              onChangeSummary={handleChangedSummary}
+              data={data}
+            />
+          </Paper>
+        </Grid>
+      )}
+      {view === "execution" && (
+        <Grid item>
+          <Paper style={{ padding: 5 }}>
+            <Execution description={views["execution"].description} />
+          </Paper>
+        </Grid>
+      )}
+      {view === "well-done" && (
+        <Grid item>
+          <Paper style={{ padding: 5 }}>
+            <WellDone
+              description={views["well-done"].description}
+              actions={wellDoneActions}
+            />
           </Paper>
         </Grid>
       )}

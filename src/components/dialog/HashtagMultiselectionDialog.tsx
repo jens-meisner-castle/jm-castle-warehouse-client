@@ -65,7 +65,7 @@ export const HashtagMultiselectionDialog = (
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => handleAccept(selected)}>{"Speichern"}</Button>
+        <Button onClick={() => handleAccept(selected)}>{"Übernehmen"}</Button>
         <Button onClick={handleCancel}>{"Abbrechen"}</Button>
       </DialogActions>
     </Dialog>

@@ -5,16 +5,11 @@ import { StoreRefAutocomplete } from "../components/autocomplete/StoreRefAutocom
 import { StoreSectionRefAutocomplete } from "../components/autocomplete/StoreSectionRefAutocomplete";
 import { ErrorDisplays } from "../components/ErrorDisplays";
 import { HashtagsRefEditor } from "../components/multi-ref/HashtagsRefEditor";
+import { StoreSectionsRefEditor } from "../components/multi-ref/StoreSectionsRefEditor";
 import { TextFieldWithSpeech } from "../components/TextFieldWithSpeech";
 import { backendApiUrl } from "../configuration/Urls";
 import { useFilterData } from "./FilterData";
-import { ArbitraryFilter } from "./Types";
-
-export type FilterAspect =
-  | "hashtag"
-  | "nameFragment"
-  | "store"
-  | "storeSection";
+import { ArbitraryFilter, FilterAspect } from "./Types";
 
 export interface ArbitraryFilterComponentProps {
   filter: ArbitraryFilter;
@@ -29,9 +24,7 @@ export const ArbitraryFilterComponent = (
 ) => {
   const { filter, onChange, helpNameFragment, aspects, handleExpiredToken } =
     props;
-  const { hashtags, nameFragment, storeId, sectionId } = filter;
-
-  console.log(sectionId);
+  const { hashtags, nameFragment, storeId, sectionId, sectionIds } = filter;
 
   const { errors, rows } = useFilterData(
     backendApiUrl,
@@ -42,6 +35,9 @@ export const ArbitraryFilterComponent = (
 
   const currentStore = storeRows?.find((r) => r.storeId === storeId);
   const currentSection = sectionRows?.find((r) => r.sectionId === sectionId);
+  const currentSections = sectionRows?.filter((r) =>
+    sectionIds?.includes(r.sectionId)
+  );
   const currentHashtags = hashtagRows?.filter((r) =>
     hashtags?.includes(r.tagId)
   );
@@ -107,8 +103,20 @@ export const ArbitraryFilterComponent = (
           </div>
         </Grid>
       )}
-
-      {aspects.includes("hashtag") && (
+      {aspects.includes("storeSections") && (
+        <Grid item>
+          <div style={elementContainerStyle}>
+            <StoreSectionsRefEditor
+              value={currentSections}
+              storeSections={sectionRows || []}
+              onChange={(sections) =>
+                onChange({ sectionIds: sections?.map((r) => r.sectionId) })
+              }
+            />
+          </div>
+        </Grid>
+      )}
+      {aspects.includes("hashtags") && (
         <Grid item>
           <div style={elementContainerStyle}>
             <HashtagsRefEditor

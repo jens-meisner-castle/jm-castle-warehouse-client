@@ -6,7 +6,7 @@ import { SizeVariant } from "../../../components/SizeVariant";
 import { StockChangeTable } from "../../../components/table/StockChangeTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { TimeintervalFilter } from "../../../filter/Types";
-import { useReceiptSelect } from "../../../hooks/useReceiptSelect";
+import { useReceiptSelectByInterval } from "../../../hooks/useReceiptSelectByInterval";
 import {
   StockChangingRow,
   stockChangingRowFromRawReceipt,
@@ -21,7 +21,7 @@ export const StockChangeIncoming = (props: StockChangeIncomingProps) => {
   const { filter, sizeVariant } = props;
   const handleExpiredToken = useHandleExpiredToken();
 
-  const receiptApiResponse = useReceiptSelect(
+  const receiptApiResponse = useReceiptSelectByInterval(
     backendApiUrl,
     filter.from,
     filter.to,

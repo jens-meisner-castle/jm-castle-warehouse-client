@@ -1,16 +1,22 @@
 import {
-  useSetUsecaseState,
+  useCancelUsecase,
+  useUpdateUsecaseData,
   useUsecaseState,
 } from "../../../usecases/context/UsecaseContext";
 import { InventoryUsecase } from "../../../usecases/inventory/InventoryUsecase";
+import { RelocateUsecase } from "../../../usecases/relocate/RelocateUsecase";
 import { GeneralUsecaseProps } from "../../../usecases/Types";
 
-export type UsecaseDisplayProps = Omit<GeneralUsecaseProps, "setUsecaseState">;
+export type UsecaseDisplayProps = Omit<
+  Omit<GeneralUsecaseProps, "cancelUsecase">,
+  "updateUsecaseData"
+>;
 
 export const UsecaseDisplay = (props: UsecaseDisplayProps) => {
   const { sizeVariant } = props;
   const usecaseState = useUsecaseState();
-  const setUsecaseState = useSetUsecaseState();
+  const updateUsecaseData = useUpdateUsecaseData();
+  const cancelUsecase = useCancelUsecase();
 
   const { id, data } = usecaseState || {};
 
@@ -19,7 +25,18 @@ export const UsecaseDisplay = (props: UsecaseDisplayProps) => {
     case "inventory":
       return (
         <InventoryUsecase
-          setUsecaseState={setUsecaseState}
+          updateUsecaseData={updateUsecaseData}
+          cancelUsecase={cancelUsecase}
+          sizeVariant={sizeVariant}
+          id={id}
+          data={data}
+        />
+      );
+    case "relocate":
+      return (
+        <RelocateUsecase
+          updateUsecaseData={updateUsecaseData}
+          cancelUsecase={cancelUsecase}
           sizeVariant={sizeVariant}
           id={id}
           data={data}

@@ -17,11 +17,8 @@ import {
   backendApiUrl,
   getCompleteUrlForPath,
 } from "../../../configuration/Urls";
-import {
-  ArbitraryFilterComponent,
-  FilterAspect,
-} from "../../../filter/ArbitraryFilterComponent";
-import { ArbitraryFilter } from "../../../filter/Types";
+import { ArbitraryFilterComponent } from "../../../filter/ArbitraryFilterComponent";
+import { ArbitraryFilter, FilterAspect } from "../../../filter/Types";
 import { useStoreSectionInsert } from "../../../hooks/useStoreSectionInsert";
 import { useStoreSectionSelect } from "../../../hooks/useStoreSectionSelect";
 import { useStoreSectionUpdate } from "../../../hooks/useStoreSectionUpdate";

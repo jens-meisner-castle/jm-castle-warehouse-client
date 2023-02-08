@@ -1,4 +1,4 @@
-import { MenuItem, useTheme } from "@mui/material";
+import { MenuItem } from "@mui/material";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -14,6 +14,7 @@ import {
 import { useMemo, useState } from "react";
 import { useHandleExpiredToken } from "../../../../auth/AuthorizationProvider";
 import { ArticleRefAutocomplete } from "../../../../components/autocomplete/ArticleRefAutocomplete";
+import { CostunitRefAutocomplete } from "../../../../components/autocomplete/CostunitRefAutocomplete";
 import { ReceiverRefAutocomplete } from "../../../../components/autocomplete/ReceiverRefAutocomplete";
 import { StoreSectionRefAutocomplete } from "../../../../components/autocomplete/StoreSectionRefAutocomplete";
 import { CountField } from "../../../../components/CountField";
@@ -25,6 +26,7 @@ import { backendApiUrl } from "../../../../configuration/Urls";
 import { useStockArticleSelect } from "../../../../hooks/useStockArticleSelect";
 import {
   ArticleRow,
+  CostunitRow,
   EmissionRow,
   isSavingEmissionAllowed,
   ReceiverRow,
@@ -36,6 +38,7 @@ export interface CreateEmissionDialogProps {
   articles: ArticleRow[];
   storeSections: StoreSectionRow[];
   receivers: ReceiverRow[];
+  costunits: CostunitRow[];
   open: boolean;
   handleCancel: () => void;
   handleAccept: (receipt: EmissionRow) => void;
@@ -50,8 +53,8 @@ export const CreateEmissionDialog = (props: CreateEmissionDialogProps) => {
     storeSections,
     articles,
     receivers,
+    costunits,
   } = props;
-  const theme = useTheme();
   const [data, setData] = useState(receipt);
   const updateData = (updates: Partial<EmissionRow>) => {
     setData((previous) => ({ ...previous, ...updates }));
@@ -65,6 +68,7 @@ export const CreateEmissionDialog = (props: CreateEmissionDialogProps) => {
     emittedAt,
     price,
     imageRefs,
+    costUnit,
   } = data;
 
   const handleExpiredToken = useHandleExpiredToken();
@@ -76,6 +80,10 @@ export const CreateEmissionDialog = (props: CreateEmissionDialogProps) => {
   const currentReceiver = useMemo(() => {
     return receivers.find((row) => row.receiverId === receiver);
   }, [receivers, receiver]);
+
+  const currentCostunit = useMemo(() => {
+    return costunits.find((row) => row.unitId === costUnit);
+  }, [costunits, costUnit]);
 
   const currentCountUnit = currentArticle
     ? CountUnits[currentArticle.countUnit]
@@ -214,6 +222,22 @@ export const CreateEmissionDialog = (props: CreateEmissionDialogProps) => {
           fullWidth
           variant="standard"
         />
+        <CostunitRefAutocomplete
+          margin="dense"
+          id="costunit"
+          label="Kostenstelle"
+          costunits={costunits}
+          value={currentCostunit}
+          errorData={fieldErrorData.costUnit}
+          onChange={(row) => updateData({ costUnit: row?.unitId })}
+          fullWidth
+          variant="standard"
+          helperText={
+            receivers.length
+              ? "Bitte wählen Sie eine Kostenstelle aus"
+              : "Es sind keine Kostenstellen vorhanden. Sie müssen zuerst eine Kostenstelle anlegen."
+          }
+        />
         <PriceField
           margin="dense"
           id="price"
@@ -226,7 +250,6 @@ export const CreateEmissionDialog = (props: CreateEmissionDialogProps) => {
           variant="standard"
         />
         <ReceiverRefAutocomplete
-          autoFocus
           margin="dense"
           id="receiver"
           label="Empfänger"
@@ -237,15 +260,9 @@ export const CreateEmissionDialog = (props: CreateEmissionDialogProps) => {
           fullWidth
           variant="standard"
           helperText={
-            receivers.length ? (
-              "Bitte wählen Sie einen Empfänger aus"
-            ) : (
-              <span style={{ color: theme.palette.error.main }}>
-                {
-                  "Es sind keine Empfänger vorhanden. Sie müssen zuerst einen Empfänger anlegen."
-                }
-              </span>
-            )
+            receivers.length
+              ? "Bitte wählen Sie einen Empfänger aus"
+              : "Es sind keine Empfänger vorhanden. Sie müssen zuerst einen Empfänger anlegen."
           }
         />
         <StoreSectionRefAutocomplete

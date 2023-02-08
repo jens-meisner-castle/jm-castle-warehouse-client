@@ -120,7 +120,7 @@ export const CostunitsTable = (props: CostunitsTableProps) => {
               {name}
             </TableCell>
             {reduceColumns < 2 && (
-              <TableCell style={cellStyle} size={cellSize}>
+              <TableCell style={cellStyle} align="center" size={cellSize}>
                 {atFormatFunction(createdAt)}
               </TableCell>
             )}

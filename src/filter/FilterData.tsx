@@ -12,7 +12,7 @@ import {
   StoreRow,
   StoreSectionRow,
 } from "../types/RowTypes";
-import { FilterAspect } from "./ArbitraryFilterComponent";
+import { FilterAspect } from "./Types";
 
 export interface FilterData {
   errors: Record<string, ErrorData>;
@@ -45,7 +45,9 @@ export const useFilterData = (
   const sectionApiResponse = useStoreSectionSelect(
     apiUrl,
     "%",
-    aspects.includes("storeSection") ? 1 : 0,
+    aspects.includes("storeSection") || aspects.includes("storeSections")
+      ? 1
+      : 0,
     handleExpiredToken
   );
   const { response: sectionResponse } = sectionApiResponse;
@@ -55,7 +57,7 @@ export const useFilterData = (
   const hashtagApiResponse = useHashtagSelect(
     apiUrl,
     "%",
-    aspects.includes("hashtag") ? 1 : 0,
+    aspects.includes("hashtags") ? 1 : 0,
     handleExpiredToken
   );
   const { response: hashtagResponse } = hashtagApiResponse;

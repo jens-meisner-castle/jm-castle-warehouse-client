@@ -1,14 +1,18 @@
 import { Grid, Paper } from "@mui/material";
-import { TextComponent } from "../../../components/TextComponent";
+import { TextComponent } from "../../components/TextComponent";
 
-export const WellDone = () => {
+export interface ExecutionProps {
+  description: string;
+}
+export const Execution = (props: ExecutionProps) => {
+  const { description } = props;
   return (
     <Grid container direction="column">
       <Grid item>
         <Paper>
           <div style={{ alignContent: "space-around", alignItems: "center" }}>
             <TextComponent
-              value={"Well done!"}
+              value={description}
               fullWidth
               multiline
               inputProps={{ style: { textAlign: "center" } }}

@@ -3,19 +3,36 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { Grid, IconButton, Tooltip, Typography } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { backendApiUrl, getImageDisplayUrl } from "../configuration/Urls";
+import { SizeVariant, typoVariantForSize } from "./SizeVariant";
 
 export interface ImagesSlideProps {
   imageRefs: string[] | undefined;
-  maxSize: string | number;
+  sizeVariant: SizeVariant;
   index?: number;
   onIndexChange?: (index: number) => void;
 }
 
 export const ImagesSlide = (props: ImagesSlideProps) => {
-  const { imageRefs, maxSize, onIndexChange, index: controlledIndex } = props;
+  const {
+    imageRefs,
+    onIndexChange,
+    index: controlledIndex,
+    sizeVariant,
+  } = props;
   const [stateIndex, setStateIndex] = useState(0);
 
+  const typoVariant = typoVariantForSize(sizeVariant);
+
   const isControlled = typeof controlledIndex === "number";
+
+  const maxSize =
+    sizeVariant === "tiny"
+      ? 100
+      : sizeVariant === "small"
+      ? 150
+      : sizeVariant === "medium"
+      ? 200
+      : 250;
 
   useEffect(() => {
     const newIndex = imageRefs ? 0 : -1;
@@ -116,8 +133,12 @@ export const ImagesSlide = (props: ImagesSlideProps) => {
               </>
             )}
             <Grid item>
-              <Typography component="span">
-                {`(Bild: ${currentImageRef})`}
+              <Typography
+                sx={{ color: "text.secondary" }}
+                variant={typoVariant}
+                component="span"
+              >
+                {`(${currentImageRef})`}
               </Typography>
             </Grid>
           </Grid>

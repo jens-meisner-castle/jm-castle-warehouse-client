@@ -30,7 +30,7 @@ export const useEmissionSelect = (
       const options = defaultFetchOptions(token);
       const at_from = Math.floor(from.toMillis() / 1000);
       const at_to = Math.ceil(to.toMillis() / 1000);
-      const url = `${apiUrl}/emission/select?at_from=${at_from}&at_to=${at_to}`;
+      const url = `${apiUrl}/emission/select/interval?at_from=${at_from}&at_to=${at_to}`;
       fetch(url, options)
         .then((response) => {
           response

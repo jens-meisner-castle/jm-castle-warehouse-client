@@ -1,35 +1,69 @@
 import { FilterAlt, FilterAltOff, Print, Refresh } from "@mui/icons-material";
 import { Grid, Paper, Typography } from "@mui/material";
 import { SectionStockState } from "jm-castle-warehouse-types/build";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../../components/AppActions";
 import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
 import { SectionStockStateComponent } from "../../../components/SectionStockStateComponent";
+import { SizeVariant } from "../../../components/SizeVariant";
 import { backendApiUrl } from "../../../configuration/Urls";
-import {
-  ArbitraryFilterComponent,
-  FilterAspect,
-} from "../../../filter/ArbitraryFilterComponent";
-import { ArbitraryFilter } from "../../../filter/Types";
+import { ArbitraryFilterComponent } from "../../../filter/ArbitraryFilterComponent";
+import { ArbitraryFilter, FilterAspect } from "../../../filter/Types";
 import { useStockSectionAll } from "../../../hooks/useStockSectionAll";
 import { useUrlSearchParameters } from "../../../hooks/useUrlSearchParameters";
+import { useWindowSize } from "../../../hooks/useWindowSize";
 import { allRoutes } from "../../../navigation/AppRoutes";
-import { fromRawStoreSection, StoreSectionRow } from "../../../types/RowTypes";
+import {
+  ArticleRow,
+  fromRawStoreSection,
+  StoreSectionRow,
+} from "../../../types/RowTypes";
 import { PrintSectionLabelDialog } from "./parts/PrintSectionLabelDialog";
 
-const filterAspects: FilterAspect[] = ["storeSection"];
+const filterAspects: FilterAspect[] = ["storeSections"];
+
+export const sizeVariantForWidth = (width: number): SizeVariant => {
+  if (width < 800) return "tiny";
+  if (width < 1000) return "small";
+  if (width < 1200) return "medium";
+  return "large";
+};
 
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
+  const { width } = useWindowSize() || {};
+  const sizeVariant = width ? sizeVariantForWidth(width) : "tiny";
   const navigate = useNavigate();
-  const { params: urlParameters } = useUrlSearchParameters();
-  const { sectionId: sectionIds } = urlParameters || { sectionId: [] };
-  const [filter, setFilter] = useState<ArbitraryFilter>({
-    sectionIds,
-  });
+  const { params: searchParams } = useUrlSearchParameters();
+  const { sectionId: initialSectionIds, action: actionArr } =
+    searchParams || {};
+
+  const initialAction = actionArr?.length
+    ? actionArr[0]
+    : initialSectionIds?.length
+    ? "show"
+    : undefined;
+
+  const [filter, setFilter] = useState<ArbitraryFilter>({});
+
+  useEffect(() => {
+    switch (initialAction) {
+      case "show":
+        if (initialSectionIds?.length) {
+          setFilter((previous) => ({
+            ...previous,
+            sectionIds: initialSectionIds,
+          }));
+          navigate(allRoutes().stockSectionDetail.path, { replace: true });
+        }
+        break;
+      default:
+        return;
+    }
+  }, [initialAction, initialSectionIds, navigate]);
 
   const [isFilterComponentVisible, setIsFilterComponentVisible] =
     useState(false);
@@ -66,10 +100,12 @@ export const Page = () => {
   );
   const { response: stock } = stockApiResponse;
 
+  const { sectionIds } = filter;
+
   const selectedStockStates = useMemo(() => {
     const newStates: SectionStockState[] = [];
     if (stock) {
-      sectionIds.forEach((sectionId) => {
+      sectionIds?.forEach((sectionId) => {
         const state = stock[sectionId];
         state && newStates.push(state);
       });
@@ -124,13 +160,25 @@ export const Page = () => {
     selectedStockStates,
   ]);
 
-  const onAddToSection = useCallback(
+  const handleAddToSection = useCallback(
     (section: StoreSectionRow) => {
       const searchParams = new URLSearchParams({
         action: "new",
         sectionId: section.sectionId,
       });
       navigate(`${allRoutes().stockReceipt.path}?${searchParams.toString()}`);
+    },
+    [navigate]
+  );
+
+  const handleMoveArticle = useCallback(
+    (article: ArticleRow, section: StoreSectionRow) => {
+      const searchParams = new URLSearchParams({
+        usecase: "relocate",
+        articleId: article.articleId,
+        sectionId: section.sectionId,
+      });
+      navigate(`${allRoutes().usecase.path}?${searchParams.toString()}`);
     },
     [navigate]
   );
@@ -176,7 +224,11 @@ export const Page = () => {
             <SectionStockStateComponent
               key={state.section.section_id}
               stockState={state}
-              onAddToSection={onAddToSection}
+              sizeVariant={sizeVariant}
+              onAddToSection={handleAddToSection}
+              onAddToSectionHelp={"Neuer Wareneingang"}
+              onMoveArticle={handleMoveArticle}
+              onMoveArticleHelp={"Artikel umlagern"}
             />
           </Paper>
         ))}

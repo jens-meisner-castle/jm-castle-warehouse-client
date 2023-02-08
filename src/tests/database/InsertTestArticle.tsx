@@ -38,6 +38,8 @@ export const InsertTestArticle = () => {
       }),
       image_refs: null,
       www_link: null,
+      manufacturer: "unknown",
+      attributes: JSON.stringify({ test: true }),
     });
   }, []);
   const actions = useMemo(() => {

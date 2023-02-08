@@ -23,8 +23,11 @@ export const StockSections = (props: StockSectionsProps) => {
       onClickNavigate: { to: routes.stockArticle.path },
     });
     const values: string[][] = [];
-    stockSections.forEach((state) =>
-      values.push(["sectionId", state.section.section_id])
+    values.push(["action", "show"]);
+    stockSections.forEach(
+      (state) =>
+        state.states.find((d) => d.physicalCount > 0 || d.availableCount > 0) &&
+        values.push(["sectionId", state.section.section_id])
     );
     const searchParams = new URLSearchParams(values);
     newActions.push({

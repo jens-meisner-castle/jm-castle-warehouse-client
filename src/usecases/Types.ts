@@ -1,25 +1,63 @@
-import { ArticleStockState } from "jm-castle-warehouse-types/build";
-import { Dispatch, SetStateAction } from "react";
 import { SizeVariant } from "../components/SizeVariant";
-import { ArticleRow } from "../types/RowTypes";
+import {
+  ArticleRow,
+  EmissionRow,
+  ReceiptRow,
+  StoreSectionRow,
+} from "../types/RowTypes";
 
+export interface SectionDifference {
+  sectionId: string;
+  currentValue: number;
+  newValue: number | null;
+  costUnit: string | null;
+}
+export interface InventoryData {
+  article?: ArticleRow;
+  newArticle?: ArticleRow;
+  temporaryArticle?: Partial<ArticleRow>;
+  sectionDifferences?: SectionDifference[];
+  emissions?: EmissionRow[];
+  receipts?: ReceiptRow[];
+}
+
+export interface RelocateData {
+  article?: ArticleRow;
+  from?: StoreSectionRow;
+  to?: StoreSectionRow;
+  emission?: EmissionRow;
+  receipt?: ReceiptRow;
+  originalReceipt?: ReceiptRow;
+}
 export interface InventoryState {
   id: "inventory";
-  data: {
-    article?: ArticleRow;
-    newArticle?: ArticleRow;
-    stock?: ArticleStockState;
-    temp: { article?: Partial<ArticleRow> };
-  };
+  data: InventoryData;
+}
+export interface RelocateState {
+  id: "relocate";
+  data: RelocateData;
 }
 export interface EmptyState {
   id: "empty";
-  data: undefined;
+  data?: never;
 }
 
-export type UsecaseState = InventoryState | EmptyState;
+export const isInventoryState = (state: {
+  id: string;
+}): state is InventoryState => state.id === "inventory";
+
+export const isRelocateState = (state: {
+  id: string;
+}): state is RelocateState => state.id === "relocate";
+
+export type UsecaseData = InventoryData | RelocateData;
+
+export type UsecaseState = InventoryState | RelocateState | EmptyState;
 
 export interface GeneralUsecaseProps {
   sizeVariant: SizeVariant;
-  setUsecaseState: Dispatch<SetStateAction<UsecaseState>>;
+  updateUsecaseData: (
+    updates: { data: Partial<UsecaseData> } & { id: UsecaseState["id"] }
+  ) => void;
+  cancelUsecase: () => void;
 }

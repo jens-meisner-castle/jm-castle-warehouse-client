@@ -20,6 +20,7 @@ import { backendApiUrl } from "../../../configuration/Urls";
 import { TimeFilterComponent } from "../../../filter/TimeFilterComponent";
 import { TimeintervalFilter } from "../../../filter/Types";
 import { useArticleSelect } from "../../../hooks/useArticleSelect";
+import { useCostunitSelect } from "../../../hooks/useCostunitSelect";
 import { useEmissionInsert } from "../../../hooks/useEmissionInsert";
 import { useEmissionSelect } from "../../../hooks/useEmissionSelect";
 import { useReceiverSelect } from "../../../hooks/useReceiverSelect";
@@ -30,8 +31,10 @@ import { allRoutes } from "../../../navigation/AppRoutes";
 import {
   ArticleRow,
   compareEmissionRow,
+  CostunitRow,
   EmissionRow,
   fromRawArticle,
+  fromRawCostunit,
   fromRawEmission,
   fromRawReceiver,
   fromRawStoreSection,
@@ -170,6 +173,21 @@ export const Page = () => {
     return newRows;
   }, [receiverResult]);
 
+  const costunitApiResponse = useCostunitSelect(
+    backendApiUrl,
+    "%",
+    1,
+    handleExpiredToken
+  );
+  const { response: costunitResponse } = costunitApiResponse;
+  const { result: costunitResult } = costunitResponse || {};
+  const costunitRows = useMemo(() => {
+    const newRows: CostunitRow[] = [];
+    const { rows } = costunitResult || {};
+    rows?.forEach((raw) => newRows.push(fromRawCostunit(raw)));
+    return newRows;
+  }, [costunitResult]);
+
   const sectionsApiResponse = useStoreSectionSelect(
     backendApiUrl,
     "%",
@@ -178,7 +196,6 @@ export const Page = () => {
   );
   const { response: sectionsResponse } = sectionsApiResponse;
   const { result: sectionsResult } = sectionsResponse || {};
-
   const sectionRows = useMemo(() => {
     const newRows: StoreSectionRow[] = [];
     const { rows } = sectionsResult || {};
@@ -363,6 +380,7 @@ export const Page = () => {
           articles={articleRows}
           receivers={receiverRows}
           storeSections={sectionRows}
+          costunits={costunitRows}
           open={true}
           handleCancel={handleCancel}
           handleAccept={handleAccept}

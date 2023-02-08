@@ -93,3 +93,13 @@ export const formatterFactory: FormatterFactory = {
       : "";
   },
 };
+
+export const formatPrice = (n: number | null | undefined) =>
+  typeof n === "number"
+    ? (n / 100).toFixed(2).toString().replace(".", ",")
+    : "";
+
+export const parsePrice = (s: string) => {
+  const n = s ? parseFloat(s.replace(",", ".")) : null;
+  return typeof n === "number" ? n * 100 : null;
+};

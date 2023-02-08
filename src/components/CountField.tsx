@@ -17,7 +17,7 @@ export const CountField = (props: CountFieldProps) => {
   return (
     <TextField
       {...textFieldProps}
-      value={value}
+      value={typeof value === "number" ? value : ""}
       helperText={usedHelperText}
       error={!!error}
       type="number"

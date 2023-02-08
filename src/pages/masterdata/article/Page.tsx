@@ -14,6 +14,7 @@ import {
 import { backendApiUrl } from "../../../configuration/Urls";
 import { useArticleInsert } from "../../../hooks/useArticleInsert";
 import { useArticleUpdate } from "../../../hooks/useArticleUpdate";
+import { useMasterdata } from "../../../hooks/useMasterdata";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
 import { allRoutes } from "../../../navigation/AppRoutes";
@@ -36,7 +37,6 @@ import {
 } from "../utils/Reducer";
 import { CreateArticleDialog } from "./dialogs/CreateArticleDialog";
 import { EditArticleDialog } from "./dialogs/EditArticleDialog";
-import { usePageData } from "./PageData";
 
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
@@ -57,12 +57,13 @@ export const Page = () => {
     [initialAction, navigate]
   );
 
-  const { errors, rows } = usePageData(
+  const { errors, rows } = useMasterdata(
     backendApiUrl,
+    { article: true, hashtag: true, manufacturer: true, attribute: true },
     updateIndicator,
     handleExpiredToken
   );
-  const { articleRows, hashtagRows } = rows;
+  const { articleRows, hashtagRows, manufacturerRows, attributeRows } = rows;
 
   const filteredOrderedRows = useMemo(() => {
     if (!articleRows) return undefined;
@@ -109,9 +110,11 @@ export const Page = () => {
               imageRefs: undefined,
               hashtags: undefined,
               wwwLink: undefined,
+              manufacturer: "",
               datasetVersion: 1,
               createdAt: new Date(),
               editedAt: new Date(),
+              attributes: undefined,
             },
           });
           break;
@@ -303,6 +306,8 @@ export const Page = () => {
         <CreateArticleDialog
           article={actionState.data}
           availableHashtags={hashtagRows || []}
+          availableManufacturers={manufacturerRows || []}
+          availableAttributes={attributeRows || []}
           open={true}
           handleCancel={handleCancel}
           handleAccept={handleAccept}
@@ -312,6 +317,8 @@ export const Page = () => {
         <EditArticleDialog
           article={actionState.data}
           availableHashtags={hashtagRows || []}
+          availableManufacturers={manufacturerRows || []}
+          availableAttributes={attributeRows || []}
           open={true}
           handleCancel={handleCancel}
           handleAccept={handleAccept}
@@ -338,11 +345,12 @@ export const Page = () => {
             <Grid item>
               <Paper style={{ padding: 5 }}>
                 <ArticlesTable
-                  containerStyle={{ width: "100%", maxWidth: 1200 }}
+                  containerStyle={{ width: "100%", maxWidth: undefined }}
                   editable
                   displayImage="small"
                   sizeVariant={tableSize}
                   data={filteredOrderedRows || []}
+                  availableAttributes={attributeRows || []}
                   order={order}
                   onOrderChange={setOrder}
                   onEdit={handleEdit}
