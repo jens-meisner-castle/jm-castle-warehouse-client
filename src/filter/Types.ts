@@ -15,7 +15,7 @@ export interface TimeintervalFilter {
 export interface ArbitraryFilter {
   hashtags?: string[];
   nameFragment?: string;
-  storeId?: string;
-  sectionId?: string;
-  sectionIds?: string[];
+  store?: string;
+  storeSection?: string;
+  storeSections?: string[];
 }

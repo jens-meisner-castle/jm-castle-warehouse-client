@@ -1,18 +1,28 @@
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { Grid, Paper, Tooltip, Typography } from "@mui/material";
+import { Grid, Paper, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAppActionEdit } from "../../../app-action/useAppActionEdit";
+import { useAppActionFilter } from "../../../app-action/useAppActionFilter";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
+import { ErrorDisplays } from "../../../components/ErrorDisplays";
+import { FilteredRowsDisplay } from "../../../components/FilteredRowsDisplay";
 import {
   ReceiversTable,
   sizeVariantForWidth,
 } from "../../../components/table/ReceiversTable";
 import { backendApiUrl } from "../../../configuration/Urls";
+import { ArbitraryFilterComponent } from "../../../filter/ArbitraryFilterComponent";
+import { FilterAspect } from "../../../filter/Types";
+import {
+  FilterTest,
+  useArbitraryFilter,
+} from "../../../filter/useArbitraryFilter";
+import { useMasterdata } from "../../../hooks/useMasterdata";
 import { useReceiverInsert } from "../../../hooks/useReceiverInsert";
-import { useReceiverSelect } from "../../../hooks/useReceiverSelect";
 import { useReceiverUpdate } from "../../../hooks/useReceiverUpdate";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
@@ -24,11 +34,7 @@ import {
   toRawReceiver,
 } from "../../../types/RowTypes";
 import { OrderElement } from "../../../types/Types";
-import {
-  CompareFunction,
-  concatCompares,
-  isNonEmptyArray,
-} from "../../../utils/Compare";
+import { getFilteredOrderedRows } from "../../../utils/Compare";
 import {
   ActionStateReducer,
   getValidInitialAction,
@@ -37,12 +43,26 @@ import {
 import { CreateReceiverDialog } from "./dialogs/CreateReceiverDialog";
 import { EditReceiverDialog } from "./dialogs/EditReceiverDialog";
 
+const filterTest: FilterTest<ReceiverRow> = {
+  nameFragment: ["receiverId", "name"],
+};
+
+const filterAspects = Object.keys(filterTest) as FilterAspect[];
+
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
   const [order, setOrder] = useState<OrderElement<ReceiverRow>[]>([
     { field: "receiverId", direction: "ascending" },
   ]);
+  const { filter, handleFilterChange, passFilter } = useArbitraryFilter(
+    {},
+    filterTest
+  );
+
+  const { filterAction, isFilterVisible } = useAppActionFilter(false);
+  const { editAction, isEditActive, setIsEditActive } = useAppActionEdit(false);
+
   const handleExpiredToken = useHandleExpiredToken();
   const navigate = useNavigate();
   const { action, params } = useUrlAction() || {};
@@ -56,41 +76,22 @@ export const Page = () => {
     [initialAction, navigate]
   );
 
-  const { response: selectResponse, error: selectError } = useReceiverSelect(
+  const { rows, errors: errorData } = useMasterdata(
     backendApiUrl,
-    "%",
-    updateIndicator
+    { receiver: true },
+    updateIndicator,
+    handleExpiredToken
   );
-  const { result: selectResult } = selectResponse || {};
-  const rows = useMemo(() => {
-    if (selectResult) {
-      const newRows: ReceiverRow[] = [];
-      selectResult.rows.forEach((r) => {
-        const newRow = fromRawReceiver(r);
-        newRows.push(newRow);
-      });
-      newRows.sort((a, b) => a.name.localeCompare(b.name));
-      return newRows;
-    }
-    return undefined;
-  }, [selectResult]);
+  const { receiverRows } = rows;
 
   const filteredOrderedRows = useMemo(() => {
-    if (!rows) return undefined;
-    const filtered = [...rows]; //.filter((row) => passFilter(row));
-    const activeOrder = order?.filter((e) => e.direction) || [];
-    if (activeOrder.length) {
-      const compares: CompareFunction<ReceiverRow>[] = [];
-      activeOrder.forEach((e) => {
-        const { field, direction } = e;
-        const compare = compareReceiverRow[field];
-        const compareFn = direction && compare && compare(direction);
-        compareFn && compares.push(compareFn);
-      });
-      isNonEmptyArray(compares) && filtered.sort(concatCompares(compares));
-    }
-    return filtered;
-  }, [rows, order]);
+    return getFilteredOrderedRows(
+      receiverRows,
+      passFilter,
+      order,
+      compareReceiverRow
+    );
+  }, [receiverRows, passFilter, order]);
 
   const [actionState, dispatch] = useReducer<
     typeof ActionStateReducer<ReceiverRow>,
@@ -108,40 +109,46 @@ export const Page = () => {
   }, [resetInitialAction]);
 
   useEffect(() => {
-    if (initialAction && rows) {
+    if (initialAction && receiverRows) {
       switch (initialAction) {
         case "new":
-          dispatch({
-            type: "new",
-            data: {
-              receiverId: "",
-              name: "",
-              mailAddress: "",
-              datasetVersion: 1,
-              createdAt: new Date(),
-              editedAt: new Date(),
-            },
-          });
+          {
+            setIsEditActive(true);
+            dispatch({
+              type: "new",
+              data: {
+                receiverId: "",
+                name: "",
+                mailAddress: "",
+                datasetVersion: 1,
+                createdAt: new Date(),
+                editedAt: new Date(),
+              },
+            });
+          }
           break;
         case "edit": {
           const receiverId = params?.receiverId;
           const row = receiverId
-            ? rows.find((row) => row.receiverId === receiverId)
+            ? receiverRows.find((row) => row.receiverId === receiverId)
             : undefined;
-          row &&
+          if (row) {
+            setIsEditActive(true);
             dispatch({
               type: "edit",
               data: row,
             });
+          }
           break;
         }
         case "duplicate":
           {
             const receiverId = params?.receiverId;
             const data = receiverId
-              ? rows.find((row) => row.receiverId === receiverId)
+              ? receiverRows.find((row) => row.receiverId === receiverId)
               : undefined;
-            data &&
+            if (data) {
+              setIsEditActive(true);
               dispatch({
                 type: "new",
                 data: {
@@ -151,11 +158,12 @@ export const Page = () => {
                   editedAt: new Date(),
                 },
               });
+            }
           }
           break;
       }
     }
-  }, [initialAction, params, rows]);
+  }, [initialAction, setIsEditActive, params, receiverRows]);
   const handleEdit = useCallback(
     (row: ReceiverRow) => {
       navigate(
@@ -290,17 +298,17 @@ export const Page = () => {
       tooltip: "Daten aktualisieren",
       onClick: refreshStatus,
     });
-    newActions.push({
-      label: (
-        <Tooltip title="Neuen Datensatz anlegen">
-          <AddBoxIcon />
-        </Tooltip>
-      ),
-      onClick: () =>
-        navigate(`${allRoutes().masterdataReceiver.path}?action=new`),
-    });
+    newActions.push(filterAction);
+    newActions.push(editAction);
+    isEditActive &&
+      newActions.push({
+        label: <AddBoxIcon />,
+        tooltip: "Neuen Datensatz anlegen",
+        onClick: () =>
+          navigate(`${allRoutes().masterdataReceiver.path}?action=new`),
+      });
     return newActions;
-  }, [refreshStatus, navigate]);
+  }, [refreshStatus, filterAction, editAction, isEditActive, navigate]);
 
   return (
     <>
@@ -335,20 +343,35 @@ export const Page = () => {
             <AppActions actions={actions} />
           </Paper>
         </Grid>
-        {selectError && (
+        <Grid item>
+          <ErrorDisplays results={errorData} />
+        </Grid>
+        {isFilterVisible && (
           <Grid item>
-            <Paper style={{ padding: 5, marginBottom: 5 }}>
-              <Typography>{selectError}</Typography>
+            <Paper style={{ marginBottom: 5, padding: 5 }}>
+              <ArbitraryFilterComponent
+                filter={filter}
+                onChange={handleFilterChange}
+                aspects={filterAspects}
+                helpNameFragment={"Sucht in der ID und im Namen."}
+                handleExpiredToken={handleExpiredToken}
+              />
             </Paper>
           </Grid>
         )}
+        <Grid item>
+          <FilteredRowsDisplay
+            all={receiverRows}
+            filtered={filteredOrderedRows}
+          />
+        </Grid>
         <Grid item>
           <Grid container direction="row">
             <Grid item>
               <Paper style={{ padding: 5 }}>
                 <ReceiversTable
                   containerStyle={{ width: "100%", maxWidth: 1200 }}
-                  editable
+                  editable={isEditActive}
                   data={filteredOrderedRows || []}
                   order={order}
                   onOrderChange={setOrder}

@@ -43,7 +43,7 @@ export const useCellLayout = (props: CellLayoutProps) => {
           portions.push(portion);
           cells = [node];
           row = { cells };
-          rows = [];
+          rows = [row];
           portion = { rows, rowHeight, columnWidth };
         }
       }
@@ -55,7 +55,7 @@ export const useCellLayout = (props: CellLayoutProps) => {
       } else {
         portions.push(portion);
         row = { cells };
-        rows = [];
+        rows = [row];
         portion = { rows, rowHeight, columnWidth };
       }
     }

@@ -168,12 +168,12 @@ export const InventoryUsecase = (props: InventoryUsecaseProps) => {
   const findArticleActions = useMemo(() => {
     const actions: AppAction[] = [];
     actions.push({
-      label: "Neuer Artikel",
-      onClick: () => setView("add-article"),
-    });
-    actions.push({
       label: "Abbrechen",
       onClick: cancelUsecase,
+    });
+    actions.push({
+      label: "Neuer Artikel",
+      onClick: () => setView("add-article"),
     });
     actions.push({
       label: "Weiter",
@@ -260,15 +260,15 @@ export const InventoryUsecase = (props: InventoryUsecaseProps) => {
       onClick: () => setView("edit-article-stock-states"),
     });
     actions.push({
+      label: "Abbrechen",
+      onClick: cancelUsecase,
+    });
+    actions.push({
       label: "Fertigstellen",
       disabled: !emissions?.length && !receipts?.length,
       onClick: () => {
         setView("execution");
       },
-    });
-    actions.push({
-      label: "Abbrechen",
-      onClick: cancelUsecase,
     });
     return actions;
   }, [emissions, receipts, cancelUsecase]);

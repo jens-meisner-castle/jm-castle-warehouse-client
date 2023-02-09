@@ -1,83 +1,77 @@
-import { FilterAlt, FilterAltOff } from "@mui/icons-material";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
 import { Grid, Paper, Tooltip, Typography } from "@mui/material";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { DateTime } from "luxon";
+import { useCallback, useMemo, useState } from "react";
+import { useAppActionFilter } from "../../app-action/useAppActionFilter";
 import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { ErrorData, ErrorDisplays } from "../../components/ErrorDisplays";
+import { FilteredRowsDisplay } from "../../components/FilteredRowsDisplay";
 import {
   sizeVariantForWidth,
   StockChangeTable,
 } from "../../components/table/StockChangeTable";
 import { backendApiUrl } from "../../configuration/Urls";
+import { ArbitraryFilterComponent } from "../../filter/ArbitraryFilterComponent";
 import { TimeFilterComponent } from "../../filter/TimeFilterComponent";
-import { TimeintervalFilter } from "../../filter/Types";
+import { FilterAspect } from "../../filter/Types";
+import {
+  FilterTest,
+  useArbitraryFilter,
+} from "../../filter/useArbitraryFilter";
+import { useTimeintervalFilter } from "../../filter/useTimeintervalFilter";
 import { useEmissionSelect } from "../../hooks/useEmissionSelect";
 import { useReceiptSelectByInterval } from "../../hooks/useReceiptSelectByInterval";
 import { useWindowSize } from "../../hooks/useWindowSize";
-import { allRoutes } from "../../navigation/AppRoutes";
 import {
+  compareStockChangingRow,
   StockChangingRow,
   stockChangingRowFromRawEmission,
   stockChangingRowFromRawReceipt,
 } from "../../types/RowTypes";
-import { getNewFilter } from "../../utils/Filter";
+import { OrderElement } from "../../types/Types";
 import {
-  loadFilterForPage,
-  loadOptionsForPage,
-  storeFilterForPage,
-  storeOptionsForPage,
-} from "../../utils/LocalStorage";
-import { getNewOptions, PageOptions } from "./parts/OptionsComponent";
-import { OptionsMenu } from "./parts/OptionsMenu";
+  CompareFunction,
+  concatCompares,
+  isNonEmptyArray,
+} from "../../utils/Compare";
+import { getNewFilter } from "../../utils/Filter";
+
+const filterTest: FilterTest<StockChangingRow> = {
+  nameFragment: ["articleId"],
+};
+
+const filterAspects = Object.keys(filterTest) as FilterAspect[];
 
 export const Page = () => {
   const handleExpiredToken = useHandleExpiredToken();
-  const [pageOptions, setPageOptions] = useState(
-    getNewOptions(loadOptionsForPage(allRoutes().history.path) || {})
-  );
+
+  const [order, setOrder] = useState<OrderElement<StockChangingRow>[]>([
+    { field: "at", direction: "descending" },
+  ]);
   const { width } = useWindowSize() || {};
   const tableSize = width ? sizeVariantForWidth(width) : "tiny";
-  const handleNewOptions = useCallback((newOptions: Partial<PageOptions>) => {
-    let mergedOptions: PageOptions | Partial<PageOptions> = {};
-    setPageOptions((previous) => {
-      mergedOptions = { ...previous, ...newOptions };
-      return { ...previous, ...newOptions };
-    });
-    mergedOptions &&
-      storeOptionsForPage(mergedOptions, allRoutes().history.path);
-  }, []);
-  const [isOptionsVisible, setIsOptionsVisible] = useState(false);
-  const optionsSelectionRef = useRef<HTMLButtonElement | null>(null);
 
-  const initialFilter = useMemo(
-    () => getNewFilter(loadFilterForPage(allRoutes().history.path)),
-    []
-  );
-  const [filter, setFilter] = useState<TimeintervalFilter>(initialFilter);
-  const [isFilterComponentVisible, setIsFilterComponentVisible] =
-    useState(false);
-  const handleHideFilterComponent = useCallback(
-    () => setIsFilterComponentVisible(false),
-    []
-  );
-  const handleShowFilterComponent = useCallback(
-    () => setIsFilterComponentVisible(true),
-    []
+  const { timeFilter, handleTimeFilterChange } = useTimeintervalFilter(
+    getNewFilter({
+      from: DateTime.now().minus({ days: 7 }),
+      to: DateTime.now().endOf("day"),
+    })
   );
 
-  const handleFilterChange = useCallback((newFilter: TimeintervalFilter) => {
-    storeFilterForPage(newFilter, allRoutes().history.path);
-    setFilter(newFilter);
-  }, []);
+  const { filter, handleFilterChange, passFilter } = useArbitraryFilter(
+    {},
+    filterTest
+  );
+
+  const { isFilterVisible, filterAction } = useAppActionFilter(false);
 
   const [updateIndicator, setUpdateIndicator] = useState(1);
 
   const receiptApiResponse = useReceiptSelectByInterval(
     backendApiUrl,
-    filter.from,
-    filter.to,
+    timeFilter.from,
+    timeFilter.to,
     updateIndicator,
     handleExpiredToken
   );
@@ -85,8 +79,8 @@ export const Page = () => {
 
   const emissionApiResponse = useEmissionSelect(
     backendApiUrl,
-    filter.from,
-    filter.to,
+    timeFilter.from,
+    timeFilter.to,
     updateIndicator,
     handleExpiredToken
   );
@@ -101,23 +95,36 @@ export const Page = () => {
     newData.emission = emissionApiResponse;
     return newData;
   }, [receiptApiResponse, emissionApiResponse]);
-  const { tableData } = useMemo(() => {
-    const newTableData: StockChangingRow[] = [];
-    receiptRows?.forEach((row) => {
-      newTableData.push(stockChangingRowFromRawReceipt(row));
-    });
-    emissionRows?.forEach((row) => {
-      newTableData.push(stockChangingRowFromRawEmission(row));
-    });
-    newTableData.sort((a, b) =>
-      a.at === b.at
-        ? a.articleId.localeCompare(b.articleId)
-        : a.at.getTime() - b.at.getTime()
-    );
-    return {
-      tableData: newTableData,
-    };
-  }, [emissionRows, receiptRows]);
+
+  const filteredOrderedRows = useMemo(() => {
+    const filtered: StockChangingRow[] = [];
+    if (receiptRows) {
+      receiptRows.forEach((raw) => {
+        const row = stockChangingRowFromRawReceipt(raw);
+        passFilter(row) && filtered.push(row);
+      });
+    }
+
+    if (emissionRows) {
+      emissionRows.forEach((raw) => {
+        const row = stockChangingRowFromRawEmission(raw);
+        passFilter(row) && filtered.push(row);
+      });
+    }
+
+    const activeOrder = order?.filter((e) => e.direction) || [];
+    if (activeOrder.length) {
+      const compares: CompareFunction<StockChangingRow>[] = [];
+      activeOrder.forEach((e) => {
+        const { field, direction } = e;
+        const compare = compareStockChangingRow[field];
+        const compareFn = direction && compare && compare(direction);
+        compareFn && compares.push(compareFn);
+      });
+      isNonEmptyArray(compares) && filtered.sort(concatCompares(compares));
+    }
+    return filtered;
+  }, [receiptRows, emissionRows, passFilter, order]);
 
   const refresh = useCallback(() => {
     setUpdateIndicator((previous) => previous + 1);
@@ -133,38 +140,12 @@ export const Page = () => {
       ),
       onClick: refresh,
     });
-    newActions.push({
-      label: isFilterComponentVisible ? <FilterAltOff /> : <FilterAlt />,
-      tooltip: isFilterComponentVisible
-        ? "Filter ausblenden"
-        : "Filter einblenden",
-      onClick: isFilterComponentVisible
-        ? handleHideFilterComponent
-        : handleShowFilterComponent,
-    });
-    newActions.push({
-      label: <SettingsApplicationsIcon />,
-      onClick: () => setIsOptionsVisible((previous) => !previous),
-      elementRef: optionsSelectionRef,
-    });
+    newActions.push(filterAction);
     return newActions;
-  }, [
-    refresh,
-    handleHideFilterComponent,
-    handleShowFilterComponent,
-    isFilterComponentVisible,
-  ]);
+  }, [refresh, filterAction]);
 
   return (
     <>
-      {isOptionsVisible && (
-        <OptionsMenu
-          options={pageOptions}
-          onChange={handleNewOptions}
-          onClose={() => setIsOptionsVisible(false)}
-          anchorEl={optionsSelectionRef.current}
-        />
-      )}
       <Grid container direction="column">
         <Grid item>
           <Typography variant="h5">{"History"}</Typography>
@@ -174,22 +155,43 @@ export const Page = () => {
             <AppActions actions={actions} />
           </Paper>
         </Grid>
-        {isFilterComponentVisible && (
+        {isFilterVisible && (
           <Grid item>
             <Paper style={{ marginBottom: 5 }}>
               <TimeFilterComponent
+                filter={timeFilter}
+                onChange={handleTimeFilterChange}
+              />
+            </Paper>
+          </Grid>
+        )}
+        {isFilterVisible && (
+          <Grid item>
+            <Paper style={{ marginBottom: 5, padding: 5 }}>
+              <ArbitraryFilterComponent
                 filter={filter}
                 onChange={handleFilterChange}
+                aspects={filterAspects}
+                helpNameFragment={"Sucht in der Artikel ID."}
+                handleExpiredToken={handleExpiredToken}
               />
             </Paper>
           </Grid>
         )}
         <Grid item>
+          <FilteredRowsDisplay
+            all={[receiptRows, emissionRows]}
+            filtered={filteredOrderedRows}
+          />
+        </Grid>
+        <Grid item>
           <ErrorDisplays results={errorData} />
         </Grid>
         <Grid item>
           <StockChangeTable
-            data={tableData}
+            data={filteredOrderedRows}
+            order={order}
+            onOrderChange={setOrder}
             sizeVariant={tableSize}
             containerStyle={{ width: "100%", maxWidth: 1200 }}
           />

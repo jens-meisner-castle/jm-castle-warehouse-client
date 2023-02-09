@@ -1,8 +1,9 @@
-import { FilterAlt, FilterAltOff, Print, Refresh } from "@mui/icons-material";
+import { Print, Refresh } from "@mui/icons-material";
 import { Grid, Paper, Typography } from "@mui/material";
 import { SectionStockState } from "jm-castle-warehouse-types/build";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAppActionFilter } from "../../../app-action/useAppActionFilter";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../../components/AppActions";
 import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
@@ -10,7 +11,11 @@ import { SectionStockStateComponent } from "../../../components/SectionStockStat
 import { SizeVariant } from "../../../components/SizeVariant";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { ArbitraryFilterComponent } from "../../../filter/ArbitraryFilterComponent";
-import { ArbitraryFilter, FilterAspect } from "../../../filter/Types";
+import { FilterAspect } from "../../../filter/Types";
+import {
+  FilterTest,
+  useArbitraryFilter,
+} from "../../../filter/useArbitraryFilter";
 import { useStockSectionAll } from "../../../hooks/useStockSectionAll";
 import { useUrlSearchParameters } from "../../../hooks/useUrlSearchParameters";
 import { useWindowSize } from "../../../hooks/useWindowSize";
@@ -22,7 +27,11 @@ import {
 } from "../../../types/RowTypes";
 import { PrintSectionLabelDialog } from "./parts/PrintSectionLabelDialog";
 
-const filterAspects: FilterAspect[] = ["storeSections"];
+const filterTest: FilterTest<SectionStockState> = {
+  storeSections: [],
+};
+
+const filterAspects = Object.keys(filterTest) as FilterAspect[];
 
 export const sizeVariantForWidth = (width: number): SizeVariant => {
   if (width < 800) return "tiny";
@@ -47,49 +56,22 @@ export const Page = () => {
     ? "show"
     : undefined;
 
-  const [filter, setFilter] = useState<ArbitraryFilter>({});
+  const { filter, handleFilterChange } = useArbitraryFilter({}, filterTest);
 
   useEffect(() => {
     switch (initialAction) {
       case "show":
         if (initialSectionIds?.length) {
-          setFilter((previous) => ({
-            ...previous,
-            sectionIds: initialSectionIds,
-          }));
+          handleFilterChange({ storeSections: initialSectionIds });
           navigate(allRoutes().stockSectionDetail.path, { replace: true });
         }
         break;
       default:
         return;
     }
-  }, [initialAction, initialSectionIds, navigate]);
+  }, [initialAction, handleFilterChange, initialSectionIds, navigate]);
 
-  const [isFilterComponentVisible, setIsFilterComponentVisible] =
-    useState(false);
-
-  const handleFilterChange = useCallback(
-    (changes: Partial<ArbitraryFilter>) => {
-      setFilter((previous) => {
-        const newFilter = { ...previous, ...changes };
-        return Object.keys(newFilter).find(
-          (k) => newFilter[k as keyof typeof newFilter]
-        )
-          ? newFilter
-          : {};
-      });
-    },
-    []
-  );
-
-  const handleHideFilterComponent = useCallback(
-    () => setIsFilterComponentVisible(false),
-    []
-  );
-  const handleShowFilterComponent = useCallback(
-    () => setIsFilterComponentVisible(true),
-    []
-  );
+  const { isFilterVisible, filterAction } = useAppActionFilter(false);
 
   const handleExpiredToken = useHandleExpiredToken();
 
@@ -100,18 +82,18 @@ export const Page = () => {
   );
   const { response: stock } = stockApiResponse;
 
-  const { sectionIds } = filter;
+  const { storeSections } = filter;
 
   const selectedStockStates = useMemo(() => {
     const newStates: SectionStockState[] = [];
     if (stock) {
-      sectionIds?.forEach((sectionId) => {
+      storeSections?.forEach((sectionId) => {
         const state = stock[sectionId];
         state && newStates.push(state);
       });
     }
     return newStates;
-  }, [sectionIds, stock]);
+  }, [storeSections, stock]);
 
   const selectedSections = useMemo(() => {
     return selectedStockStates.map((state) =>
@@ -136,15 +118,7 @@ export const Page = () => {
       tooltip: "Daten aktualisieren",
       onClick: refreshStatus,
     });
-    newActions.push({
-      label: isFilterComponentVisible ? <FilterAltOff /> : <FilterAlt />,
-      tooltip: isFilterComponentVisible
-        ? "Filter ausblenden"
-        : "Filter einblenden",
-      onClick: isFilterComponentVisible
-        ? handleHideFilterComponent
-        : handleShowFilterComponent,
-    });
+    newActions.push(filterAction);
     newActions.push({
       label: <Print />,
       tooltip: "Etikett drucken",
@@ -152,13 +126,7 @@ export const Page = () => {
       onClick: () => setIsPrintDialogOpen((previous) => !previous),
     });
     return newActions;
-  }, [
-    refreshStatus,
-    isFilterComponentVisible,
-    handleHideFilterComponent,
-    handleShowFilterComponent,
-    selectedStockStates,
-  ]);
+  }, [refreshStatus, filterAction, selectedStockStates]);
 
   const handleAddToSection = useCallback(
     (section: StoreSectionRow) => {
@@ -199,7 +167,7 @@ export const Page = () => {
           <AppActions actions={actions} />
         </Paper>
       </Grid>
-      {isFilterComponentVisible && (
+      {isFilterVisible && (
         <Grid item>
           <Paper style={{ marginBottom: 5, padding: 5 }}>
             <ArbitraryFilterComponent

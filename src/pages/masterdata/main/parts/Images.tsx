@@ -1,14 +1,13 @@
 import { Grid, Typography } from "@mui/material";
-import { Row_ImageContent } from "jm-castle-warehouse-types/build";
 import { useMemo } from "react";
 import { AppAction, AppActions } from "../../../../components/AppActions";
 
 export interface ImagesProps {
-  images: Row_ImageContent[];
+  count: number;
 }
 
 export const Images = (props: ImagesProps) => {
-  const { images } = props;
+  const { count } = props;
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
@@ -24,7 +23,7 @@ export const Images = (props: ImagesProps) => {
   return (
     <Grid container direction="column">
       <Grid item>
-        <Typography>{`Bilder (${images.length})`}</Typography>
+        <Typography>{`Bilder (${count})`}</Typography>
       </Grid>
       <Grid item>
         <AppActions actions={actions} />

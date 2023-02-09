@@ -564,6 +564,20 @@ export const compareReceiptRow: Record<
     compareDate<ReceiptRow>("receiptAt", direction),
 };
 
+export const compareStockChangingRow: Record<
+  string,
+  (direction: OrderDirection) => CompareFunction<StockChangingRow>
+> = {
+  articleId: (direction: OrderDirection) =>
+    compareString<StockChangingRow>("articleId", direction),
+  sectionId: (direction: OrderDirection) =>
+    compareString<StockChangingRow>("sectionId", direction),
+  articleCount: (direction: OrderDirection) =>
+    compareNumber<StockChangingRow>("count", direction),
+  at: (direction: OrderDirection) =>
+    compareDate<StockChangingRow>("at", direction),
+};
+
 export const toRawMasterdataFields = (row: MasterdataRow): Row_Masterdata => {
   return {
     dataset_version: row.datasetVersion,

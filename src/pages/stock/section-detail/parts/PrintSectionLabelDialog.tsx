@@ -32,6 +32,8 @@ export const PrintSectionLabelDialog = (
     parts: sectionNodes,
   });
 
+  console.log(printPortions);
+
   return (
     <ThemeProvider theme={muiThemeLight}>
       <PrintDialog

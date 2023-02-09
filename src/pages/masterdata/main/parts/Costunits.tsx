@@ -1,14 +1,13 @@
 import { Grid, Typography } from "@mui/material";
-import { Row_Costunit } from "jm-castle-warehouse-types/build";
 import { useMemo } from "react";
 import { AppAction, AppActions } from "../../../../components/AppActions";
 
 export interface CostunitsProps {
-  costunits: Row_Costunit[];
+  count: number;
 }
 
 export const Costunits = (props: CostunitsProps) => {
-  const { costunits } = props;
+  const { count } = props;
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
@@ -24,7 +23,7 @@ export const Costunits = (props: CostunitsProps) => {
   return (
     <Grid container direction="column">
       <Grid item>
-        <Typography>{`Kostenstellen (${costunits.length})`}</Typography>
+        <Typography>{`Kostenstellen (${count})`}</Typography>
       </Grid>
       <Grid item>
         <AppActions actions={actions} />

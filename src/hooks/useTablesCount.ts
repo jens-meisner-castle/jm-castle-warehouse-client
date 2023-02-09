@@ -1,22 +1,21 @@
 import {
   ApiServiceResponse,
   ErrorCode,
-  Row_ImageContent,
-  SelectResponse,
+  FindResponse,
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
 import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
-export const useImageContentRows = (
+export const useTablesCount = (
   apiUrl: string,
-  imageIdFragment: string | undefined,
+  tables: string[] | undefined,
   updateIndicator: number,
   handleExpiredToken?: (errorCode: ErrorCode | undefined) => void
 ) => {
   const [queryStatus, setQueryStatus] = useState<
-    | ApiServiceResponse<SelectResponse<Row_ImageContent>>
+    | ApiServiceResponse<FindResponse<{ table: string; countOfRows: number }>[]>
     | ApiServiceResponse<undefined>
   >({
     response: undefined,
@@ -24,17 +23,21 @@ export const useImageContentRows = (
   const token = useAuthorizationToken();
 
   useEffect(() => {
-    if (updateIndicator) {
+    if (updateIndicator && tables) {
       const options = defaultFetchOptions(token);
-      const url = `${apiUrl}/image-content/rows?image_id=${
-        imageIdFragment || "%"
-      }`;
+      const url = `${apiUrl}/system/stats/count?${tables
+        .map((table) => `table=${table}`)
+        .join("&")}`;
       fetch(url, options)
         .then((response) => {
           response
             .json()
             .then(
-              (obj: ApiServiceResponse<SelectResponse<Row_ImageContent>>) => {
+              (
+                obj: ApiServiceResponse<
+                  FindResponse<{ table: string; countOfRows: number }>[]
+                >
+              ) => {
                 const { response, error, errorDetails, errorCode } = obj || {};
                 if (handleExpiredToken) {
                   handleExpiredToken(errorCode);
@@ -42,10 +45,9 @@ export const useImageContentRows = (
                 if (error) {
                   return setQueryStatus({ error, errorCode, errorDetails });
                 }
-                const { result } = response || {};
-                if (result) {
+                if (response) {
                   return setQueryStatus({
-                    response: { result },
+                    response,
                   });
                 }
                 return setQueryStatus({
@@ -62,6 +64,6 @@ export const useImageContentRows = (
           });
         });
     }
-  }, [apiUrl, updateIndicator, imageIdFragment, token, handleExpiredToken]);
+  }, [apiUrl, updateIndicator, tables, token, handleExpiredToken]);
   return queryStatus;
 };

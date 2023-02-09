@@ -103,9 +103,9 @@ export const FindStockStateTarget = (props: FindStockStateTargetProps) => {
           ) : (
             <Grid item>
               <div>
-                <Typography
-                  variant={typoVariant}
-                >{`Lager ist leer.`}</Typography>
+                <Typography variant={typoVariant}>
+                  {section ? `Lager ist leer.` : ""}
+                </Typography>
               </div>
             </Grid>
           )}

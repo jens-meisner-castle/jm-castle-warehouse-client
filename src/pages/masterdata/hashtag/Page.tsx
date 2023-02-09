@@ -3,17 +3,27 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import { Grid, Paper, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAppActionEdit } from "../../../app-action/useAppActionEdit";
+import { useAppActionFilter } from "../../../app-action/useAppActionFilter";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
+import { ErrorDisplays } from "../../../components/ErrorDisplays";
+import { FilteredRowsDisplay } from "../../../components/FilteredRowsDisplay";
 import {
   HashtagsTable,
   sizeVariantForWidth,
 } from "../../../components/table/HashtagsTable";
 import { backendApiUrl } from "../../../configuration/Urls";
+import { ArbitraryFilterComponent } from "../../../filter/ArbitraryFilterComponent";
+import { FilterAspect } from "../../../filter/Types";
+import {
+  FilterTest,
+  useArbitraryFilter,
+} from "../../../filter/useArbitraryFilter";
 import { useHashtagInsert } from "../../../hooks/useHashtagInsert";
-import { useHashtagSelect } from "../../../hooks/useHashtagSelect";
 import { useHashtagUpdate } from "../../../hooks/useHashtagUpdate";
+import { useMasterdata } from "../../../hooks/useMasterdata";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
 import { allRoutes } from "../../../navigation/AppRoutes";
@@ -24,11 +34,7 @@ import {
   toRawHashtag,
 } from "../../../types/RowTypes";
 import { OrderElement } from "../../../types/Types";
-import {
-  CompareFunction,
-  concatCompares,
-  isNonEmptyArray,
-} from "../../../utils/Compare";
+import { getFilteredOrderedRows } from "../../../utils/Compare";
 import {
   ActionStateReducer,
   getValidInitialAction,
@@ -36,6 +42,12 @@ import {
 } from "../utils/Reducer";
 import { CreateHashtagDialog } from "./dialogs/CreateHashtagDialog";
 import { EditHashtagDialog } from "./dialogs/EditHashtagDialog";
+
+const filterTest: FilterTest<HashtagRow> = {
+  nameFragment: ["tagId", "name"],
+};
+
+const filterAspects = Object.keys(filterTest) as FilterAspect[];
 
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
@@ -56,41 +68,31 @@ export const Page = () => {
     [initialAction, navigate]
   );
 
-  const { response: selectResponse, error: selectError } = useHashtagSelect(
-    backendApiUrl,
-    "%",
-    updateIndicator
+  const { filter, handleFilterChange, passFilter } = useArbitraryFilter(
+    {},
+    filterTest
   );
-  const { result: selectResult } = selectResponse || {};
-  const rows = useMemo(() => {
-    if (selectResult) {
-      const newRows: HashtagRow[] = [];
-      selectResult.rows.forEach((r) => {
-        const newRow = fromRawHashtag(r);
-        newRows.push(newRow);
-      });
-      newRows.sort((a, b) => a.name.localeCompare(b.name));
-      return newRows;
-    }
-    return undefined;
-  }, [selectResult]);
+
+  const { isFilterVisible, filterAction } = useAppActionFilter(false);
+  const { isEditActive, setIsEditActive, editAction } = useAppActionEdit(false);
+
+  const { errors: errorData, rows } = useMasterdata(
+    backendApiUrl,
+    { hashtag: true },
+    updateIndicator,
+    handleExpiredToken
+  );
+
+  const { hashtagRows } = rows;
 
   const filteredOrderedRows = useMemo(() => {
-    if (!rows) return undefined;
-    const filtered = [...rows]; //.filter((row) => passFilter(row));
-    const activeOrder = order?.filter((e) => e.direction) || [];
-    if (activeOrder.length) {
-      const compares: CompareFunction<HashtagRow>[] = [];
-      activeOrder.forEach((e) => {
-        const { field, direction } = e;
-        const compare = compareHashtagRow[field];
-        const compareFn = direction && compare && compare(direction);
-        compareFn && compares.push(compareFn);
-      });
-      isNonEmptyArray(compares) && filtered.sort(concatCompares(compares));
-    }
-    return filtered;
-  }, [rows, order]);
+    return getFilteredOrderedRows(
+      hashtagRows,
+      passFilter,
+      order,
+      compareHashtagRow
+    );
+  }, [hashtagRows, passFilter, order]);
 
   const [actionState, dispatch] = useReducer<
     typeof ActionStateReducer<HashtagRow>,
@@ -108,39 +110,45 @@ export const Page = () => {
   }, [resetInitialAction]);
 
   useEffect(() => {
-    if (initialAction && rows) {
+    if (initialAction && hashtagRows) {
       switch (initialAction) {
         case "new":
-          dispatch({
-            type: "new",
-            data: {
-              tagId: "",
-              name: "",
-              datasetVersion: 1,
-              createdAt: new Date(),
-              editedAt: new Date(),
-            },
-          });
+          {
+            setIsEditActive(true);
+            dispatch({
+              type: "new",
+              data: {
+                tagId: "",
+                name: "",
+                datasetVersion: 1,
+                createdAt: new Date(),
+                editedAt: new Date(),
+              },
+            });
+          }
           break;
         case "edit": {
           const tagId = params?.tagId;
           const row = tagId
-            ? rows.find((row) => row.tagId === tagId)
+            ? hashtagRows.find((row) => row.tagId === tagId)
             : undefined;
-          row &&
+          if (row) {
+            setIsEditActive(true);
             dispatch({
               type: "edit",
               data: row,
             });
+          }
           break;
         }
         case "duplicate":
           {
             const tagId = params?.tagId;
             const data = tagId
-              ? rows.find((row) => row.tagId === tagId)
+              ? hashtagRows.find((row) => row.tagId === tagId)
               : undefined;
-            data &&
+            if (data) {
+              setIsEditActive(true);
               dispatch({
                 type: "new",
                 data: {
@@ -150,11 +158,12 @@ export const Page = () => {
                   editedAt: new Date(),
                 },
               });
+            }
           }
           break;
       }
     }
-  }, [initialAction, params, rows]);
+  }, [initialAction, params, setIsEditActive, hashtagRows]);
   const handleEdit = useCallback(
     (row: HashtagRow) => {
       navigate(
@@ -287,13 +296,17 @@ export const Page = () => {
       tooltip: "Daten aktualisieren",
       onClick: refreshStatus,
     });
-    newActions.push({
-      label: <AddBoxIcon />,
-      onClick: () =>
-        navigate(`${allRoutes().masterdataHashtag.path}?action=new`),
-    });
+    newActions.push(filterAction);
+    newActions.push(editAction);
+    isEditActive &&
+      newActions.push({
+        label: <AddBoxIcon />,
+        tooltip: "Neuen Datensatz anlegen",
+        onClick: () =>
+          navigate(`${allRoutes().masterdataHashtag.path}?action=new`),
+      });
     return newActions;
-  }, [refreshStatus, navigate]);
+  }, [refreshStatus, filterAction, editAction, isEditActive, navigate]);
 
   return (
     <>
@@ -328,20 +341,35 @@ export const Page = () => {
             <AppActions actions={actions} />
           </Paper>
         </Grid>
-        {selectError && (
+        <Grid item>
+          <ErrorDisplays results={errorData} />
+        </Grid>
+        {isFilterVisible && (
           <Grid item>
-            <Paper style={{ padding: 5, marginBottom: 5 }}>
-              <Typography>{selectError}</Typography>
+            <Paper style={{ marginBottom: 5, padding: 5 }}>
+              <ArbitraryFilterComponent
+                filter={filter}
+                onChange={handleFilterChange}
+                aspects={filterAspects}
+                helpNameFragment={"Sucht in der ID und im Namen."}
+                handleExpiredToken={handleExpiredToken}
+              />
             </Paper>
           </Grid>
         )}
+        <Grid item>
+          <FilteredRowsDisplay
+            all={hashtagRows}
+            filtered={filteredOrderedRows}
+          />
+        </Grid>
         <Grid item>
           <Grid container direction="row">
             <Grid item>
               <Paper style={{ padding: 5 }}>
                 <HashtagsTable
                   containerStyle={{ width: "100%", maxWidth: 1200 }}
-                  editable
+                  editable={isEditActive}
                   data={filteredOrderedRows || []}
                   order={order}
                   onOrderChange={setOrder}

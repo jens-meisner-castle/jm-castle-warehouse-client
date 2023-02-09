@@ -1,10 +1,11 @@
-import { FilterAlt, FilterAltOff } from "@mui/icons-material";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { Grid, Paper, Tooltip, Typography } from "@mui/material";
+import { Grid, Paper, Typography } from "@mui/material";
 import { DateTime } from "luxon";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAppActionEdit } from "../../../app-action/useAppActionEdit";
+import { useAppActionFilter } from "../../../app-action/useAppActionFilter";
 import {
   useHandleExpiredToken,
   useVerifiedUser,
@@ -12,34 +13,30 @@ import {
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
 import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
+import { FilteredRowsDisplay } from "../../../components/FilteredRowsDisplay";
 import {
   EmissionsTable,
   sizeVariantForWidth,
 } from "../../../components/table/EmissionsTable";
 import { backendApiUrl } from "../../../configuration/Urls";
+import { ArbitraryFilterComponent } from "../../../filter/ArbitraryFilterComponent";
 import { TimeFilterComponent } from "../../../filter/TimeFilterComponent";
-import { TimeintervalFilter } from "../../../filter/Types";
-import { useArticleSelect } from "../../../hooks/useArticleSelect";
-import { useCostunitSelect } from "../../../hooks/useCostunitSelect";
+import { FilterAspect } from "../../../filter/Types";
+import {
+  FilterTest,
+  useArbitraryFilter,
+} from "../../../filter/useArbitraryFilter";
+import { useTimeintervalFilter } from "../../../filter/useTimeintervalFilter";
 import { useEmissionInsert } from "../../../hooks/useEmissionInsert";
 import { useEmissionSelect } from "../../../hooks/useEmissionSelect";
-import { useReceiverSelect } from "../../../hooks/useReceiverSelect";
-import { useStoreSectionSelect } from "../../../hooks/useStoreSectionSelect";
+import { useMasterdata } from "../../../hooks/useMasterdata";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
 import { allRoutes } from "../../../navigation/AppRoutes";
 import {
-  ArticleRow,
   compareEmissionRow,
-  CostunitRow,
   EmissionRow,
-  fromRawArticle,
-  fromRawCostunit,
   fromRawEmission,
-  fromRawReceiver,
-  fromRawStoreSection,
-  ReceiverRow,
-  StoreSectionRow,
   toRawEmission,
 } from "../../../types/RowTypes";
 import { OrderElement } from "../../../types/Types";
@@ -56,31 +53,35 @@ import {
 } from "../utils/Reducer";
 import { CreateEmissionDialog } from "./dialogs/CreateEmissionDialog";
 
+const filterTest: FilterTest<EmissionRow> = {
+  nameFragment: ["articleId"],
+};
+
+const filterAspects = Object.keys(filterTest) as FilterAspect[];
+
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
   const [order, setOrder] = useState<OrderElement<EmissionRow>[]>([
     { field: "emittedAt", direction: "descending" },
   ]);
-  const [filter, setFilter] = useState<TimeintervalFilter>(
+
+  const { isFilterVisible, filterAction } = useAppActionFilter(false);
+
+  const { isEditActive, setIsEditActive, editAction } = useAppActionEdit(false);
+
+  const { timeFilter, handleTimeFilterChange } = useTimeintervalFilter(
     getNewFilter({
       from: DateTime.now().minus({ days: 7 }),
       to: DateTime.now().endOf("day"),
     })
   );
-  const [isFilterComponentVisible, setIsFilterComponentVisible] =
-    useState(false);
-  const handleHideFilterComponent = useCallback(
-    () => setIsFilterComponentVisible(false),
-    []
+
+  const { filter, handleFilterChange, passFilter } = useArbitraryFilter(
+    {},
+    filterTest
   );
-  const handleShowFilterComponent = useCallback(
-    () => setIsFilterComponentVisible(true),
-    []
-  );
-  const handleFilterChange = useCallback((newFilter: TimeintervalFilter) => {
-    setFilter(newFilter);
-  }, []);
+
   const handleExpiredToken = useHandleExpiredToken();
   const { username } = useVerifiedUser() || {};
   const navigate = useNavigate();
@@ -97,8 +98,8 @@ export const Page = () => {
 
   const emissionApiResponse = useEmissionSelect(
     backendApiUrl,
-    filter.from,
-    filter.to,
+    timeFilter.from,
+    timeFilter.to,
     updateIndicator,
     handleExpiredToken
   );
@@ -111,7 +112,6 @@ export const Page = () => {
         const newRow = fromRawEmission(r);
         newRows.push(newRow);
       });
-      newRows.sort((a, b) => a.emittedAt.getTime() - b.emittedAt.getTime());
       return newRows;
     }
     return undefined;
@@ -119,7 +119,7 @@ export const Page = () => {
 
   const filteredOrderedRows = useMemo(() => {
     if (!emissionRows) return undefined;
-    const filtered = [...emissionRows]; //.filter((row) => passFilter(row));
+    const filtered = emissionRows.filter((row) => passFilter(row));
     const activeOrder = order?.filter((e) => e.direction) || [];
     if (activeOrder.length) {
       const compares: CompareFunction<EmissionRow>[] = [];
@@ -132,7 +132,7 @@ export const Page = () => {
       isNonEmptyArray(compares) && filtered.sort(concatCompares(compares));
     }
     return filtered;
-  }, [emissionRows, order]);
+  }, [emissionRows, passFilter, order]);
 
   const [actionState, dispatch] = useReducer<
     typeof ActionStateReducer<EmissionRow>,
@@ -143,72 +143,19 @@ export const Page = () => {
     () => ({ action: "none", data: undefined })
   );
 
-  const articleApiResponse = useArticleSelect(
+  const { rows, errors } = useMasterdata(
     backendApiUrl,
-    "%",
+    { article: true, receiver: true, costunit: true, section: true },
     1,
     handleExpiredToken
   );
-  const { response: articleResponse } = articleApiResponse;
-  const { result: articleResult } = articleResponse || {};
-  const articleRows = useMemo(() => {
-    const newRows: ArticleRow[] = [];
-    const { rows } = articleResult || {};
-    rows?.forEach((raw) => newRows.push(fromRawArticle(raw)));
-    return newRows;
-  }, [articleResult]);
-
-  const receiverApiResponse = useReceiverSelect(
-    backendApiUrl,
-    "%",
-    1,
-    handleExpiredToken
-  );
-  const { response: receiverResponse } = receiverApiResponse;
-  const { result: receiverResult } = receiverResponse || {};
-  const receiverRows = useMemo(() => {
-    const newRows: ReceiverRow[] = [];
-    const { rows } = receiverResult || {};
-    rows?.forEach((raw) => newRows.push(fromRawReceiver(raw)));
-    return newRows;
-  }, [receiverResult]);
-
-  const costunitApiResponse = useCostunitSelect(
-    backendApiUrl,
-    "%",
-    1,
-    handleExpiredToken
-  );
-  const { response: costunitResponse } = costunitApiResponse;
-  const { result: costunitResult } = costunitResponse || {};
-  const costunitRows = useMemo(() => {
-    const newRows: CostunitRow[] = [];
-    const { rows } = costunitResult || {};
-    rows?.forEach((raw) => newRows.push(fromRawCostunit(raw)));
-    return newRows;
-  }, [costunitResult]);
-
-  const sectionsApiResponse = useStoreSectionSelect(
-    backendApiUrl,
-    "%",
-    1,
-    handleExpiredToken
-  );
-  const { response: sectionsResponse } = sectionsApiResponse;
-  const { result: sectionsResult } = sectionsResponse || {};
-  const sectionRows = useMemo(() => {
-    const newRows: StoreSectionRow[] = [];
-    const { rows } = sectionsResult || {};
-    rows?.forEach((raw) => newRows.push(fromRawStoreSection(raw)));
-    return newRows;
-  }, [sectionsResult]);
+  const { articleRows, receiverRows, costunitRows, sectionRows } = rows;
 
   const errorData = useMemo(() => {
-    const newData: Record<string, ErrorData> = {};
-    newData.storeSection = sectionsApiResponse;
+    const newData: Record<string, ErrorData> = { ...errors };
     newData.emission = emissionApiResponse;
     return newData;
-  }, [sectionsApiResponse, emissionApiResponse]);
+  }, [emissionApiResponse, errors]);
 
   const refreshStatus = useCallback(() => {
     setUpdateIndicator((previous) => previous + 1);
@@ -220,22 +167,25 @@ export const Page = () => {
     if (initialAction && emissionRows) {
       switch (initialAction) {
         case "new":
-          dispatch({
-            type: "new",
-            data: {
-              datasetId: "new",
-              sectionId: "",
-              byUser: username || "",
-              articleId: "",
-              articleCount: 1,
-              emittedAt: new Date(),
-              reason: "loan",
-              receiver: "",
-              costUnit: "",
-              imageRefs: undefined,
-              price: undefined,
-            },
-          });
+          {
+            setIsEditActive(true);
+            dispatch({
+              type: "new",
+              data: {
+                datasetId: "new",
+                sectionId: "",
+                byUser: username || "",
+                articleId: "",
+                articleCount: 1,
+                emittedAt: new Date(),
+                reason: "loan",
+                receiver: "",
+                costUnit: "",
+                imageRefs: undefined,
+                price: undefined,
+              },
+            });
+          }
           break;
         case "duplicate":
           {
@@ -246,7 +196,8 @@ export const Page = () => {
             const data = datasetId
               ? emissionRows.find((row) => row.datasetId === datasetNumber)
               : undefined;
-            data &&
+            if (data) {
+              setIsEditActive(true);
               dispatch({
                 type: "new",
                 data: {
@@ -256,11 +207,12 @@ export const Page = () => {
                   emittedAt: new Date(),
                 },
               });
+            }
           }
           break;
       }
     }
-  }, [initialAction, params, emissionRows, username]);
+  }, [initialAction, setIsEditActive, params, emissionRows, username]);
   const handleDuplicate = useCallback(
     (row: EmissionRow) => {
       navigate(
@@ -340,31 +292,16 @@ export const Page = () => {
       tooltip: "Daten aktualisieren",
       onClick: refreshStatus,
     });
-    newActions.push({
-      label: isFilterComponentVisible ? <FilterAltOff /> : <FilterAlt />,
-      tooltip: isFilterComponentVisible
-        ? "Filter ausblenden"
-        : "Filter einblenden",
-      onClick: isFilterComponentVisible
-        ? handleHideFilterComponent
-        : handleShowFilterComponent,
-    });
-    newActions.push({
-      label: (
-        <Tooltip title="Neuen Datensatz anlegen">
-          <AddBoxIcon />
-        </Tooltip>
-      ),
-      onClick: () => navigate(`${allRoutes().stockEmission.path}?action=new`),
-    });
+    newActions.push(filterAction);
+    newActions.push(editAction);
+    isEditActive &&
+      newActions.push({
+        label: <AddBoxIcon />,
+        tooltip: "Neuen Datensatz anlegen",
+        onClick: () => navigate(`${allRoutes().stockEmission.path}?action=new`),
+      });
     return newActions;
-  }, [
-    refreshStatus,
-    handleHideFilterComponent,
-    handleShowFilterComponent,
-    isFilterComponentVisible,
-    navigate,
-  ]);
+  }, [refreshStatus, filterAction, editAction, isEditActive, navigate]);
 
   return (
     <>
@@ -374,18 +311,23 @@ export const Page = () => {
         isAnySnackbarOpen={isAnySnackbarOpen}
         closeSnackbar={() => setIsAnySnackbarOpen(false)}
       />
-      {actionState.action === "new" && actionState.data && (
-        <CreateEmissionDialog
-          receipt={actionState.data}
-          articles={articleRows}
-          receivers={receiverRows}
-          storeSections={sectionRows}
-          costunits={costunitRows}
-          open={true}
-          handleCancel={handleCancel}
-          handleAccept={handleAccept}
-        />
-      )}
+      {actionState.action === "new" &&
+        actionState.data &&
+        articleRows &&
+        costunitRows &&
+        receiverRows &&
+        sectionRows && (
+          <CreateEmissionDialog
+            receipt={actionState.data}
+            articles={articleRows}
+            receivers={receiverRows}
+            storeSections={sectionRows}
+            costunits={costunitRows}
+            open={true}
+            handleCancel={handleCancel}
+            handleAccept={handleAccept}
+          />
+        )}
       <Grid container direction="column">
         <Grid item>
           <Typography variant="h5">{"Warenausgang"}</Typography>
@@ -395,16 +337,35 @@ export const Page = () => {
             <AppActions actions={actions} />
           </Paper>
         </Grid>
-        {isFilterComponentVisible && (
+        {isFilterVisible && (
           <Grid item>
             <Paper style={{ marginBottom: 5 }}>
               <TimeFilterComponent
-                filter={filter}
-                onChange={handleFilterChange}
+                filter={timeFilter}
+                onChange={handleTimeFilterChange}
               />
             </Paper>
           </Grid>
         )}
+        {isFilterVisible && (
+          <Grid item>
+            <Paper style={{ marginBottom: 5, padding: 5 }}>
+              <ArbitraryFilterComponent
+                filter={filter}
+                onChange={handleFilterChange}
+                aspects={filterAspects}
+                helpNameFragment={"Sucht in der Artikel ID."}
+                handleExpiredToken={handleExpiredToken}
+              />
+            </Paper>
+          </Grid>
+        )}
+        <Grid item>
+          <FilteredRowsDisplay
+            all={emissionRows}
+            filtered={filteredOrderedRows}
+          />
+        </Grid>
         <Grid item>
           <ErrorDisplays results={errorData} />
         </Grid>
@@ -414,7 +375,7 @@ export const Page = () => {
               <Paper style={{ padding: 5 }}>
                 <EmissionsTable
                   containerStyle={{ width: "100%", maxWidth: 1200 }}
-                  editable
+                  editable={isEditActive}
                   data={filteredOrderedRows || []}
                   order={order}
                   onOrderChange={setOrder}

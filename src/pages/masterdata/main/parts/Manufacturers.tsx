@@ -1,14 +1,13 @@
 import { Grid, Typography } from "@mui/material";
-import { Row_Manufacturer } from "jm-castle-warehouse-types/build";
 import { useMemo } from "react";
 import { AppAction, AppActions } from "../../../../components/AppActions";
 
 export interface ManufacturersProps {
-  manufacturers: Row_Manufacturer[];
+  count: number;
 }
 
 export const Manufacturers = (props: ManufacturersProps) => {
-  const { manufacturers } = props;
+  const { count } = props;
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
@@ -24,7 +23,7 @@ export const Manufacturers = (props: ManufacturersProps) => {
   return (
     <Grid container direction="column">
       <Grid item>
-        <Typography>{`Hersteller (${manufacturers.length})`}</Typography>
+        <Typography>{`Hersteller (${count})`}</Typography>
       </Grid>
       <Grid item>
         <AppActions actions={actions} />

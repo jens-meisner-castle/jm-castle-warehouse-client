@@ -24,7 +24,7 @@ export const ArbitraryFilterComponent = (
 ) => {
   const { filter, onChange, helpNameFragment, aspects, handleExpiredToken } =
     props;
-  const { hashtags, nameFragment, storeId, sectionId, sectionIds } = filter;
+  const { hashtags, nameFragment, store, storeSection, storeSections } = filter;
 
   const { errors, rows } = useFilterData(
     backendApiUrl,
@@ -33,10 +33,10 @@ export const ArbitraryFilterComponent = (
   );
   const { storeRows, hashtagRows, sectionRows } = rows;
 
-  const currentStore = storeRows?.find((r) => r.storeId === storeId);
-  const currentSection = sectionRows?.find((r) => r.sectionId === sectionId);
+  const currentStore = storeRows?.find((r) => r.storeId === store);
+  const currentSection = sectionRows?.find((r) => r.sectionId === storeSection);
   const currentSections = sectionRows?.filter((r) =>
-    sectionIds?.includes(r.sectionId)
+    storeSections?.includes(r.sectionId)
   );
   const currentHashtags = hashtagRows?.filter((r) =>
     hashtags?.includes(r.tagId)
@@ -78,7 +78,7 @@ export const ArbitraryFilterComponent = (
             <StoreRefAutocomplete
               value={currentStore}
               stores={storeRows || []}
-              onChange={(store) => onChange({ storeId: store?.storeId })}
+              onChange={(store) => onChange({ store: store?.storeId })}
               margin="dense"
               fullWidth
               variant="standard"
@@ -94,7 +94,7 @@ export const ArbitraryFilterComponent = (
               value={currentSection}
               sections={sectionRows || []}
               onChange={(section) =>
-                onChange({ sectionId: section?.sectionId })
+                onChange({ storeSection: section?.sectionId })
               }
               fullWidth
               variant="standard"
@@ -110,7 +110,7 @@ export const ArbitraryFilterComponent = (
               value={currentSections}
               storeSections={sectionRows || []}
               onChange={(sections) =>
-                onChange({ sectionIds: sections?.map((r) => r.sectionId) })
+                onChange({ storeSections: sections?.map((r) => r.sectionId) })
               }
             />
           </div>

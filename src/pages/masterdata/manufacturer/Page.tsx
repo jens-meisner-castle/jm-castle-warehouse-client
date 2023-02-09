@@ -1,19 +1,29 @@
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { Grid, Paper, Tooltip, Typography } from "@mui/material";
+import { Grid, Paper, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAppActionEdit } from "../../../app-action/useAppActionEdit";
+import { useAppActionFilter } from "../../../app-action/useAppActionFilter";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
+import { ErrorDisplays } from "../../../components/ErrorDisplays";
+import { FilteredRowsDisplay } from "../../../components/FilteredRowsDisplay";
 import {
   ManufacturersTable,
   sizeVariantForWidth,
 } from "../../../components/table/ManufacturersTable";
 import { backendApiUrl } from "../../../configuration/Urls";
+import { ArbitraryFilterComponent } from "../../../filter/ArbitraryFilterComponent";
+import { FilterAspect } from "../../../filter/Types";
+import {
+  FilterTest,
+  useArbitraryFilter,
+} from "../../../filter/useArbitraryFilter";
 import { useManufacturerInsert } from "../../../hooks/useManufacturerInsert";
-import { useManufacturerSelect } from "../../../hooks/useManufacturerSelect";
 import { useManufacturerUpdate } from "../../../hooks/useManufacturerUpdate";
+import { useMasterdata } from "../../../hooks/useMasterdata";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
 import { allRoutes } from "../../../navigation/AppRoutes";
@@ -37,12 +47,27 @@ import {
 import { CreateManufacturerDialog } from "./dialogs/CreateManufacturerDialog";
 import { EditManufacturerDialog } from "./dialogs/EditManufacturerDialog";
 
+const filterTest: FilterTest<ManufacturerRow> = {
+  nameFragment: ["manufacturerId", "name"],
+};
+
+const filterAspects = Object.keys(filterTest) as FilterAspect[];
+
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
   const [order, setOrder] = useState<OrderElement<ManufacturerRow>[]>([
     { field: "manufacturerId", direction: "ascending" },
   ]);
+
+  const { filter, handleFilterChange, passFilter } = useArbitraryFilter(
+    {},
+    filterTest
+  );
+
+  const { isFilterVisible, filterAction } = useAppActionFilter(false);
+  const { isEditActive, setIsEditActive, editAction } = useAppActionEdit(false);
+
   const handleExpiredToken = useHandleExpiredToken();
   const navigate = useNavigate();
   const { action, params } = useUrlAction() || {};
@@ -56,25 +81,17 @@ export const Page = () => {
     [initialAction, navigate]
   );
 
-  const { response: selectResponse, error: selectError } =
-    useManufacturerSelect(backendApiUrl, "%", updateIndicator);
-  const { result: selectResult } = selectResponse || {};
-  const rows = useMemo(() => {
-    if (selectResult) {
-      const newRows: ManufacturerRow[] = [];
-      selectResult.rows.forEach((r) => {
-        const newRow = fromRawManufacturer(r);
-        newRows.push(newRow);
-      });
-      newRows.sort((a, b) => a.name.localeCompare(b.name));
-      return newRows;
-    }
-    return undefined;
-  }, [selectResult]);
+  const { rows, errors: errorData } = useMasterdata(
+    backendApiUrl,
+    { manufacturer: true },
+    updateIndicator,
+    handleExpiredToken
+  );
+  const { manufacturerRows } = rows;
 
   const filteredOrderedRows = useMemo(() => {
-    if (!rows) return undefined;
-    const filtered = [...rows]; //.filter((row) => passFilter(row));
+    if (!manufacturerRows) return undefined;
+    const filtered = manufacturerRows.filter((row) => passFilter(row));
     const activeOrder = order?.filter((e) => e.direction) || [];
     if (activeOrder.length) {
       const compares: CompareFunction<ManufacturerRow>[] = [];
@@ -87,7 +104,7 @@ export const Page = () => {
       isNonEmptyArray(compares) && filtered.sort(concatCompares(compares));
     }
     return filtered;
-  }, [rows, order]);
+  }, [manufacturerRows, passFilter, order]);
 
   const [actionState, dispatch] = useReducer<
     typeof ActionStateReducer<ManufacturerRow>,
@@ -105,40 +122,50 @@ export const Page = () => {
   }, [resetInitialAction]);
 
   useEffect(() => {
-    if (initialAction && rows) {
+    if (initialAction && manufacturerRows) {
       switch (initialAction) {
         case "new":
-          dispatch({
-            type: "new",
-            data: {
-              manufacturerId: "",
-              name: "",
-              datasetVersion: 1,
-              createdAt: new Date(),
-              editedAt: new Date(),
-            },
-          });
+          {
+            setIsEditActive(true);
+            dispatch({
+              type: "new",
+              data: {
+                manufacturerId: "",
+                name: "",
+                datasetVersion: 1,
+                createdAt: new Date(),
+                editedAt: new Date(),
+              },
+            });
+          }
           break;
         case "edit": {
           const manufacturerId = params?.manufacturerId;
           console.log(manufacturerId);
           const row = manufacturerId
-            ? rows.find((row) => row.manufacturerId === manufacturerId)
+            ? manufacturerRows.find(
+                (row) => row.manufacturerId === manufacturerId
+              )
             : undefined;
-          row &&
+          if (row) {
+            setIsEditActive(true);
             dispatch({
               type: "edit",
               data: row,
             });
+          }
           break;
         }
         case "duplicate":
           {
             const manufacturerId = params?.manufacturerId;
             const data = manufacturerId
-              ? rows.find((row) => row.manufacturerId === manufacturerId)
+              ? manufacturerRows.find(
+                  (row) => row.manufacturerId === manufacturerId
+                )
               : undefined;
-            data &&
+            if (data) {
+              setIsEditActive(true);
               dispatch({
                 type: "new",
                 data: {
@@ -148,11 +175,12 @@ export const Page = () => {
                   editedAt: new Date(),
                 },
               });
+            }
           }
           break;
       }
     }
-  }, [initialAction, params, rows]);
+  }, [initialAction, setIsEditActive, params, manufacturerRows]);
   const handleEdit = useCallback(
     (row: ManufacturerRow) => {
       navigate(
@@ -284,17 +312,17 @@ export const Page = () => {
       tooltip: "Daten aktualisieren",
       onClick: refreshStatus,
     });
-    newActions.push({
-      label: (
-        <Tooltip title="Neuen Datensatz anlegen">
-          <AddBoxIcon />
-        </Tooltip>
-      ),
-      onClick: () =>
-        navigate(`${allRoutes().masterdataManufacturer.path}?action=new`),
-    });
+    newActions.push(filterAction);
+    newActions.push(editAction);
+    isEditActive &&
+      newActions.push({
+        label: <AddBoxIcon />,
+        tooltip: "Neuen Datensatz anlegen",
+        onClick: () =>
+          navigate(`${allRoutes().masterdataManufacturer.path}?action=new`),
+      });
     return newActions;
-  }, [refreshStatus, navigate]);
+  }, [refreshStatus, filterAction, editAction, isEditActive, navigate]);
 
   return (
     <>
@@ -329,20 +357,35 @@ export const Page = () => {
             <AppActions actions={actions} />
           </Paper>
         </Grid>
-        {selectError && (
+        <Grid item>
+          <ErrorDisplays results={errorData} />
+        </Grid>
+        {isFilterVisible && (
           <Grid item>
-            <Paper style={{ padding: 5, marginBottom: 5 }}>
-              <Typography>{selectError}</Typography>
+            <Paper style={{ marginBottom: 5, padding: 5 }}>
+              <ArbitraryFilterComponent
+                filter={filter}
+                onChange={handleFilterChange}
+                aspects={filterAspects}
+                helpNameFragment={"Sucht in der ID und im Namen."}
+                handleExpiredToken={handleExpiredToken}
+              />
             </Paper>
           </Grid>
         )}
+        <Grid item>
+          <FilteredRowsDisplay
+            all={manufacturerRows}
+            filtered={filteredOrderedRows}
+          />
+        </Grid>
         <Grid item>
           <Grid container direction="row">
             <Grid item>
               <Paper style={{ padding: 5 }}>
                 <ManufacturersTable
                   containerStyle={{ width: "100%", maxWidth: 1200 }}
-                  editable
+                  editable={isEditActive}
                   data={filteredOrderedRows || []}
                   order={order}
                   onOrderChange={setOrder}

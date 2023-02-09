@@ -5,21 +5,20 @@ import { AppAction } from "../../components/AppActions";
 import { ErrorData } from "../../components/ErrorDisplays";
 import { backendApiUrl } from "../../configuration/Urls";
 import { useEmissionInsert } from "../../hooks/useEmissionInsert";
+import { useMasterdata } from "../../hooks/useMasterdata";
 import { useReceiptInsert } from "../../hooks/useReceiptInsert";
-import { useStoreSectionSelect } from "../../hooks/useStoreSectionSelect";
 import {
   ArticleRow,
   EmissionRow,
-  fromRawStoreSection,
   ReceiptRow,
   StoreSectionRow,
   toRawEmission,
   toRawReceipt,
 } from "../../types/RowTypes";
 import { ErrorView } from "../general-views/ErrorView";
+import { Execution } from "../general-views/Execution";
 import { WellDone } from "../general-views/WellDone";
 import { GeneralUsecaseProps, RelocateState } from "../Types";
-import { Execution } from "../general-views/Execution";
 import { FindStockStateSource } from "./views/FindStockStateSource";
 import { FindStockStateTarget } from "./views/FindStockStateTarget";
 import { Summary } from "./views/Summary";
@@ -98,38 +97,36 @@ export const RelocateUsecase = (props: RelocateUsecaseProps) => {
     [updateUsecaseData, id]
   );
 
-  const sectionApiResponse = useStoreSectionSelect(
+  const { rows, errors } = useMasterdata(
     backendApiUrl,
-    "%",
+    { section: true },
     1,
     handleExpiredToken
   );
-  const { response } = sectionApiResponse;
-  const { result } = response || {};
-  const { rows } = result || {};
-  const availableSections = useMemo(
-    () => rows?.map((r) => fromRawStoreSection(r)),
-    [rows]
-  );
+  const { sectionRows } = rows;
+
+  const availableTargetSections = useMemo(() => {
+    if (!sectionRows || !from) return undefined;
+    return sectionRows.filter((r) => r.sectionId !== from.sectionId);
+  }, [sectionRows, from]);
 
   useEffect(() => {
-    sectionApiResponse.error &&
-      updateErrorData({ section: sectionApiResponse });
-  }, [sectionApiResponse, updateErrorData]);
+    Object.keys(errors).length && updateErrorData(errors);
+  }, [errors, updateErrorData]);
 
   /** view: find-source */
   const findSourceActions = useMemo(() => {
     const actions: AppAction[] = [];
+    actions.push({
+      label: "Abbrechen",
+      onClick: cancelUsecase,
+    });
     actions.push({
       label: "Weiter",
       disabled: !article || !from,
       onClick: () => {
         setView("find-target");
       },
-    });
-    actions.push({
-      label: "Abbrechen",
-      onClick: cancelUsecase,
     });
     return actions;
   }, [article, from, cancelUsecase]);
@@ -142,15 +139,15 @@ export const RelocateUsecase = (props: RelocateUsecaseProps) => {
       onClick: () => setView("find-source"),
     });
     actions.push({
+      label: "Abbrechen",
+      onClick: cancelUsecase,
+    });
+    actions.push({
       label: "Weiter",
       disabled: !to,
       onClick: () => {
         setView("summary");
       },
-    });
-    actions.push({
-      label: "Abbrechen",
-      onClick: cancelUsecase,
     });
     return actions;
   }, [to, cancelUsecase]);
@@ -162,15 +159,15 @@ export const RelocateUsecase = (props: RelocateUsecaseProps) => {
       onClick: () => setView("find-target"),
     });
     actions.push({
+      label: "Abbrechen",
+      onClick: cancelUsecase,
+    });
+    actions.push({
       label: "Fertigstellen",
       disabled: !emission || !receipt,
       onClick: () => {
         setView("execution");
       },
-    });
-    actions.push({
-      label: "Abbrechen",
-      onClick: cancelUsecase,
     });
     return actions;
   }, [emission, receipt, cancelUsecase]);
@@ -253,7 +250,7 @@ export const RelocateUsecase = (props: RelocateUsecaseProps) => {
           </Paper>
         </Grid>
       )}
-      {view === "find-source" && availableSections && (
+      {view === "find-source" && sectionRows && (
         <Grid item>
           <Paper style={{ padding: 5 }}>
             <FindStockStateSource
@@ -262,7 +259,7 @@ export const RelocateUsecase = (props: RelocateUsecaseProps) => {
               handleExpiredToken={handleExpiredToken}
               onError={updateErrorData}
               description={views["find-source"].description}
-              availableSections={availableSections}
+              availableSections={sectionRows}
               section={from}
               onChangeSection={handleChangedSelectedFrom}
               article={article}
@@ -271,7 +268,7 @@ export const RelocateUsecase = (props: RelocateUsecaseProps) => {
           </Paper>
         </Grid>
       )}
-      {view === "find-target" && availableSections && (
+      {view === "find-target" && availableTargetSections && (
         <Grid item>
           <Paper style={{ padding: 5 }}>
             <FindStockStateTarget
@@ -280,7 +277,7 @@ export const RelocateUsecase = (props: RelocateUsecaseProps) => {
               handleExpiredToken={handleExpiredToken}
               onError={updateErrorData}
               description={views["find-target"].description}
-              availableSections={availableSections}
+              availableSections={availableTargetSections}
               section={to}
               onChangeSection={handleChangedSelectedTo}
             />

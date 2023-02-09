@@ -13,7 +13,7 @@ import {
 import { useMemo, useState } from "react";
 import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
 import { backendApiUrl, getImageDisplayUrl } from "../../configuration/Urls";
-import { useImageContentRows } from "../../hooks/useImageContentRows";
+import { useImageContentSelect } from "../../hooks/useImageContentSelect";
 import { ErrorDisplay } from "../ErrorDisplay";
 
 export interface ImageSelectionDialogProps {
@@ -27,7 +27,7 @@ export const ImageSelectionDialog = (props: ImageSelectionDialogProps) => {
   const { handleAccept, handleCancel, hiddenImageIds } = props;
   const theme = useTheme();
   const handleExpiredToken = useHandleExpiredToken();
-  const { response, error, errorCode, errorDetails } = useImageContentRows(
+  const { response, error, errorCode, errorDetails } = useImageContentSelect(
     backendApiUrl,
     "%",
     1,

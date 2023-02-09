@@ -1,4 +1,4 @@
-import { AllowedKeys } from "../types/Types";
+import { AllowedKeys, OrderDirection, OrderElement } from "../types/Types";
 
 export type NonEmptyArray<T> = [T] & T[];
 
@@ -79,4 +79,29 @@ export const compareDate = <T>(
 
 export const includesOneOf = (s: string, test: string[]) => {
   return !!test.find((t) => s.includes(t));
+};
+
+export const getFilteredOrderedRows = <T>(
+  rows: T[] | undefined,
+  passFilter: (r: T) => boolean,
+  order: OrderElement<T>[],
+  compareFields: Record<
+    string,
+    (direction: OrderDirection) => CompareFunction<T>
+  >
+) => {
+  if (!rows) return undefined;
+  const filtered = rows.filter((row) => passFilter(row));
+  const activeOrder = order?.filter((e) => e.direction) || [];
+  if (activeOrder.length) {
+    const compares: CompareFunction<T>[] = [];
+    activeOrder.forEach((e) => {
+      const { field, direction } = e;
+      const compare = compareFields[field];
+      const compareFn = direction && compare && compare(direction);
+      compareFn && compares.push(compareFn);
+    });
+    isNonEmptyArray(compares) && filtered.sort(concatCompares(compares));
+  }
+  return filtered;
 };

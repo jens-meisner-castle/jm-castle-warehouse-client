@@ -1,19 +1,29 @@
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { Grid, Paper, Tooltip, Typography } from "@mui/material";
+import { Grid, Paper, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAppActionEdit } from "../../../app-action/useAppActionEdit";
+import { useAppActionFilter } from "../../../app-action/useAppActionFilter";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
+import { ErrorDisplays } from "../../../components/ErrorDisplays";
+import { FilteredRowsDisplay } from "../../../components/FilteredRowsDisplay";
 import {
   ImagesTable,
   sizeVariantForWidth,
 } from "../../../components/table/ImagesTable";
 import { backendApiUrl } from "../../../configuration/Urls";
+import { ArbitraryFilterComponent } from "../../../filter/ArbitraryFilterComponent";
+import { FilterAspect } from "../../../filter/Types";
+import {
+  FilterTest,
+  useArbitraryFilter,
+} from "../../../filter/useArbitraryFilter";
 import { useImageContentInsert } from "../../../hooks/useImageContentInsert";
-import { useImageContentRows } from "../../../hooks/useImageContentRows";
 import { useImageContentUpdate } from "../../../hooks/useImageContentUpdate";
+import { useMasterdata } from "../../../hooks/useMasterdata";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
 import { allRoutes } from "../../../navigation/AppRoutes";
@@ -24,11 +34,7 @@ import {
   toRawImageContent,
 } from "../../../types/RowTypes";
 import { OrderElement } from "../../../types/Types";
-import {
-  CompareFunction,
-  concatCompares,
-  isNonEmptyArray,
-} from "../../../utils/Compare";
+import { getFilteredOrderedRows } from "../../../utils/Compare";
 import {
   ActionStateReducer,
   getValidInitialAction,
@@ -38,12 +44,26 @@ import { CreateImageContentDialog } from "./dialogs/CreateImageContentDialog";
 import { EditImageContentDialog } from "./dialogs/EditImageContentDialog";
 import { ImageContentEditState } from "./Types";
 
+const filterTest: FilterTest<ImageContentRow> = {
+  nameFragment: ["imageId"],
+};
+
+const filterAspects = Object.keys(filterTest) as FilterAspect[];
+
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
   const [order, setOrder] = useState<OrderElement<ImageContentRow>[]>([
     { field: "imageId", direction: "ascending" },
   ]);
+  const { filter, handleFilterChange, passFilter } = useArbitraryFilter(
+    {},
+    filterTest
+  );
+
+  const { filterAction, isFilterVisible } = useAppActionFilter(false);
+  const { editAction, isEditActive, setIsEditActive } = useAppActionEdit(false);
+
   const handleExpiredToken = useHandleExpiredToken();
   const navigate = useNavigate();
   const { action, params } = useUrlAction() || {};
@@ -57,42 +77,22 @@ export const Page = () => {
     [initialAction, navigate]
   );
 
-  const { response: selectResponse, error: selectError } = useImageContentRows(
+  const { rows, errors: errorData } = useMasterdata(
     backendApiUrl,
-    "%",
+    { imageContent: true },
     updateIndicator,
     handleExpiredToken
   );
-  const { result: selectResult } = selectResponse || {};
-  const rows = useMemo(() => {
-    if (selectResult) {
-      const newRows: ImageContentRow[] = [];
-      selectResult.rows.forEach((r) => {
-        const newRow = fromRawImageContent(r);
-        newRows.push(newRow);
-      });
-      newRows.sort((a, b) => a.imageId.localeCompare(b.imageId));
-      return newRows;
-    }
-    return undefined;
-  }, [selectResult]);
+  const { imageContentRows } = rows;
 
   const filteredOrderedRows = useMemo(() => {
-    if (!rows) return undefined;
-    const filtered = [...rows]; //.filter((row) => passFilter(row));
-    const activeOrder = order?.filter((e) => e.direction) || [];
-    if (activeOrder.length) {
-      const compares: CompareFunction<ImageContentRow>[] = [];
-      activeOrder.forEach((e) => {
-        const { field, direction } = e;
-        const compare = compareImageRow[field];
-        const compareFn = direction && compare && compare(direction);
-        compareFn && compares.push(compareFn);
-      });
-      isNonEmptyArray(compares) && filtered.sort(concatCompares(compares));
-    }
-    return filtered;
-  }, [rows, order]);
+    return getFilteredOrderedRows(
+      imageContentRows,
+      passFilter,
+      order,
+      compareImageRow
+    );
+  }, [imageContentRows, passFilter, order]);
 
   const [actionState, dispatch] = useReducer<
     typeof ActionStateReducer<ImageContentEditState>,
@@ -110,44 +110,50 @@ export const Page = () => {
   }, [resetInitialAction]);
 
   useEffect(() => {
-    if (initialAction && rows) {
+    if (initialAction && imageContentRows) {
       switch (initialAction) {
         case "new":
-          dispatch({
-            type: "new",
-            data: {
-              row: {
-                imageId: "",
-                imageExtension: "",
-                sizeInBytes: 0,
-                width: 0,
-                height: 0,
-                datasetVersion: 1,
-                createdAt: new Date(),
-                editedAt: new Date(),
+          {
+            setIsEditActive(true);
+            dispatch({
+              type: "new",
+              data: {
+                row: {
+                  imageId: "",
+                  imageExtension: "",
+                  sizeInBytes: 0,
+                  width: 0,
+                  height: 0,
+                  datasetVersion: 1,
+                  createdAt: new Date(),
+                  editedAt: new Date(),
+                },
               },
-            },
-          });
+            });
+          }
           break;
         case "edit": {
           const imageId = params?.imageId;
           const row = imageId
-            ? rows.find((row) => row.imageId === imageId)
+            ? imageContentRows.find((row) => row.imageId === imageId)
             : undefined;
-          row &&
+          if (row) {
+            setIsEditActive(true);
             dispatch({
               type: "edit",
               data: { row },
             });
+          }
           break;
         }
         case "duplicate":
           {
             const imageId = params?.imageId;
             const data = imageId
-              ? rows.find((row) => row.imageId === imageId)
+              ? imageContentRows.find((row) => row.imageId === imageId)
               : undefined;
-            data &&
+            if (data) {
+              setIsEditActive(true);
               dispatch({
                 type: "new",
                 data: {
@@ -164,11 +170,12 @@ export const Page = () => {
                   },
                 },
               });
+            }
           }
           break;
       }
     }
-  }, [initialAction, params, rows]);
+  }, [initialAction, setIsEditActive, params, imageContentRows]);
   const handleEdit = useCallback(
     (row: ImageContentRow) => {
       navigate(
@@ -315,17 +322,17 @@ export const Page = () => {
       tooltip: "Daten aktualisieren",
       onClick: refreshStatus,
     });
-    newActions.push({
-      label: (
-        <Tooltip title="Neuen Datensatz anlegen">
-          <AddBoxIcon />
-        </Tooltip>
-      ),
-      onClick: () =>
-        navigate(`${allRoutes().masterdataImageContent.path}?action=new`),
-    });
+    newActions.push(filterAction);
+    newActions.push(editAction);
+    isEditActive &&
+      newActions.push({
+        label: <AddBoxIcon />,
+        tooltip: "Neuen Datensatz anlegen",
+        onClick: () =>
+          navigate(`${allRoutes().masterdataImageContent.path}?action=new`),
+      });
     return newActions;
-  }, [refreshStatus, navigate]);
+  }, [refreshStatus, filterAction, editAction, isEditActive, navigate]);
 
   return (
     <>
@@ -360,20 +367,35 @@ export const Page = () => {
             <AppActions actions={actions} />
           </Paper>
         </Grid>
-        {selectError && (
+        <Grid item>
+          <ErrorDisplays results={errorData} />
+        </Grid>
+        {isFilterVisible && (
           <Grid item>
-            <Paper style={{ padding: 5, marginBottom: 5 }}>
-              <Typography>{selectError}</Typography>
+            <Paper style={{ marginBottom: 5, padding: 5 }}>
+              <ArbitraryFilterComponent
+                filter={filter}
+                onChange={handleFilterChange}
+                aspects={filterAspects}
+                helpNameFragment={"Sucht in der ID."}
+                handleExpiredToken={handleExpiredToken}
+              />
             </Paper>
           </Grid>
         )}
+        <Grid item>
+          <FilteredRowsDisplay
+            all={imageContentRows}
+            filtered={filteredOrderedRows}
+          />
+        </Grid>
         <Grid item>
           <Grid container direction="row">
             <Grid item>
               <Paper style={{ padding: 5 }}>
                 <ImagesTable
                   containerStyle={{ width: "100%", maxWidth: 1200 }}
-                  editable
+                  editable={isEditActive}
                   displayImage="small"
                   data={filteredOrderedRows || []}
                   order={order}

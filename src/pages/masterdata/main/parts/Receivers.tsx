@@ -1,14 +1,13 @@
 import { Grid, Typography } from "@mui/material";
-import { Row_Receiver } from "jm-castle-warehouse-types/build";
 import { useMemo } from "react";
 import { AppAction, AppActions } from "../../../../components/AppActions";
 
 export interface ReceiversProps {
-  receivers: Row_Receiver[];
+  count: number;
 }
 
 export const Receivers = (props: ReceiversProps) => {
-  const { receivers } = props;
+  const { count } = props;
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
@@ -24,7 +23,7 @@ export const Receivers = (props: ReceiversProps) => {
   return (
     <Grid container direction="column">
       <Grid item>
-        <Typography>{`Empfänger (${receivers.length})`}</Typography>
+        <Typography>{`Empfänger (${count})`}</Typography>
       </Grid>
       <Grid item>
         <AppActions actions={actions} />

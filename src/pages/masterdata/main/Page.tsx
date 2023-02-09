@@ -1,19 +1,12 @@
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Grid, Paper, Typography } from "@mui/material";
+import { TableName } from "jm-castle-warehouse-types/build";
 import { useCallback, useMemo, useState } from "react";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../../components/AppActions";
 import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
 import { backendApiUrl } from "../../../configuration/Urls";
-import { useArticleSelect } from "../../../hooks/useArticleSelect";
-import { useAttributeSelect } from "../../../hooks/useAttributeSelect";
-import { useCostunitSelect } from "../../../hooks/useCostunitSelect";
-import { useHashtagSelect } from "../../../hooks/useHashtagSelect";
-import { useImageContentRows } from "../../../hooks/useImageContentRows";
-import { useManufacturerSelect } from "../../../hooks/useManufacturerSelect";
-import { useReceiverSelect } from "../../../hooks/useReceiverSelect";
-import { useStoreSectionSelect } from "../../../hooks/useStoreSectionSelect";
-import { useStoreSelect } from "../../../hooks/useStoreSelect";
+import { useTablesCount } from "../../../hooks/useTablesCount";
 import { Articles } from "./parts/Articles";
 import { Attributes } from "./parts/Attributes";
 import { Costunits } from "./parts/Costunits";
@@ -24,114 +17,49 @@ import { Receivers } from "./parts/Receivers";
 import { Stores } from "./parts/Stores";
 import { StoreSections } from "./parts/StoreSections";
 
+const tablenameArr: TableName[] = [
+  "article",
+  "attribute",
+  "costunit",
+  "hashtag",
+  "image_content",
+  "manufacturer",
+  "receiver",
+  "store",
+  "store_section",
+];
+
 export const Page = () => {
   const handleExpiredToken = useHandleExpiredToken();
   const [updateIndicator, setUpdateIndicator] = useState(1);
   const refreshStatus = useCallback(() => {
     setUpdateIndicator((previous) => previous + 1);
   }, []);
-  const articleApiResponse = useArticleSelect(
-    backendApiUrl,
-    "%",
-    updateIndicator,
-    handleExpiredToken
-  );
-  const { response: articleResponse } = articleApiResponse;
-  const { result: articleResult } = articleResponse || {};
 
-  const storeApiResponse = useStoreSelect(
+  const countApiResponse = useTablesCount(
     backendApiUrl,
-    "%",
+    tablenameArr,
     updateIndicator,
     handleExpiredToken
   );
-  const { response: storeResponse } = storeApiResponse;
-  const { result: storeResult } = storeResponse || {};
-  const storeSectionApiResponse = useStoreSectionSelect(
-    backendApiUrl,
-    "%",
-    updateIndicator,
-    handleExpiredToken
-  );
-  const { response: storeSectionResponse } = storeSectionApiResponse;
-  const { result: storeSectionResult } = storeSectionResponse || {};
-  const imageContentApiResponse = useImageContentRows(
-    backendApiUrl,
-    "%",
-    updateIndicator,
-    handleExpiredToken
-  );
-  const { response: imageContentResponse } = imageContentApiResponse;
-  const { result: imageContentResult } = imageContentResponse || {};
-  const hashtagApiResponse = useHashtagSelect(
-    backendApiUrl,
-    "%",
-    updateIndicator,
-    handleExpiredToken
-  );
-  const { response: hashtagResponse } = hashtagApiResponse;
-  const { result: hashtagResult } = hashtagResponse || {};
-
-  const costunitApiResponse = useCostunitSelect(
-    backendApiUrl,
-    "%",
-    updateIndicator,
-    handleExpiredToken
-  );
-  const { response: costunitResponse } = costunitApiResponse;
-  const { result: costunitResult } = costunitResponse || {};
-
-  const receiverApiResponse = useReceiverSelect(
-    backendApiUrl,
-    "%",
-    updateIndicator,
-    handleExpiredToken
-  );
-  const { response: receiverResponse } = receiverApiResponse;
-  const { result: receiverResult } = receiverResponse || {};
-
-  const manufacturerApiResponse = useManufacturerSelect(
-    backendApiUrl,
-    "%",
-    updateIndicator,
-    handleExpiredToken
-  );
-  const { response: manufacturerResponse } = manufacturerApiResponse;
-  const { result: manufacturerResult } = manufacturerResponse || {};
-
-  const attributeApiResponse = useAttributeSelect(
-    backendApiUrl,
-    "%",
-    updateIndicator,
-    handleExpiredToken
-  );
-  const { response: attributeResponse } = attributeApiResponse;
-  const { result: attributeResult } = attributeResponse || {};
+  const counts = useMemo(() => {
+    const newCounts: Partial<Record<TableName, number>> = {};
+    const { response } = countApiResponse;
+    response?.forEach(
+      (res) =>
+        res.result &&
+        res.result.row &&
+        (newCounts[res.result.row.table as TableName] =
+          res.result.row.countOfRows)
+    );
+    return newCounts;
+  }, [countApiResponse]);
 
   const errorData = useMemo(() => {
     const newErrors: Record<string, ErrorData> = {};
-    newErrors.article = { ...articleApiResponse };
-    newErrors.store = { ...storeApiResponse };
-    newErrors.storeSection = { ...storeSectionApiResponse };
-    newErrors.imageContent = { ...imageContentApiResponse };
-    newErrors.hashtag = { ...hashtagApiResponse };
-    newErrors.costunit = { ...costunitApiResponse };
-    newErrors.receiver = { ...receiverApiResponse };
-    newErrors.manufacturer = { ...manufacturerApiResponse };
-    newErrors.attribute = { ...attributeApiResponse };
-
+    newErrors.count = { ...countApiResponse };
     return newErrors;
-  }, [
-    articleApiResponse,
-    storeApiResponse,
-    storeSectionApiResponse,
-    imageContentApiResponse,
-    hashtagApiResponse,
-    receiverApiResponse,
-    costunitApiResponse,
-    manufacturerApiResponse,
-    attributeApiResponse,
-  ]);
+  }, [countApiResponse]);
 
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
@@ -162,77 +90,63 @@ export const Page = () => {
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
-              <Stores stores={storeResult ? storeResult.rows : []} />
+              <Stores count={counts.store || 0} />
             </Paper>
           </Grid>
           <Grid item>
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
-              <StoreSections
-                sections={storeSectionResult ? storeSectionResult.rows : []}
-              />
+              <StoreSections count={counts.store_section || 0} />
             </Paper>
           </Grid>
           <Grid item>
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
-              <Articles articles={articleResult ? articleResult.rows : []} />
+              <Articles count={counts.article || 0} />
             </Paper>
           </Grid>
           <Grid item>
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
-              <Receivers
-                receivers={receiverResult ? receiverResult.rows : []}
-              />
+              <Receivers count={counts.receiver || 0} />
             </Paper>
           </Grid>
           <Grid item>
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
-              <Images
-                images={imageContentResult ? imageContentResult.rows : []}
-              />
+              <Images count={counts.image_content || 0} />
             </Paper>
           </Grid>
           <Grid item>
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
-              <Hashtags hashtags={hashtagResult ? hashtagResult.rows : []} />
+              <Hashtags count={counts.hashtag || 0} />
             </Paper>
           </Grid>
           <Grid item>
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
-              <Costunits
-                costunits={costunitResult ? costunitResult.rows : []}
-              />
+              <Costunits count={counts.costunit || 0} />
             </Paper>
           </Grid>
           <Grid item>
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
-              <Manufacturers
-                manufacturers={
-                  manufacturerResult ? manufacturerResult.rows : []
-                }
-              />
+              <Manufacturers count={counts.manufacturer || 0} />
             </Paper>
           </Grid>
           <Grid item>
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
-              <Attributes
-                attributes={attributeResult ? attributeResult.rows : []}
-              />
+              <Attributes count={counts.attribute || 0} />
             </Paper>
           </Grid>
         </Grid>

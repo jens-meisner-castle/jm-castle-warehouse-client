@@ -1,21 +1,22 @@
-import {
-  FilterAlt,
-  FilterAltOff,
-  NorthEast,
-  SouthWest,
-} from "@mui/icons-material";
+import { NorthEast, SouthWest } from "@mui/icons-material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Grid, Paper, Tooltip, Typography } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAppActionFilter } from "../../../app-action/useAppActionFilter";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../../components/AppActions";
 import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
+import { FilteredRowsDisplay } from "../../../components/FilteredRowsDisplay";
 import { sizeVariantForWidth } from "../../../components/table/EmissionsTable";
 import { StockArticlesTable } from "../../../components/table/StockArticlesTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { ArbitraryFilterComponent } from "../../../filter/ArbitraryFilterComponent";
-import { ArbitraryFilter, FilterAspect } from "../../../filter/Types";
+import { FilterAspect } from "../../../filter/Types";
+import {
+  FilterTest,
+  useArbitraryFilter,
+} from "../../../filter/useArbitraryFilter";
 import { useStockArticleAll } from "../../../hooks/useStockArticleAll";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
@@ -33,68 +34,36 @@ import {
 } from "../../../utils/Compare";
 import { getValidInitialAction } from "../utils/Reducer";
 
-const filterAspects: FilterAspect[] = [
-  "hashtags",
-  "nameFragment",
-  "storeSection",
-];
+const filterTest: FilterTest<StockArticleRowExt> = {
+  nameFragment: ["articleId", "name"],
+  hashtags: ["hashtags"],
+  storeSection: [],
+};
+
+const filterAspects = Object.keys(filterTest) as FilterAspect[];
 
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
-  const [filter, setFilter] = useState<ArbitraryFilter>({});
+
+  const { filter, handleFilterChange, passFilter } = useArbitraryFilter(
+    {},
+    filterTest
+  );
+
   const [order, setOrder] = useState<OrderElement<StockArticleRowExt>[]>([
     { field: "articleId", direction: "ascending" },
   ]);
-  const [isFilterComponentVisible, setIsFilterComponentVisible] =
-    useState(false);
+  const { isFilterVisible, filterAction } = useAppActionFilter(false);
 
-  const handleFilterChange = useCallback(
-    (changes: Partial<ArbitraryFilter>) => {
-      setFilter((previous) => {
-        const newFilter = { ...previous, ...changes };
-        return Object.keys(newFilter).find(
-          (k) => newFilter[k as keyof typeof newFilter]
-        )
-          ? newFilter
-          : {};
-      });
-    },
-    []
-  );
-
-  const handleHideFilterComponent = useCallback(
-    () => setIsFilterComponentVisible(false),
-    []
-  );
-  const handleShowFilterComponent = useCallback(
-    () => setIsFilterComponentVisible(true),
-    []
-  );
-
-  const passFilter = useCallback(
+  const passPageFilter = useCallback(
     (article: StockArticleRowExt) => {
-      const { hashtags, nameFragment, sectionId } = filter;
-      if (hashtags) {
-        const articleTags = article.hashtags;
-        if (
-          !articleTags ||
-          !hashtags.every((hashtag) => articleTags.includes(hashtag))
-        )
-          return false;
-      }
-      if (nameFragment?.length) {
-        if (
-          article.articleId.indexOf(nameFragment) < 0 &&
-          article.name.indexOf(nameFragment) < 0
-        )
-          return false;
-      }
-      if (sectionId?.length) {
+      const pass = passFilter(article);
+      if (!pass) return false;
+      const { storeSection } = filter;
+      if (storeSection?.length) {
         if (
           !article.sectionStates.find(
-            (state) =>
-              (state.physicalCount > 0 || state.availableCount > 0) &&
-              state.section.sectionId === sectionId
+            (state) => state.section.sectionId === storeSection
           )
         ) {
           return false;
@@ -102,7 +71,7 @@ export const Page = () => {
       }
       return true;
     },
-    [filter]
+    [filter, passFilter]
   );
   const handleExpiredToken = useHandleExpiredToken();
 
@@ -118,7 +87,7 @@ export const Page = () => {
   }, [stock]);
 
   const filteredOrderedRows = useMemo(() => {
-    const filtered = stockArticleRows.filter((row) => passFilter(row));
+    const filtered = stockArticleRows.filter((row) => passPageFilter(row));
     const activeOrder = order?.filter((e) => e.direction) || [];
     if (activeOrder.length) {
       const compares: CompareFunction<StockArticleRowExt>[] = [];
@@ -131,13 +100,7 @@ export const Page = () => {
       isNonEmptyArray(compares) && filtered.sort(concatCompares(compares));
     }
     return filtered;
-  }, [stockArticleRows, passFilter, order]);
-
-  const filteredRowsDisplay =
-    stockArticleRows.length &&
-    stockArticleRows.length !== filteredOrderedRows.length
-      ? `${filteredOrderedRows.length} Artikel von ${stockArticleRows.length} gefiltert`
-      : undefined;
+  }, [stockArticleRows, passPageFilter, order]);
 
   const navigate = useNavigate();
   const { action } = useUrlAction() || {};
@@ -169,15 +132,7 @@ export const Page = () => {
       tooltip: "Daten aktualisieren",
       onClick: refreshStatus,
     });
-    newActions.push({
-      label: isFilterComponentVisible ? <FilterAltOff /> : <FilterAlt />,
-      tooltip: isFilterComponentVisible
-        ? "Filter ausblenden"
-        : "Filter einblenden",
-      onClick: isFilterComponentVisible
-        ? handleHideFilterComponent
-        : handleShowFilterComponent,
-    });
+    newActions.push(filterAction);
     newActions.push({
       label: (
         <Tooltip title="Neuer Wareneingang">
@@ -195,13 +150,7 @@ export const Page = () => {
       onClick: () => navigate(`${allRoutes().stockEmission.path}?action=new`),
     });
     return newActions;
-  }, [
-    refreshStatus,
-    navigate,
-    isFilterComponentVisible,
-    handleHideFilterComponent,
-    handleShowFilterComponent,
-  ]);
+  }, [refreshStatus, navigate, filterAction]);
 
   return (
     <Grid container direction="column">
@@ -213,7 +162,7 @@ export const Page = () => {
           <AppActions actions={actions} />
         </Paper>
       </Grid>
-      {isFilterComponentVisible && (
+      {isFilterVisible && (
         <Grid item>
           <Paper style={{ marginBottom: 5, padding: 5 }}>
             <ArbitraryFilterComponent
@@ -226,11 +175,12 @@ export const Page = () => {
           </Paper>
         </Grid>
       )}
-      {filteredRowsDisplay && (
-        <Grid item>
-          <Typography>{filteredRowsDisplay}</Typography>
-        </Grid>
-      )}
+      <Grid item>
+        <FilteredRowsDisplay
+          all={stockArticleRows}
+          filtered={filteredOrderedRows}
+        />
+      </Grid>
       <Grid item>
         <ErrorDisplays results={errorData} />
       </Grid>

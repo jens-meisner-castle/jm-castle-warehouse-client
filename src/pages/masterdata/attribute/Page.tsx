@@ -1,19 +1,29 @@
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { Grid, Paper, Tooltip, Typography } from "@mui/material";
+import { Grid, Paper, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAppActionEdit } from "../../../app-action/useAppActionEdit";
+import { useAppActionFilter } from "../../../app-action/useAppActionFilter";
+import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
-import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
+import { ErrorDisplays } from "../../../components/ErrorDisplays";
+import { FilteredRowsDisplay } from "../../../components/FilteredRowsDisplay";
 import {
   AttributesTable,
   sizeVariantForWidth,
 } from "../../../components/table/AttributesTable";
 import { backendApiUrl } from "../../../configuration/Urls";
+import { ArbitraryFilterComponent } from "../../../filter/ArbitraryFilterComponent";
+import { FilterAspect } from "../../../filter/Types";
+import {
+  FilterTest,
+  useArbitraryFilter,
+} from "../../../filter/useArbitraryFilter";
 import { useAttributeInsert } from "../../../hooks/useAttributeInsert";
-import { useAttributeSelect } from "../../../hooks/useAttributeSelect";
 import { useAttributeUpdate } from "../../../hooks/useAttributeUpdate";
+import { useMasterdata } from "../../../hooks/useMasterdata";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
 import { allRoutes } from "../../../navigation/AppRoutes";
@@ -24,11 +34,7 @@ import {
   toRawAttribute,
 } from "../../../types/RowTypes";
 import { OrderElement } from "../../../types/Types";
-import {
-  CompareFunction,
-  concatCompares,
-  isNonEmptyArray,
-} from "../../../utils/Compare";
+import { getFilteredOrderedRows } from "../../../utils/Compare";
 import {
   ActionStateReducer,
   getValidInitialAction,
@@ -37,12 +43,28 @@ import {
 import { CreateAttributeDialog } from "./dialogs/CreateAttributeDialog";
 import { EditAttributeDialog } from "./dialogs/EditAttributeDialog";
 
+const filterTest: FilterTest<AttributeRow> = {
+  nameFragment: ["attributeId", "name"],
+};
+
+const filterAspects = Object.keys(filterTest) as FilterAspect[];
+
 export const Page = () => {
   const [updateIndicator, setUpdateIndicator] = useState(1);
+  const handleExpiredToken = useHandleExpiredToken();
   const [isAnySnackbarOpen, setIsAnySnackbarOpen] = useState(false);
   const [order, setOrder] = useState<OrderElement<AttributeRow>[]>([
     { field: "attributeId", direction: "ascending" },
   ]);
+  const { filter, handleFilterChange, passFilter } = useArbitraryFilter(
+    {},
+    filterTest
+  );
+
+  const { filterAction, isFilterVisible } = useAppActionFilter(false);
+
+  const { editAction, isEditActive, setIsEditActive } = useAppActionEdit(false);
+
   const navigate = useNavigate();
   const { action, params } = useUrlAction() || {};
   const initialAction = getValidInitialAction(action);
@@ -56,49 +78,22 @@ export const Page = () => {
     [initialAction, navigate]
   );
 
-  const attributeApiResponse = useAttributeSelect(
+  const { rows, errors: errorData } = useMasterdata(
     backendApiUrl,
-    "%",
-    updateIndicator
+    { attribute: true },
+    updateIndicator,
+    handleExpiredToken
   );
-  const { response: selectResponse } = attributeApiResponse;
-  const { result: selectResult } = selectResponse || {};
-
-  const errorData = useMemo(() => {
-    const newData: Record<string, ErrorData> = {};
-    newData.attribute = attributeApiResponse;
-    return newData;
-  }, [attributeApiResponse]);
-
-  const rows = useMemo(() => {
-    if (selectResult) {
-      const newRows: AttributeRow[] = [];
-      selectResult.rows.forEach((r) => {
-        const newRow = fromRawAttribute(r);
-        newRows.push(newRow);
-      });
-      newRows.sort((a, b) => a.name.localeCompare(b.name));
-      return newRows;
-    }
-    return undefined;
-  }, [selectResult]);
+  const { attributeRows } = rows;
 
   const filteredOrderedRows = useMemo(() => {
-    if (!rows) return undefined;
-    const filtered = [...rows]; //.filter((row) => passFilter(row));
-    const activeOrder = order?.filter((e) => e.direction) || [];
-    if (activeOrder.length) {
-      const compares: CompareFunction<AttributeRow>[] = [];
-      activeOrder.forEach((e) => {
-        const { field, direction } = e;
-        const compare = compareAttributeRow[field];
-        const compareFn = direction && compare && compare(direction);
-        compareFn && compares.push(compareFn);
-      });
-      isNonEmptyArray(compares) && filtered.sort(concatCompares(compares));
-    }
-    return filtered;
-  }, [rows, order]);
+    return getFilteredOrderedRows(
+      attributeRows,
+      passFilter,
+      order,
+      compareAttributeRow
+    );
+  }, [attributeRows, passFilter, order]);
 
   const [actionState, dispatch] = useReducer<
     typeof ActionStateReducer<AttributeRow>,
@@ -118,41 +113,47 @@ export const Page = () => {
   }, [resetInitialAction]);
 
   useEffect(() => {
-    if (initialAction && rows) {
+    if (initialAction && attributeRows) {
       switch (initialAction) {
         case "new":
-          dispatch({
-            type: "new",
-            data: {
-              attributeId: "",
-              name: "",
-              valueType: "string",
-              valueUnit: undefined,
-              datasetVersion: 1,
-              createdAt: new Date(),
-              editedAt: new Date(),
-            },
-          });
+          {
+            setIsEditActive(true);
+            dispatch({
+              type: "new",
+              data: {
+                attributeId: "",
+                name: "",
+                valueType: "string",
+                valueUnit: undefined,
+                datasetVersion: 1,
+                createdAt: new Date(),
+                editedAt: new Date(),
+              },
+            });
+          }
           break;
         case "edit": {
           const attributeId = params?.attributeId;
           const data = attributeId
-            ? rows.find((row) => row.attributeId === attributeId)
+            ? attributeRows.find((row) => row.attributeId === attributeId)
             : undefined;
-          data &&
+          if (data) {
+            setIsEditActive(true);
             dispatch({
               type: "edit",
               data,
             });
+          }
           break;
         }
         case "duplicate":
           {
             const attributeId = params?.attributeId;
             const data = attributeId
-              ? rows.find((row) => row.attributeId === attributeId)
+              ? attributeRows.find((row) => row.attributeId === attributeId)
               : undefined;
-            data &&
+            if (data) {
+              setIsEditActive(true);
               dispatch({
                 type: "new",
                 data: {
@@ -163,11 +164,12 @@ export const Page = () => {
                   editedAt: new Date(),
                 },
               });
+            }
           }
           break;
       }
     }
-  }, [initialAction, params, rows]);
+  }, [initialAction, params, setIsEditActive, attributeRows]);
   const handleDuplicate = useCallback(
     (row: AttributeRow) => {
       navigate(
@@ -289,17 +291,17 @@ export const Page = () => {
       tooltip: "Daten aktualisieren",
       onClick: refreshStatus,
     });
-    newActions.push({
-      label: (
-        <Tooltip title="Neuen Datensatz anlegen">
-          <AddBoxIcon />
-        </Tooltip>
-      ),
-      onClick: () =>
-        navigate(`${allRoutes().masterdataAttribute.path}?action=new`),
-    });
+    newActions.push(filterAction);
+    newActions.push(editAction);
+    isEditActive &&
+      newActions.push({
+        label: <AddBoxIcon />,
+        tooltip: "Neuen Datensatz anlegen",
+        onClick: () =>
+          navigate(`${allRoutes().masterdataAttribute.path}?action=new`),
+      });
     return newActions;
-  }, [refreshStatus, navigate]);
+  }, [refreshStatus, filterAction, editAction, isEditActive, navigate]);
 
   return (
     <>
@@ -337,12 +339,31 @@ export const Page = () => {
         <Grid item>
           <ErrorDisplays results={errorData} />
         </Grid>
+        {isFilterVisible && (
+          <Grid item>
+            <Paper style={{ marginBottom: 5, padding: 5 }}>
+              <ArbitraryFilterComponent
+                filter={filter}
+                onChange={handleFilterChange}
+                aspects={filterAspects}
+                helpNameFragment={"Sucht in der ID und im Namen."}
+                handleExpiredToken={handleExpiredToken}
+              />
+            </Paper>
+          </Grid>
+        )}
+        <Grid item>
+          <FilteredRowsDisplay
+            all={attributeRows}
+            filtered={filteredOrderedRows}
+          />
+        </Grid>
         <Grid item>
           <Grid container direction="row">
             <Grid item>
               <Paper style={{ padding: 5 }}>
                 <AttributesTable
-                  editable
+                  editable={isEditActive}
                   data={filteredOrderedRows || []}
                   order={order}
                   onOrderChange={setOrder}
