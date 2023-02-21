@@ -4,25 +4,23 @@ import { Grid, Paper, Typography } from "@mui/material";
 import { DateTime } from "luxon";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { AppAction, AppActions } from "../../components/AppActions";
-import { sizeVariantForWidth } from "../../components/table/StockChangeTable";
 import { TimeintervalFilter } from "../../filter/Types";
-import { useWindowSize } from "../../hooks/useWindowSize";
 import { allRoutes } from "../../navigation/AppRoutes";
 import {
   loadOptionsForPage,
   storeOptionsForPage,
 } from "../../utils/LocalStorage";
+import { MasterdataChanges } from "./parts/MasterdataChanges";
 import { getNewOptions, PageOptions } from "./parts/OptionsComponent";
 import { OptionsMenu } from "./parts/OptionsMenu";
-import { StockChangeIncoming } from "./parts/StockChangeIncoming";
+import { Receipts } from "./parts/Receipts";
 
 export const Page = () => {
   const [pageOptions, setPageOptions] = useState(
     getNewOptions(loadOptionsForPage(allRoutes().dashboard.path) || {})
   );
-  const { isIncomingHistoryVisible } = pageOptions;
-  const { width } = useWindowSize() || {};
-  const tableSize = width ? sizeVariantForWidth(width) : "tiny";
+  const { isIncomingHistoryVisible, isMasterdataChangesVisible } = pageOptions;
+
   const handleNewOptions = useCallback((newOptions: Partial<PageOptions>) => {
     let mergedOptions: PageOptions | Partial<PageOptions> = {};
     setPageOptions((previous) => {
@@ -35,7 +33,7 @@ export const Page = () => {
   const [isOptionsVisible, setIsOptionsVisible] = useState(false);
   const optionsSelectionRef = useRef<HTMLButtonElement | null>(null);
   const [filter, setFilter] = useState<TimeintervalFilter>({
-    from: DateTime.now().minus({ day: 1 }).startOf("day"),
+    from: DateTime.now().minus({ day: 7 }).startOf("day"),
     to: DateTime.now(),
   });
 
@@ -79,11 +77,20 @@ export const Page = () => {
             <AppActions actions={actions} />
           </Paper>
         </Grid>
-        {isIncomingHistoryVisible && (
-          <Grid item>
-            <StockChangeIncoming filter={filter} sizeVariant={tableSize} />
+        <Grid item>
+          <Grid container direction="row" gap={1}>
+            {isMasterdataChangesVisible && (
+              <Grid item>
+                <MasterdataChanges filter={filter} sizeVariant="tiny" />
+              </Grid>
+            )}
+            {isIncomingHistoryVisible && (
+              <Grid item>
+                <Receipts filter={filter} sizeVariant="tiny" />
+              </Grid>
+            )}
           </Grid>
-        )}
+        </Grid>
       </Grid>
     </>
   );

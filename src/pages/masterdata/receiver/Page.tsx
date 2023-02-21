@@ -35,11 +35,7 @@ import {
 } from "../../../types/RowTypes";
 import { OrderElement } from "../../../types/Types";
 import { getFilteredOrderedRows } from "../../../utils/Compare";
-import {
-  ActionStateReducer,
-  getValidInitialAction,
-  ReducerState,
-} from "../utils/Reducer";
+import { ActionStateReducer, getValidInitialAction } from "../utils/Reducer";
 import { CreateReceiverDialog } from "./dialogs/CreateReceiverDialog";
 import { EditReceiverDialog } from "./dialogs/EditReceiverDialog";
 
@@ -93,14 +89,10 @@ export const Page = () => {
     );
   }, [receiverRows, passFilter, order]);
 
-  const [actionState, dispatch] = useReducer<
-    typeof ActionStateReducer<ReceiverRow>,
-    ReducerState<ReceiverRow>
-  >(
-    ActionStateReducer<ReceiverRow>,
-    { action: "none", data: undefined },
-    () => ({ action: "none", data: undefined })
-  );
+  const [actionState, dispatch] = useReducer(ActionStateReducer<ReceiverRow>, {
+    action: "none",
+    data: undefined,
+  });
 
   const refreshStatus = useCallback(() => {
     setUpdateIndicator((previous) => previous + 1);

@@ -46,11 +46,7 @@ import {
   isNonEmptyArray,
 } from "../../../utils/Compare";
 import { getNewFilter } from "../../../utils/Filter";
-import {
-  ActionStateReducer,
-  getValidInitialAction,
-  ReducerState,
-} from "../utils/Reducer";
+import { ActionStateReducer, getValidInitialAction } from "../utils/Reducer";
 import { CreateEmissionDialog } from "./dialogs/CreateEmissionDialog";
 
 const filterTest: FilterTest<EmissionRow> = {
@@ -72,7 +68,7 @@ export const Page = () => {
 
   const { timeFilter, handleTimeFilterChange } = useTimeintervalFilter(
     getNewFilter({
-      from: DateTime.now().minus({ days: 7 }),
+      from: DateTime.now().minus({ days: 7 }).startOf("day"),
       to: DateTime.now().endOf("day"),
     })
   );
@@ -134,14 +130,10 @@ export const Page = () => {
     return filtered;
   }, [emissionRows, passFilter, order]);
 
-  const [actionState, dispatch] = useReducer<
-    typeof ActionStateReducer<EmissionRow>,
-    ReducerState<EmissionRow>
-  >(
-    ActionStateReducer<EmissionRow>,
-    { action: "none", data: undefined },
-    () => ({ action: "none", data: undefined })
-  );
+  const [actionState, dispatch] = useReducer(ActionStateReducer<EmissionRow>, {
+    action: "none",
+    data: undefined,
+  });
 
   const { rows, errors } = useMasterdata(
     backendApiUrl,
@@ -169,13 +161,14 @@ export const Page = () => {
         case "new":
           {
             setIsEditActive(true);
+            const { sectionId, articleId } = params || {};
             dispatch({
               type: "new",
               data: {
                 datasetId: "new",
-                sectionId: "",
+                sectionId: sectionId || "",
                 byUser: username || "",
-                articleId: "",
+                articleId: articleId || "",
                 articleCount: 1,
                 emittedAt: new Date(),
                 reason: "loan",

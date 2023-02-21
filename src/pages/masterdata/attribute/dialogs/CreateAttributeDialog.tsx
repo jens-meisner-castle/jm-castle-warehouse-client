@@ -8,11 +8,12 @@ import { useState } from "react";
 import { AttributeEditor } from "../../../../components/row-editor/AttributeEditor";
 import {
   AttributeRow,
+  isAttributeRow,
   isSavingAttributeAllowed,
 } from "../../../../types/RowTypes";
 
 export interface CreateAttributeDialogProps {
-  attribute: AttributeRow;
+  attribute: Partial<AttributeRow>;
   open: boolean;
   handleCancel: () => void;
   handleAccept: (attribute: AttributeRow) => void;
@@ -29,7 +30,7 @@ export const CreateAttributeDialog = (props: CreateAttributeDialogProps) => {
 
   return (
     <Dialog open={open} onClose={handleCancel}>
-      <DialogTitle>{"Neues Lager"}</DialogTitle>
+      <DialogTitle>{"Neues Attribut"}</DialogTitle>
       <DialogContent>
         <DialogContentText>
           {
@@ -39,7 +40,10 @@ export const CreateAttributeDialog = (props: CreateAttributeDialogProps) => {
         <AttributeEditor mode="create" row={data} onChange={updateData} />
       </DialogContent>
       <DialogActions>
-        <Button disabled={!isSavingAllowed} onClick={() => handleAccept(data)}>
+        <Button
+          disabled={!isSavingAllowed}
+          onClick={() => isAttributeRow(data) && handleAccept(data)}
+        >
           {"Speichern"}
         </Button>
         <Button onClick={handleCancel}>{"Abbrechen"}</Button>

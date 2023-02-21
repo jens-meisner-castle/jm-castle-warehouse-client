@@ -7,10 +7,14 @@ import DialogTitle from "@mui/material/DialogTitle";
 import { useState } from "react";
 import { ImageRefsEditor } from "../../../../components/multi-ref/ImageRefsEditor";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
-import { isSavingStoreAllowed, StoreRow } from "../../../../types/RowTypes";
+import {
+  isSavingStoreAllowed,
+  isStoreRow,
+  StoreRow,
+} from "../../../../types/RowTypes";
 
 export interface CreateStoreDialogProps {
-  store: StoreRow;
+  store: Partial<StoreRow>;
   open: boolean;
   handleCancel: () => void;
   handleAccept: (store: StoreRow) => void;
@@ -40,7 +44,7 @@ export const CreateStoreDialog = (props: CreateStoreDialogProps) => {
           margin="dense"
           id="storeId"
           label="Lager"
-          value={storeId}
+          value={storeId || ""}
           errorData={errorData.storeId}
           onChange={(s) => updateData({ storeId: s })}
           fullWidth
@@ -50,7 +54,7 @@ export const CreateStoreDialog = (props: CreateStoreDialogProps) => {
           margin="dense"
           id="name"
           label="Name"
-          value={name}
+          value={name || ""}
           errorData={errorData.name}
           onChange={(s) => updateData({ name: s })}
           fullWidth
@@ -64,7 +68,10 @@ export const CreateStoreDialog = (props: CreateStoreDialogProps) => {
         />
       </DialogContent>
       <DialogActions>
-        <Button disabled={!isSavingAllowed} onClick={() => handleAccept(data)}>
+        <Button
+          disabled={!isSavingAllowed}
+          onClick={() => isStoreRow(data) && handleAccept(data)}
+        >
           {"Speichern"}
         </Button>
         <Button onClick={handleCancel}>{"Abbrechen"}</Button>

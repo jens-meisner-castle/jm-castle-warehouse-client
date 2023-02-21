@@ -35,11 +35,7 @@ import {
 } from "../../../types/RowTypes";
 import { OrderElement } from "../../../types/Types";
 import { getFilteredOrderedRows } from "../../../utils/Compare";
-import {
-  ActionStateReducer,
-  getValidInitialAction,
-  ReducerState,
-} from "../utils/Reducer";
+import { ActionStateReducer, getValidInitialAction } from "../utils/Reducer";
 import { CreateAttributeDialog } from "./dialogs/CreateAttributeDialog";
 import { EditAttributeDialog } from "./dialogs/EditAttributeDialog";
 
@@ -95,17 +91,10 @@ export const Page = () => {
     );
   }, [attributeRows, passFilter, order]);
 
-  const [actionState, dispatch] = useReducer<
-    typeof ActionStateReducer<AttributeRow>,
-    ReducerState<AttributeRow>
-  >(
-    ActionStateReducer<AttributeRow>,
-    { action: "none", data: undefined },
-    () => ({
-      action: "none",
-      data: undefined,
-    })
-  );
+  const [actionState, dispatch] = useReducer(ActionStateReducer<AttributeRow>, {
+    action: "none",
+    data: undefined,
+  });
   const refreshStatus = useCallback(() => {
     setUpdateIndicator((previous) => previous + 1);
     dispatch({ type: "reset" });

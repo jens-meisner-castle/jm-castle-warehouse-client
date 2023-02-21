@@ -5,10 +5,12 @@ import { OptionsMenu } from "./OptionsMenu";
 
 export interface PageOptions {
   isIncomingHistoryVisible: boolean;
+  isMasterdataChangesVisible: boolean;
 }
 
 export const defaultOptions: PageOptions = {
   isIncomingHistoryVisible: true,
+  isMasterdataChangesVisible: true,
 };
 
 export const getNewOptions = (previous: Partial<PageOptions>) => {

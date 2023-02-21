@@ -40,7 +40,7 @@ export const AppActions = (props: AppActionProps) => {
 
   return (
     <div>
-      <Grid container direction="row">
+      <Grid container direction="row" alignItems="center">
         {actionsDisplay.map((action, i) => (
           <Grid item key={i}>
             {action.onClick ? (

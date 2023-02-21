@@ -43,11 +43,7 @@ import {
   concatCompares,
   isNonEmptyArray,
 } from "../../../utils/Compare";
-import {
-  ActionStateReducer,
-  getValidInitialAction,
-  ReducerState,
-} from "../utils/Reducer";
+import { ActionStateReducer, getValidInitialAction } from "../utils/Reducer";
 import { CreateStoreSectionDialog } from "./dialogs/CreateStoreSectionDialog";
 import { EditStoreSectionDialog } from "./dialogs/EditStoreSectionDialog";
 
@@ -123,16 +119,9 @@ export const Page = () => {
     return filtered;
   }, [sectionRows, order, passFilter]);
 
-  const [actionState, dispatch] = useReducer<
-    typeof ActionStateReducer<StoreSectionRow>,
-    ReducerState<StoreSectionRow>
-  >(
+  const [actionState, dispatch] = useReducer(
     ActionStateReducer<StoreSectionRow>,
-    { action: "none", data: undefined },
-    () => ({
-      action: "none",
-      data: undefined,
-    })
+    { action: "none", data: undefined }
   );
   const refreshStatus = useCallback(() => {
     setUpdateIndicator((previous) => previous + 1);

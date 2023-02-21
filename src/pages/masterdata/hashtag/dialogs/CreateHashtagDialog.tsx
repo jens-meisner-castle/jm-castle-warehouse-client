@@ -6,10 +6,14 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { useState } from "react";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
-import { HashtagRow, isSavingHashtagAllowed } from "../../../../types/RowTypes";
+import {
+  HashtagRow,
+  isHashtagRow,
+  isSavingHashtagAllowed,
+} from "../../../../types/RowTypes";
 
 export interface CreateHashtagDialogProps {
-  hashtag: HashtagRow;
+  hashtag: Partial<HashtagRow>;
   open: boolean;
   handleCancel: () => void;
   handleAccept: (hashtag: HashtagRow) => void;
@@ -39,7 +43,7 @@ export const CreateHashtagDialog = (props: CreateHashtagDialogProps) => {
           margin="dense"
           id="tagId"
           label="Hashtag"
-          value={tagId}
+          value={tagId || ""}
           errorData={errorData.tagId}
           onChange={(s) => updateData({ tagId: s })}
           fullWidth
@@ -49,7 +53,7 @@ export const CreateHashtagDialog = (props: CreateHashtagDialogProps) => {
           margin="dense"
           id="name"
           label="Name"
-          value={name}
+          value={name || ""}
           errorData={errorData.name}
           onChange={(s) => updateData({ name: s })}
           fullWidth
@@ -57,7 +61,10 @@ export const CreateHashtagDialog = (props: CreateHashtagDialogProps) => {
         />
       </DialogContent>
       <DialogActions>
-        <Button disabled={!isSavingAllowed} onClick={() => handleAccept(data)}>
+        <Button
+          disabled={!isSavingAllowed}
+          onClick={() => isHashtagRow(data) && handleAccept(data)}
+        >
           {"Speichern"}
         </Button>
         <Button onClick={handleCancel}>{"Abbrechen"}</Button>

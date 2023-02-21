@@ -38,6 +38,12 @@ export interface MasterdataRow {
   editedAt: Date;
 }
 
+export const initialMasterdataRow = (): MasterdataRow => ({
+  createdAt: new Date(),
+  editedAt: new Date(),
+  datasetVersion: 1,
+});
+
 export interface StoreRow extends MasterdataRow {
   storeId: string;
   name: string;
@@ -263,6 +269,25 @@ export const isCostunitRow = (
   row: Partial<CostunitRow>
 ): row is CostunitRow => {
   const { isSavingAllowed } = isSavingCostunitAllowed(row);
+  return isSavingAllowed;
+};
+
+export const isSavingImageContentAllowed = (row: Partial<ImageContentRow>) => {
+  const errorData: Partial<
+    Record<keyof ImageContentRow, ErrorData | undefined>
+  > = {
+    imageId: checkMandatoryString(row.imageId),
+  };
+  return {
+    isSavingAllowed: !errorData.imageId,
+    errorData,
+  };
+};
+
+export const isImageContentRow = (
+  row: Partial<ImageContentRow>
+): row is ImageContentRow => {
+  const { isSavingAllowed } = isSavingImageContentAllowed(row);
   return isSavingAllowed;
 };
 
@@ -578,6 +603,18 @@ export const compareStockChangingRow: Record<
     compareDate<StockChangingRow>("at", direction),
 };
 
+export const compareMasterdataChangeRow: Record<
+  string,
+  (direction: OrderDirection) => CompareFunction<MasterdataChangeRow>
+> = {
+  id: (direction: OrderDirection) =>
+    compareString<MasterdataChangeRow>("id", direction),
+  what: (direction: OrderDirection) =>
+    compareString<MasterdataChangeRow>("what", direction),
+  editedAt: (direction: OrderDirection) =>
+    compareDate<MasterdataChangeRow>("editedAt", direction),
+};
+
 export const toRawMasterdataFields = (row: MasterdataRow): Row_Masterdata => {
   return {
     dataset_version: row.datasetVersion,
@@ -847,6 +884,13 @@ export type StockChangingRow = {
   by: EmployeeId;
   at: Date;
 };
+
+export interface MasterdataChangeRow {
+  id: string;
+  what: string;
+  createdAt: Date;
+  editedAt: Date;
+}
 
 export const stockChangingRowFromRawEmission = (raw: Row_Emission) => {
   const newRow: StockChangingRow = {

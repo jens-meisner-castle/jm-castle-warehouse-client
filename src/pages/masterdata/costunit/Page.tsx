@@ -35,11 +35,7 @@ import {
 } from "../../../types/RowTypes";
 import { OrderElement } from "../../../types/Types";
 import { getFilteredOrderedRows } from "../../../utils/Compare";
-import {
-  ActionStateReducer,
-  getValidInitialAction,
-  ReducerState,
-} from "../utils/Reducer";
+import { ActionStateReducer, getValidInitialAction } from "../utils/Reducer";
 import { CreateCostunitDialog } from "./dialogs/CreateCostunitDialog";
 import { EditCostunitDialog } from "./dialogs/EditCostunitDialog";
 
@@ -94,14 +90,10 @@ export const Page = () => {
     );
   }, [costunitRows, passFilter, order]);
 
-  const [actionState, dispatch] = useReducer<
-    typeof ActionStateReducer<CostunitRow>,
-    ReducerState<CostunitRow>
-  >(
-    ActionStateReducer<CostunitRow>,
-    { action: "none", data: undefined },
-    () => ({ action: "none", data: undefined })
-  );
+  const [actionState, dispatch] = useReducer(ActionStateReducer<CostunitRow>, {
+    action: "none",
+    data: undefined,
+  });
 
   const refreshStatus = useCallback(() => {
     setUpdateIndicator((previous) => previous + 1);

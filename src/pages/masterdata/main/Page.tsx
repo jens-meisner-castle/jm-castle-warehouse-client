@@ -42,6 +42,11 @@ export const Page = () => {
     updateIndicator,
     handleExpiredToken
   );
+
+  const handleNewMasterdata = useCallback(() => {
+    setUpdateIndicator((previous) => previous + 1);
+  }, []);
+
   const counts = useMemo(() => {
     const newCounts: Partial<Record<TableName, number>> = {};
     const { response } = countApiResponse;
@@ -104,7 +109,10 @@ export const Page = () => {
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
-              <Articles count={counts.article || 0} />
+              <Articles
+                count={counts.article || 0}
+                onNew={handleNewMasterdata}
+              />
             </Paper>
           </Grid>
           <Grid item>
@@ -118,7 +126,10 @@ export const Page = () => {
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
-              <Images count={counts.image_content || 0} />
+              <Images
+                count={counts.image_content || 0}
+                onNew={handleNewMasterdata}
+              />
             </Paper>
           </Grid>
           <Grid item>

@@ -10,12 +10,13 @@ import { ImageRefsEditor } from "../../../../components/multi-ref/ImageRefsEdito
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
 import {
   isSavingStoreSectionAllowed,
+  isStoreSectionRow,
   StoreRow,
   StoreSectionRow,
 } from "../../../../types/RowTypes";
 
 export interface CreateStoreSectionDialogProps {
-  section: StoreSectionRow;
+  section: Partial<StoreSectionRow>;
   stores: StoreRow[];
   open: boolean;
   handleCancel: () => void;
@@ -54,7 +55,7 @@ export const CreateStoreSectionDialog = (
           margin="dense"
           id="sectionId"
           label="Lagerbereich"
-          value={sectionId}
+          value={sectionId || ""}
           errorData={errorData.sectionId}
           onChange={(s) => updateData({ sectionId: s })}
           fullWidth
@@ -64,7 +65,7 @@ export const CreateStoreSectionDialog = (
           margin="dense"
           id="shortId"
           label="Kurzname"
-          value={shortId}
+          value={shortId || ""}
           errorData={errorData.shortId}
           onChange={(s) => updateData({ shortId: s })}
           fullWidth
@@ -74,7 +75,7 @@ export const CreateStoreSectionDialog = (
           margin="dense"
           id="name"
           label="Name"
-          value={name}
+          value={name || ""}
           errorData={errorData.name}
           onChange={(s) => updateData({ name: s })}
           fullWidth
@@ -98,7 +99,10 @@ export const CreateStoreSectionDialog = (
         />
       </DialogContent>
       <DialogActions>
-        <Button disabled={!isSavingAllowed} onClick={() => handleAccept(data)}>
+        <Button
+          disabled={!isSavingAllowed}
+          onClick={() => isStoreSectionRow(data) && handleAccept(data)}
+        >
           {"Speichern"}
         </Button>
         <Button onClick={handleCancel}>{"Abbrechen"}</Button>

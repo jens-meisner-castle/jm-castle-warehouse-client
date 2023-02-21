@@ -35,11 +35,7 @@ import {
 } from "../../../types/RowTypes";
 import { OrderElement } from "../../../types/Types";
 import { getFilteredOrderedRows } from "../../../utils/Compare";
-import {
-  ActionStateReducer,
-  getValidInitialAction,
-  ReducerState,
-} from "../utils/Reducer";
+import { ActionStateReducer, getValidInitialAction } from "../utils/Reducer";
 import { CreateArticleDialog } from "./dialogs/CreateArticleDialog";
 import { EditArticleDialog } from "./dialogs/EditArticleDialog";
 
@@ -60,7 +56,7 @@ export const Page = () => {
   );
 
   const { isFilterVisible, filterAction } = useAppActionFilter(false);
-  const { isEditActive, setIsEditActive, editAction } = useAppActionEdit(true);
+  const { isEditActive, setIsEditActive, editAction } = useAppActionEdit(false);
 
   const [order, setOrder] = useState<OrderElement<ArticleRow>[]>([
     { field: "articleId", direction: "ascending" },
@@ -95,14 +91,10 @@ export const Page = () => {
     );
   }, [articleRows, order, passFilter]);
 
-  const [actionState, dispatch] = useReducer<
-    typeof ActionStateReducer<ArticleRow>,
-    ReducerState<ArticleRow>
-  >(
-    ActionStateReducer<ArticleRow>,
-    { action: "none", data: undefined },
-    () => ({ action: "none", data: undefined })
-  );
+  const [actionState, dispatch] = useReducer(ActionStateReducer<ArticleRow>, {
+    action: "none",
+    data: undefined,
+  });
 
   const refreshStatus = useCallback(() => {
     setUpdateIndicator((previous) => previous + 1);

@@ -13,8 +13,8 @@ import {
 import { useMemo, useState } from "react";
 import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
 import { backendApiUrl, getImageDisplayUrl } from "../../configuration/Urls";
-import { useImageContentSelect } from "../../hooks/useImageContentSelect";
-import { ErrorDisplay } from "../ErrorDisplay";
+import { useMasterdata } from "../../hooks/useMasterdata";
+import { ErrorDisplays } from "../ErrorDisplays";
 
 export interface ImageSelectionDialogProps {
   handleCancel: () => void;
@@ -27,22 +27,32 @@ export const ImageSelectionDialog = (props: ImageSelectionDialogProps) => {
   const { handleAccept, handleCancel, hiddenImageIds } = props;
   const theme = useTheme();
   const handleExpiredToken = useHandleExpiredToken();
-  const { response, error, errorCode, errorDetails } = useImageContentSelect(
+
+  const { rows, errors } = useMasterdata(
     backendApiUrl,
-    "%",
+    { imageContent: true },
     1,
     handleExpiredToken
   );
-  const { result } = response || {};
-  const { rows } = result || {};
+  const { imageContentRows } = rows;
+
   const visibleRows = useMemo(() => {
     const filteredRows = hiddenImageIds
-      ? rows?.filter((row) => !hiddenImageIds.includes(row.image_id))
-      : rows;
+      ? imageContentRows?.filter((row) => !hiddenImageIds.includes(row.imageId))
+      : imageContentRows;
     return filteredRows
-      ? filteredRows.sort((a, b) => b.edited_at - a.edited_at)
+      ? filteredRows.sort((a, b) => b.editedAt.getTime() - a.editedAt.getTime())
       : undefined;
-  }, [rows, hiddenImageIds]);
+  }, [imageContentRows, hiddenImageIds]);
+
+  const visibleRowsWarning =
+    imageContentRows && visibleRows
+      ? !imageContentRows.length
+        ? "Es sind keine Bilder vorhanden."
+        : !visibleRows.length
+        ? "Alle vorhandenen Bilder sind bereits zugeordnet."
+        : undefined
+      : undefined;
 
   return (
     <Dialog open={true} onClose={handleCancel}>
@@ -53,48 +63,35 @@ export const ImageSelectionDialog = (props: ImageSelectionDialogProps) => {
             "Klicken Sie auf ein Bild, um es auszuwählen. Ein Doppelklick wählt ein Bild aus und schließt den Dialog."
           }
         </DialogContentText>
-        {
-          <ErrorDisplay
-            error={error}
-            errorCode={errorCode}
-            errorDetails={errorDetails}
-          />
-        }
+        <ErrorDisplays results={errors} />
         <Grid container direction="row">
-          {!visibleRows ||
-            (!visibleRows.length && (
-              <Grid item>
-                <Typography>
-                  {rows?.length
-                    ? "Alle vorhandenen Bilder sind bereits zugeordnet."
-                    : "Es sind keine Bilder vorhanden."}
-                </Typography>
-              </Grid>
-            ))}
+          <Grid item>
+            <Typography>{visibleRowsWarning}</Typography>
+          </Grid>
           {visibleRows?.map((row) => (
-            <Grid key={row.image_id} item>
+            <Grid key={row.imageId} item>
               <Grid container direction="column">
                 <Grid item>
                   <Box
                     style={{
                       padding: 2,
                       backgroundColor:
-                        row.image_id === selected
+                        row.imageId === selected
                           ? theme.palette.primary.main
                           : undefined,
                     }}
                   >
                     <img
-                      onClick={() => setSelected(row.image_id)}
-                      onDoubleClick={() => handleAccept(row.image_id)}
-                      src={getImageDisplayUrl(backendApiUrl, row.image_id)}
-                      alt={row.image_id}
+                      onClick={() => setSelected(row.imageId)}
+                      onDoubleClick={() => handleAccept(row.imageId)}
+                      src={getImageDisplayUrl(backendApiUrl, row.imageId)}
+                      alt={row.imageId}
                       style={{ maxWidth: 300 }}
                     />
                   </Box>
                 </Grid>
                 <Grid item>
-                  <Typography variant="caption">{row.image_id}</Typography>
+                  <Typography variant="caption">{row.imageId}</Typography>
                 </Grid>
               </Grid>
             </Grid>

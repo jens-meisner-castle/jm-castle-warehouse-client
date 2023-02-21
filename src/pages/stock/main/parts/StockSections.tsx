@@ -22,12 +22,13 @@ export const StockSections = (props: StockSectionsProps) => {
       label: "Artikel",
       onClickNavigate: { to: routes.stockArticle.path },
     });
-    const values: string[][] = [];
+    /** Datenmengen werden zu groß! const values: string[][] = [];
     values.push(["action", "show"]);
     stockSections.forEach(
       (state) =>
-        state.states.find((d) => d.physicalCount > 0 || d.availableCount > 0) &&
-        values.push(["sectionId", state.section.section_id])
+        state.states.find(
+          (d) => d.physicalCount !== 0 || d.availableCount !== 0
+        ) && values.push(["sectionId", state.section.section_id])
     );
     const searchParams = new URLSearchParams(values);
     newActions.push({
@@ -35,9 +36,15 @@ export const StockSections = (props: StockSectionsProps) => {
       onClickNavigate: {
         to: `${routes.stockSectionDetail.path}?${searchParams.toString()}`,
       },
+    }); */
+    newActions.push({
+      label: "Lagerbereich Inhalt",
+      onClickNavigate: {
+        to: `${routes.stockSectionDetail.path}`,
+      },
     });
     return newActions;
-  }, [stockSections]);
+  }, []);
   return (
     <Grid container direction="column">
       <Grid item>

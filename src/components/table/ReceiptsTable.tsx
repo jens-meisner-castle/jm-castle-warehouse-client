@@ -90,6 +90,7 @@ export const ReceiptsTable = (props: ReceiptsTableProps) => {
             <TableCell align="center" style={cellStyle}>
               <ColumnLabel
                 label="gebucht um"
+                align="center"
                 order={order}
                 orderElement={orderElements.receiptAt}
                 onClick={handleClickOnOrderElement}

@@ -8,11 +8,12 @@ import { useState } from "react";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
 import {
   CostunitRow,
+  isCostunitRow,
   isSavingCostunitAllowed,
 } from "../../../../types/RowTypes";
 
 export interface CreateCostunitDialogProps {
-  hashtag: CostunitRow;
+  hashtag: Partial<CostunitRow>;
   open: boolean;
   handleCancel: () => void;
   handleAccept: (hashtag: CostunitRow) => void;
@@ -42,7 +43,7 @@ export const CreateCostunitDialog = (props: CreateCostunitDialogProps) => {
           margin="dense"
           id="unitId"
           label="Kostenstelle"
-          value={unitId}
+          value={unitId || ""}
           errorData={errorData.unitId}
           onChange={(s) => updateData({ unitId: s })}
           fullWidth
@@ -52,7 +53,7 @@ export const CreateCostunitDialog = (props: CreateCostunitDialogProps) => {
           margin="dense"
           id="name"
           label="Name"
-          value={name}
+          value={name || ""}
           errorData={errorData.name}
           onChange={(s) => updateData({ name: s })}
           fullWidth
@@ -60,7 +61,10 @@ export const CreateCostunitDialog = (props: CreateCostunitDialogProps) => {
         />
       </DialogContent>
       <DialogActions>
-        <Button disabled={!isSavingAllowed} onClick={() => handleAccept(data)}>
+        <Button
+          disabled={!isSavingAllowed}
+          onClick={() => isCostunitRow(data) && handleAccept(data)}
+        >
           {"Speichern"}
         </Button>
         <Button onClick={handleCancel}>{"Abbrechen"}</Button>

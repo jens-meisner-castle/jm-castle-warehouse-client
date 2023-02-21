@@ -24,7 +24,7 @@ const getFinalActionState = <T>(
 export type ReducerState<T> = { previous?: FinalActionState<T> } & (
   | {
       action: "new";
-      data: T;
+      data: Partial<T>;
       error?: never;
     }
   | {
@@ -47,7 +47,7 @@ export type ReducerAction<T> =
       data?: never;
       error?: never;
     }
-  | { type: "new"; data: T; error?: never }
+  | { type: "new"; data: Partial<T>; error?: never }
   | { type: "edit"; data: T; error?: never }
   | { type: "accept"; data: T; error?: never }
   | { type: "error"; data: T; error: string }

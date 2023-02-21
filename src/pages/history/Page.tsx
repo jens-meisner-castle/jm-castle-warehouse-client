@@ -54,7 +54,7 @@ export const Page = () => {
 
   const { timeFilter, handleTimeFilterChange } = useTimeintervalFilter(
     getNewFilter({
-      from: DateTime.now().minus({ days: 7 }),
+      from: DateTime.now().minus({ days: 7 }).startOf("day"),
       to: DateTime.now().endOf("day"),
     })
   );

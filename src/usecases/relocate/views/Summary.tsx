@@ -70,7 +70,7 @@ export const Summary = (props: SummaryProps) => {
     const originalReceipt = receiptsInSourceSection[0];
     const emission: EmissionRow = {
       datasetId: "new",
-      articleCount: 1,
+      articleCount: originalReceipt.articleCount,
       articleId: article.articleId,
       byUser: username,
       costUnit: originalReceipt.costUnit,
@@ -83,7 +83,7 @@ export const Summary = (props: SummaryProps) => {
     };
     const receipt: ReceiptRow = {
       datasetId: "new",
-      articleCount: 1,
+      articleCount: originalReceipt.articleCount,
       articleId: article.articleId,
       byUser: username,
       costUnit: originalReceipt.costUnit,

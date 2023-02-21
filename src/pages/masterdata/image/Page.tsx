@@ -10,6 +10,7 @@ import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
 import { AppAction, AppActions } from "../../../components/AppActions";
 import { ErrorDisplays } from "../../../components/ErrorDisplays";
 import { FilteredRowsDisplay } from "../../../components/FilteredRowsDisplay";
+import { ImageContentEditState } from "../../../components/row-editor/ImageContentEditor";
 import {
   ImagesTable,
   sizeVariantForWidth,
@@ -31,18 +32,15 @@ import {
   compareImageRow,
   fromRawImageContent,
   ImageContentRow,
+  initialMasterdataRow,
+  isImageContentRow,
   toRawImageContent,
 } from "../../../types/RowTypes";
 import { OrderElement } from "../../../types/Types";
 import { getFilteredOrderedRows } from "../../../utils/Compare";
-import {
-  ActionStateReducer,
-  getValidInitialAction,
-  ReducerState,
-} from "../utils/Reducer";
+import { ActionStateReducer, getValidInitialAction } from "../utils/Reducer";
 import { CreateImageContentDialog } from "./dialogs/CreateImageContentDialog";
 import { EditImageContentDialog } from "./dialogs/EditImageContentDialog";
-import { ImageContentEditState } from "./Types";
 
 const filterTest: FilterTest<ImageContentRow> = {
   nameFragment: ["imageId"],
@@ -94,13 +92,9 @@ export const Page = () => {
     );
   }, [imageContentRows, passFilter, order]);
 
-  const [actionState, dispatch] = useReducer<
-    typeof ActionStateReducer<ImageContentEditState>,
-    ReducerState<ImageContentEditState>
-  >(
+  const [actionState, dispatch] = useReducer(
     ActionStateReducer<ImageContentEditState>,
-    { action: "none", data: undefined },
-    () => ({ action: "none", data: undefined })
+    { action: "none", data: undefined }
   );
 
   const refreshStatus = useCallback(() => {
@@ -110,7 +104,7 @@ export const Page = () => {
   }, [resetInitialAction]);
 
   useEffect(() => {
-    if (initialAction && imageContentRows) {
+    if (initialAction) {
       switch (initialAction) {
         case "new":
           {
@@ -118,16 +112,7 @@ export const Page = () => {
             dispatch({
               type: "new",
               data: {
-                row: {
-                  imageId: "",
-                  imageExtension: "",
-                  sizeInBytes: 0,
-                  width: 0,
-                  height: 0,
-                  datasetVersion: 1,
-                  createdAt: new Date(),
-                  editedAt: new Date(),
-                },
+                row: initialMasterdataRow(),
               },
             });
           }
@@ -135,7 +120,7 @@ export const Page = () => {
         case "edit": {
           const imageId = params?.imageId;
           const row = imageId
-            ? imageContentRows.find((row) => row.imageId === imageId)
+            ? imageContentRows?.find((row) => row.imageId === imageId)
             : undefined;
           if (row) {
             setIsEditActive(true);
@@ -150,7 +135,7 @@ export const Page = () => {
           {
             const imageId = params?.imageId;
             const data = imageId
-              ? imageContentRows.find((row) => row.imageId === imageId)
+              ? imageContentRows?.find((row) => row.imageId === imageId)
               : undefined;
             if (data) {
               setIsEditActive(true);
@@ -158,15 +143,8 @@ export const Page = () => {
                 type: "new",
                 data: {
                   row: {
-                    ...data,
+                    ...initialMasterdataRow(),
                     imageId: `${data.imageId}-copy`,
-                    imageExtension: "",
-                    sizeInBytes: 0,
-                    width: 0,
-                    height: 0,
-                    datasetVersion: 1,
-                    createdAt: new Date(),
-                    editedAt: new Date(),
                   },
                 },
               });
@@ -206,19 +184,20 @@ export const Page = () => {
   );
 
   const dataToInsert = useMemo(() => {
-    if (actionState.action === "accept-new") {
-      const { data } = actionState;
-      const { row, newImage } = data;
+    const { data } = actionState;
+    const { row, newImage } = data || {};
+    if (actionState.action === "accept-new" && row && isImageContentRow(row)) {
       const { file } = newImage || {};
       const newToInsert = { row: toRawImageContent(row), imageFile: file };
       return newToInsert;
     }
     return undefined;
   }, [actionState]);
+
   const dataToUpdate = useMemo(() => {
-    if (actionState.action === "accept-edit") {
-      const { data } = actionState;
-      const { row, newImage } = data;
+    const { data } = actionState;
+    const { row, newImage } = data || {};
+    if (actionState.action === "accept-edit" && row && isImageContentRow(row)) {
       const { file } = newImage || {};
       const newToUpdate = {
         row: toRawImageContent(row),
@@ -342,7 +321,7 @@ export const Page = () => {
         isAnySnackbarOpen={isAnySnackbarOpen}
         closeSnackbar={() => setIsAnySnackbarOpen(false)}
       />
-      {actionState.action === "new" && actionState.data && (
+      {actionState.action === "new" && actionState.data.row && (
         <CreateImageContentDialog
           imageContent={actionState.data.row}
           open={true}

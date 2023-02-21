@@ -10,12 +10,13 @@ import {
   ArticleRow,
   AttributeRow,
   HashtagRow,
+  isArticleRow,
   isSavingArticleAllowed,
   ManufacturerRow,
 } from "../../../../types/RowTypes";
 
 export interface CreateArticleDialogProps {
-  article: ArticleRow;
+  article: Partial<ArticleRow>;
   availableHashtags: HashtagRow[];
   availableManufacturers: ManufacturerRow[];
   availableAttributes: AttributeRow[];
@@ -60,7 +61,10 @@ export const CreateArticleDialog = (props: CreateArticleDialogProps) => {
         />
       </DialogContent>
       <DialogActions>
-        <Button disabled={!isSavingAllowed} onClick={() => handleAccept(data)}>
+        <Button
+          disabled={!isSavingAllowed}
+          onClick={() => isArticleRow(data) && handleAccept(data)}
+        >
           {"Speichern"}
         </Button>
         <Button onClick={handleCancel}>{"Abbrechen"}</Button>

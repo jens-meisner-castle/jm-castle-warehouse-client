@@ -11,7 +11,7 @@ export interface OptionsMenuProps {
 
 export const OptionsMenu = (props: OptionsMenuProps) => {
   const { options, onChange, anchorEl, onClose } = props;
-  const { isIncomingHistoryVisible } = options;
+  const { isIncomingHistoryVisible, isMasterdataChangesVisible } = options;
   const isMenuOpen = Boolean(anchorEl);
   const handleNewOptions = useCallback(
     (newOptions: Partial<PageOptions>) => {
@@ -24,13 +24,26 @@ export const OptionsMenu = (props: OptionsMenuProps) => {
     <Menu open={isMenuOpen} onClose={onClose} anchorEl={anchorEl}>
       <MenuItem>
         <FormControlLabel
+          label={"Stammdaten"}
+          control={
+            <Checkbox
+              onChange={(event, checked) =>
+                handleNewOptions({ isMasterdataChangesVisible: checked })
+              }
+              checked={isMasterdataChangesVisible || false}
+            />
+          }
+        ></FormControlLabel>
+      </MenuItem>
+      <MenuItem>
+        <FormControlLabel
           label={"Wareneingänge"}
           control={
             <Checkbox
               onChange={(event, checked) =>
                 handleNewOptions({ isIncomingHistoryVisible: checked })
               }
-              checked={isIncomingHistoryVisible}
+              checked={isIncomingHistoryVisible || false}
             />
           }
         ></FormControlLabel>

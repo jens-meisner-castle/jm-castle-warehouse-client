@@ -3,7 +3,7 @@ import {
   SectionStockState,
   StockStateCounts,
 } from "jm-castle-warehouse-types/build";
-import { useCallback, useMemo } from "react";
+import { CSSProperties, useCallback, useMemo } from "react";
 import {
   ArticleRow,
   fromRawArticle,
@@ -21,6 +21,8 @@ export interface SectionStockStateComponentProps {
   onAddToSectionHelp?: string;
   onMoveArticle?: (article: ArticleRow, section: StoreSectionRow) => void;
   onMoveArticleHelp?: string;
+  onEmitArticle?: (article: ArticleRow, section: StoreSectionRow) => void;
+  onEmitArticleHelp?: string;
 }
 
 export const SectionStockStateComponent = (
@@ -33,6 +35,8 @@ export const SectionStockStateComponent = (
     sizeVariant,
     onMoveArticle,
     onMoveArticleHelp,
+    onEmitArticle,
+    onEmitArticleHelp,
   } = props;
   const { section, states } = stockState;
 
@@ -60,9 +64,17 @@ export const SectionStockStateComponent = (
     [sectionRow, onMoveArticle]
   );
 
+  const handleEmitArticle = useCallback(
+    (article: ArticleRow) =>
+      onEmitArticle && onEmitArticle(article, sectionRow),
+    [sectionRow, onEmitArticle]
+  );
+
+  const gridCellStyle: CSSProperties = useMemo(() => ({ maxWidth: "50%" }), []);
+
   return (
     <Grid container direction="row">
-      <Grid item>
+      <Grid style={gridCellStyle} item>
         <div style={{ paddingRight: 5 }}>
           <StoreSectionComponent
             section={sectionRow}
@@ -73,22 +85,43 @@ export const SectionStockStateComponent = (
         </div>
       </Grid>
       {articlesWithCount.length ? (
-        articlesWithCount.map((d, i) => (
-          <Grid key={d.article.articleId} item>
+        articlesWithCount.map((d) => (
+          <Grid style={gridCellStyle} key={d.article.articleId} item>
             <div
               style={{
-                paddingRight: articlesWithCount.length - 1 === i ? 0 : 5,
+                width: "100%",
+                height: "100%",
+                padding: 5,
               }}
             >
-              <ArticleComponent
-                article={d.article}
-                sizeVariant={sizeVariant}
-                onMove={onMoveArticle ? handleMoveArticle : undefined}
-                onMoveHelp={onMoveArticleHelp}
-              />
-              <Typography
-                variant={typoVariant}
-              >{`Lagermenge: ${d.physicalCount}, verfügbar: ${d.availableCount}`}</Typography>
+              <div
+                style={{
+                  borderStyle: "solid",
+                  borderColor: "white",
+                  borderWidth: 1,
+                  padding: 5,
+                  width: "calc(100% - 20px)",
+                  height: "calc(100% - 20px)",
+                }}
+              >
+                <ArticleComponent
+                  article={d.article}
+                  sizeVariant={sizeVariant}
+                  onMove={onMoveArticle ? handleMoveArticle : undefined}
+                  onMoveHelp={onMoveArticleHelp}
+                  onEmit={onEmitArticle ? handleEmitArticle : undefined}
+                  onEmitHelp={onEmitArticleHelp}
+                />
+                <Typography
+                  sx={{
+                    color:
+                      d.physicalCount < 0 || d.availableCount < 0
+                        ? "error.main"
+                        : undefined,
+                  }}
+                  variant={typoVariant}
+                >{`Lager: ${d.physicalCount}, verfügbar: ${d.availableCount}`}</Typography>
+              </div>
             </div>
           </Grid>
         ))

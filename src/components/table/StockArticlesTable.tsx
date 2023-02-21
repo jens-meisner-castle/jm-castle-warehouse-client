@@ -108,6 +108,7 @@ export const StockArticlesTable = (props: StockArticlesTableProps) => {
             <TableCell align="center" style={cellStyle}>
               <ColumnLabel
                 label="verfügbar"
+                align="center"
                 order={order}
                 orderElement={orderElements.availableCount}
                 onClick={handleClickOnOrderElement}

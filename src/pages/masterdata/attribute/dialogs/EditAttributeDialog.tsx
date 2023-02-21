@@ -29,7 +29,7 @@ export const EditAttributeDialog = (props: EditAttributeDialogProps) => {
 
   return (
     <Dialog open={open} onClose={handleCancel}>
-      <DialogTitle>{"Lager bearbeiten"}</DialogTitle>
+      <DialogTitle>{"Attribut bearbeiten"}</DialogTitle>
       <DialogContent>
         <DialogContentText>
           {"Führen Sie Ihre Änderungen durch und drücken am Ende 'Speichern'."}

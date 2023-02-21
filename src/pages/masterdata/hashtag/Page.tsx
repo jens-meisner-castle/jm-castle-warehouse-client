@@ -35,11 +35,7 @@ import {
 } from "../../../types/RowTypes";
 import { OrderElement } from "../../../types/Types";
 import { getFilteredOrderedRows } from "../../../utils/Compare";
-import {
-  ActionStateReducer,
-  getValidInitialAction,
-  ReducerState,
-} from "../utils/Reducer";
+import { ActionStateReducer, getValidInitialAction } from "../utils/Reducer";
 import { CreateHashtagDialog } from "./dialogs/CreateHashtagDialog";
 import { EditHashtagDialog } from "./dialogs/EditHashtagDialog";
 
@@ -94,14 +90,10 @@ export const Page = () => {
     );
   }, [hashtagRows, passFilter, order]);
 
-  const [actionState, dispatch] = useReducer<
-    typeof ActionStateReducer<HashtagRow>,
-    ReducerState<HashtagRow>
-  >(
-    ActionStateReducer<HashtagRow>,
-    { action: "none", data: undefined },
-    () => ({ action: "none", data: undefined })
-  );
+  const [actionState, dispatch] = useReducer(ActionStateReducer<HashtagRow>, {
+    action: "none",
+    data: undefined,
+  });
 
   const refreshStatus = useCallback(() => {
     setUpdateIndicator((previous) => previous + 1);

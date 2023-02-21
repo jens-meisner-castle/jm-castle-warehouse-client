@@ -88,6 +88,7 @@ export const EmissionsTable = (props: EmissionsTableProps) => {
             <TableCell key="emittedAt" style={cellStyle} align="center">
               <ColumnLabel
                 label="gebucht um"
+                align="center"
                 order={order}
                 orderElement={orderElements.emittedAt}
                 onClick={handleClickOnOrderElement}

@@ -73,9 +73,10 @@ export const StockChangeTable = (props: StockChangeTableProps) => {
                 onClick={handleClickOnOrderElement}
               />
             </TableCell>
-            <TableCell style={cellStyle} align="right">
+            <TableCell style={cellStyle} align="center">
               <ColumnLabel
                 label="gebucht um"
+                align="center"
                 order={order}
                 orderElement={orderElements.at}
                 onClick={handleClickOnOrderElement}
@@ -91,7 +92,13 @@ export const StockChangeTable = (props: StockChangeTableProps) => {
             )}
             <TableCell style={cellStyle} align="center">
               {reduceColumns < 2 ? (
-                <div style={{ display: "flex", alignItems: "center" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
                   <Typography variant="body2" component={"span"}>
                     {"in"}
                   </Typography>
@@ -129,7 +136,7 @@ export const StockChangeTable = (props: StockChangeTableProps) => {
             <TableCell style={cellStyle} size={cellSize}>
               {articleId}
             </TableCell>
-            <TableCell style={cellStyle} size={cellSize} align="right">
+            <TableCell style={cellStyle} size={cellSize} align="center">
               {atFormatFunction(at)}
             </TableCell>
             <TableCell style={cellStyle} size={cellSize} align="right">

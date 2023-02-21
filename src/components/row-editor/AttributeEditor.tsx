@@ -3,10 +3,10 @@ import {
   isValueType,
   isValueUnit,
   ValueType,
+  ValueTypes,
   ValueUnit,
   ValueUnits,
 } from "jm-castle-types/build";
-import { ValueTypes } from "jm-castle-warehouse-types/build";
 import { useCallback, useMemo } from "react";
 import { AttributeRow, isSavingAttributeAllowed } from "../../types/RowTypes";
 import { TextFieldWithSpeech } from "../TextFieldWithSpeech";

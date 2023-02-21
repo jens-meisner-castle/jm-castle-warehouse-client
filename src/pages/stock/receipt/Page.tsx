@@ -46,11 +46,7 @@ import {
   isNonEmptyArray,
 } from "../../../utils/Compare";
 import { getNewFilter } from "../../../utils/Filter";
-import {
-  ActionStateReducer,
-  getValidInitialAction,
-  ReducerState,
-} from "../utils/Reducer";
+import { ActionStateReducer, getValidInitialAction } from "../utils/Reducer";
 import { CreateReceiptDialog } from "./dialogs/CreateReceiptDialog";
 
 const filterTest: FilterTest<ReceiptRow> = {
@@ -67,7 +63,7 @@ export const Page = () => {
   ]);
   const { timeFilter, handleTimeFilterChange } = useTimeintervalFilter(
     getNewFilter({
-      from: DateTime.now().minus({ days: 7 }),
+      from: DateTime.now().minus({ days: 7 }).startOf("day"),
       to: DateTime.now().endOf("day"),
     })
   );
@@ -135,14 +131,10 @@ export const Page = () => {
     return filtered;
   }, [receiptRows, passFilter, order]);
 
-  const [actionState, dispatch] = useReducer<
-    typeof ActionStateReducer<ReceiptRow>,
-    ReducerState<ReceiptRow>
-  >(
-    ActionStateReducer<ReceiptRow>,
-    { action: "none", data: undefined },
-    () => ({ action: "none", data: undefined })
-  );
+  const [actionState, dispatch] = useReducer(ActionStateReducer<ReceiptRow>, {
+    action: "none",
+    data: undefined,
+  });
 
   const { rows, errors } = useMasterdata(
     backendApiUrl,

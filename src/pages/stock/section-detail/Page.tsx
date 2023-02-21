@@ -31,7 +31,10 @@ const filterTest: FilterTest<SectionStockState> = {
   storeSections: [],
 };
 
-const filterAspects = Object.keys(filterTest) as FilterAspect[];
+const filterAspects = [
+  ...Object.keys(filterTest),
+  "nameFragment",
+] as FilterAspect[];
 
 export const sizeVariantForWidth = (width: number): SizeVariant => {
   if (width < 800) return "tiny";
@@ -86,14 +89,23 @@ export const Page = () => {
 
   const selectedStockStates = useMemo(() => {
     const newStates: SectionStockState[] = [];
+    const { nameFragment } = filter;
+    const nameRegex = nameFragment ? new RegExp(nameFragment, "i") : undefined;
     if (stock) {
       storeSections?.forEach((sectionId) => {
         const state = stock[sectionId];
-        state && newStates.push(state);
+        const passFilter =
+          !nameRegex ||
+          state.states.find(
+            (d) =>
+              d.article.article_id.match(nameRegex) ||
+              d.article.name.match(nameRegex)
+          );
+        state && passFilter && newStates.push(state);
       });
     }
     return newStates;
-  }, [storeSections, stock]);
+  }, [storeSections, filter, stock]);
 
   const selectedSections = useMemo(() => {
     return selectedStockStates.map((state) =>
@@ -151,6 +163,18 @@ export const Page = () => {
     [navigate]
   );
 
+  const handleEmitArticle = useCallback(
+    (article: ArticleRow, section: StoreSectionRow) => {
+      const searchParams = new URLSearchParams({
+        action: "new",
+        articleId: article.articleId,
+        sectionId: section.sectionId,
+      });
+      navigate(`${allRoutes().stockEmission.path}?${searchParams.toString()}`);
+    },
+    [navigate]
+  );
+
   return (
     <Grid container direction="column">
       {isPrintDialogOpen && (
@@ -174,7 +198,9 @@ export const Page = () => {
               filter={filter}
               aspects={filterAspects}
               onChange={handleFilterChange}
-              helpNameFragment={"Sucht in der Artikel ID und im Namen."}
+              helpNameFragment={
+                "Sucht in der Artikel ID und im Namen des Artikels."
+              }
               handleExpiredToken={handleExpiredToken}
             />
           </Paper>
@@ -197,6 +223,8 @@ export const Page = () => {
               onAddToSectionHelp={"Neuer Wareneingang"}
               onMoveArticle={handleMoveArticle}
               onMoveArticleHelp={"Artikel umlagern"}
+              onEmitArticle={handleEmitArticle}
+              onEmitArticleHelp={"Artikel ausgeben"}
             />
           </Paper>
         ))}

@@ -1,8 +1,9 @@
-import MoveDownIcon from "@mui/icons-material/MoveDown";
-import { Button, Grid, Tooltip, Typography } from "@mui/material";
+import { Grid, Typography } from "@mui/material";
 import { useMemo } from "react";
 import { WwwLink } from "../navigation/WwwLink";
 import { ArticleRow } from "../types/RowTypes";
+import { EmitButton } from "./buttons/EmitButton";
+import { MoveButton } from "./buttons/MoveButton";
 import { ImagesSlide } from "./ImagesSlide";
 import {
   buttonSizeForSize,
@@ -15,11 +16,14 @@ export interface ArticleComponentProps {
   sizeVariant: SizeVariant;
   onMove?: (article: ArticleRow) => void;
   onMoveHelp?: string;
+  onEmit?: (article: ArticleRow) => void;
+  onEmitHelp?: string;
 }
 
 export const ArticleComponent = (props: ArticleComponentProps) => {
-  const { article, sizeVariant, onMove, onMoveHelp } = props;
-  const { articleId, imageRefs, name, wwwLink } = article;
+  const { article, sizeVariant, onMove, onMoveHelp, onEmit, onEmitHelp } =
+    props;
+  const { articleId, imageRefs, wwwLink } = article;
   const typoVariant = typoVariantForSize(sizeVariant);
   const buttonSize = buttonSizeForSize(sizeVariant);
   const wwwLinkUrl = useMemo(
@@ -58,9 +62,6 @@ export const ArticleComponent = (props: ArticleComponentProps) => {
             )}
             {!imageRefs && (
               <>
-                <Grid item>
-                  <Typography variant={typoVariant}>{name}</Typography>
-                </Grid>
                 {wwwLink && wwwLinkUrl && (
                   <Grid item>
                     <WwwLink
@@ -73,29 +74,28 @@ export const ArticleComponent = (props: ArticleComponentProps) => {
               </>
             )}
           </Grid>
-          {onMove && (
-            <Grid item>
-              {onMoveHelp ? (
-                <Tooltip title={onMoveHelp}>
-                  <Button
+          <Grid item>
+            <Grid container direction="column">
+              {onMove && (
+                <Grid item>
+                  <MoveButton
                     size={buttonSize}
-                    variant="contained"
                     onClick={() => onMove(article)}
-                  >
-                    <MoveDownIcon />
-                  </Button>
-                </Tooltip>
-              ) : (
-                <Button
-                  size={buttonSize}
-                  variant="contained"
-                  onClick={() => onMove(article)}
-                >
-                  <MoveDownIcon />
-                </Button>
+                    tooltip={onMoveHelp}
+                  />
+                </Grid>
+              )}
+              {onEmit && (
+                <Grid item>
+                  <EmitButton
+                    size={buttonSize}
+                    onClick={() => onEmit(article)}
+                    tooltip={onEmitHelp}
+                  />
+                </Grid>
               )}
             </Grid>
-          )}
+          </Grid>
         </Grid>
       </Grid>
     </Grid>

@@ -7,12 +7,13 @@ import DialogTitle from "@mui/material/DialogTitle";
 import { useState } from "react";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
 import {
+  isManufacturerRow,
   isSavingManufacturerAllowed,
   ManufacturerRow,
 } from "../../../../types/RowTypes";
 
 export interface CreateManufacturerDialogProps {
-  manufacturer: ManufacturerRow;
+  manufacturer: Partial<ManufacturerRow>;
   open: boolean;
   handleCancel: () => void;
   handleAccept: (manufacturer: ManufacturerRow) => void;
@@ -44,7 +45,7 @@ export const CreateManufacturerDialog = (
           margin="dense"
           id="manufacturerId"
           label="Hersteller"
-          value={manufacturerId}
+          value={manufacturerId || ""}
           errorData={errorData.manufacturerId}
           onChange={(s) => updateData({ manufacturerId: s })}
           fullWidth
@@ -54,7 +55,7 @@ export const CreateManufacturerDialog = (
           margin="dense"
           id="name"
           label="Name"
-          value={name}
+          value={name || ""}
           errorData={errorData.name}
           onChange={(s) => updateData({ name: s })}
           fullWidth
@@ -62,7 +63,10 @@ export const CreateManufacturerDialog = (
         />
       </DialogContent>
       <DialogActions>
-        <Button disabled={!isSavingAllowed} onClick={() => handleAccept(data)}>
+        <Button
+          disabled={!isSavingAllowed}
+          onClick={() => isManufacturerRow(data) && handleAccept(data)}
+        >
           {"Speichern"}
         </Button>
         <Button onClick={handleCancel}>{"Abbrechen"}</Button>

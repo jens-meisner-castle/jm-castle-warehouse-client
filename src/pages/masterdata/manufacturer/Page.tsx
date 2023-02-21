@@ -39,11 +39,7 @@ import {
   concatCompares,
   isNonEmptyArray,
 } from "../../../utils/Compare";
-import {
-  ActionStateReducer,
-  getValidInitialAction,
-  ReducerState,
-} from "../utils/Reducer";
+import { ActionStateReducer, getValidInitialAction } from "../utils/Reducer";
 import { CreateManufacturerDialog } from "./dialogs/CreateManufacturerDialog";
 import { EditManufacturerDialog } from "./dialogs/EditManufacturerDialog";
 
@@ -106,13 +102,9 @@ export const Page = () => {
     return filtered;
   }, [manufacturerRows, passFilter, order]);
 
-  const [actionState, dispatch] = useReducer<
-    typeof ActionStateReducer<ManufacturerRow>,
-    ReducerState<ManufacturerRow>
-  >(
+  const [actionState, dispatch] = useReducer(
     ActionStateReducer<ManufacturerRow>,
-    { action: "none", data: undefined },
-    () => ({ action: "none", data: undefined })
+    { action: "none", data: undefined }
   );
 
   const refreshStatus = useCallback(() => {

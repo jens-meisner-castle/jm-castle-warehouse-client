@@ -1,26 +1,35 @@
 import NorthIcon from "@mui/icons-material/North";
 import SouthIcon from "@mui/icons-material/South";
 import { Tooltip } from "@mui/material";
-import { CSSProperties } from "react";
+import { CSSProperties, useMemo } from "react";
 import { OrderElement } from "../../types/Types";
 
 export interface ColumnLabelProps<T> {
   label: string;
+  align?: "left" | "right" | "center";
   orderElement?: OrderElement<T>;
   order?: OrderElement<T>[];
   onClick?: (field: keyof T & string) => void;
 }
 
 export const ColumnLabel = <T,>(props: ColumnLabelProps<T>) => {
-  const { label, orderElement, order, onClick } = props;
+  const { label, orderElement, order, onClick, align } = props;
   const { direction, field } = orderElement || {};
-  const buttonStyle: CSSProperties = {
-    textTransform: "none",
-    padding: 0,
-    display: "flex",
-    alignItems: "center",
-    cursor: "pointer",
-  };
+  const buttonStyle: CSSProperties = useMemo(
+    () => ({
+      padding: 0,
+      display: "flex",
+      alignItems: "center",
+      justifyContent:
+        align === "center"
+          ? "center"
+          : align === "right"
+          ? "flex-end"
+          : "flex-start",
+      cursor: "pointer",
+    }),
+    [align]
+  );
 
   return order ? (
     direction === "ascending" ? (

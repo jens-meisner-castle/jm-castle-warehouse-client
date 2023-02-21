@@ -1,31 +1,31 @@
-import { Grid, Paper } from "@mui/material";
+import { Grid, Paper, Typography } from "@mui/material";
 import { useMemo, useState } from "react";
 import { useHandleExpiredToken } from "../../../auth/AuthorizationProvider";
 import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
 import { SizeVariant } from "../../../components/SizeVariant";
-import { StockChangeTable } from "../../../components/table/StockChangeTable";
+import { ReceiptsTable } from "../../../components/table/ReceiptsTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { TimeintervalFilter } from "../../../filter/Types";
 import { useReceiptSelectByInterval } from "../../../hooks/useReceiptSelectByInterval";
 import {
-  compareStockChangingRow,
-  StockChangingRow,
-  stockChangingRowFromRawReceipt,
+  compareReceiptRow,
+  fromRawReceipt,
+  ReceiptRow,
 } from "../../../types/RowTypes";
 import { OrderElement } from "../../../types/Types";
 import { getFilteredOrderedRows } from "../../../utils/Compare";
 
-export interface StockChangeIncomingProps {
+export interface ReceiptsProps {
   filter: TimeintervalFilter;
   sizeVariant: SizeVariant;
 }
 
-export const StockChangeIncoming = (props: StockChangeIncomingProps) => {
+export const Receipts = (props: ReceiptsProps) => {
   const { filter, sizeVariant } = props;
   const handleExpiredToken = useHandleExpiredToken();
 
-  const [order, setOrder] = useState<OrderElement<StockChangingRow>[]>([
-    { field: "at", direction: "descending" },
+  const [order, setOrder] = useState<OrderElement<ReceiptRow>[]>([
+    { field: "receiptAt", direction: "descending" },
   ]);
 
   const receiptApiResponse = useReceiptSelectByInterval(
@@ -45,9 +45,9 @@ export const StockChangeIncoming = (props: StockChangeIncomingProps) => {
   const { rows: receiptRows } = receiptResult || {};
 
   const { allRows } = useMemo(() => {
-    const all: StockChangingRow[] = [];
+    const all: ReceiptRow[] = [];
     receiptRows?.forEach((row) => {
-      const newRow = stockChangingRowFromRawReceipt(row);
+      const newRow = fromRawReceipt(row);
       all.push(newRow);
     });
     return { allRows: all };
@@ -58,18 +58,23 @@ export const StockChangeIncoming = (props: StockChangeIncomingProps) => {
       allRows,
       () => true,
       order,
-      compareStockChangingRow
+      compareReceiptRow
     );
   }, [allRows, order]);
 
   return (
     <Grid container direction="column">
       <Grid item>
+        <Typography>{`Wareneingänge (${filter.from.toFormat(
+          "dd. LLL"
+        )} - ${filter.to.toFormat("dd. LLL")})`}</Typography>
+      </Grid>
+      <Grid item>
         <ErrorDisplays results={errorData} />
       </Grid>
       <Grid item>
         <Paper style={{ padding: 5 }}>
-          <StockChangeTable
+          <ReceiptsTable
             data={filteredOrderedRows || []}
             sizeVariant={sizeVariant}
             order={order}

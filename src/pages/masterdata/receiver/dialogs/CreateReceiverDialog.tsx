@@ -7,12 +7,13 @@ import DialogTitle from "@mui/material/DialogTitle";
 import { useState } from "react";
 import { TextFieldWithSpeech } from "../../../../components/TextFieldWithSpeech";
 import {
+  isReceiverRow,
   isSavingReceiverAllowed,
   ReceiverRow,
 } from "../../../../types/RowTypes";
 
 export interface CreateReceiverDialogProps {
-  receiver: ReceiverRow;
+  receiver: Partial<ReceiverRow>;
   open: boolean;
   handleCancel: () => void;
   handleAccept: (receiver: ReceiverRow) => void;
@@ -42,7 +43,7 @@ export const CreateReceiverDialog = (props: CreateReceiverDialogProps) => {
           margin="dense"
           id="receiverId"
           label="Empfänger"
-          value={receiverId}
+          value={receiverId || ""}
           errorData={errorData.receiverId}
           onChange={(s) => updateData({ receiverId: s })}
           fullWidth
@@ -52,7 +53,7 @@ export const CreateReceiverDialog = (props: CreateReceiverDialogProps) => {
           margin="dense"
           id="name"
           label="Name"
-          value={name}
+          value={name || ""}
           errorData={errorData.name}
           onChange={(s) => updateData({ name: s })}
           fullWidth
@@ -62,14 +63,17 @@ export const CreateReceiverDialog = (props: CreateReceiverDialogProps) => {
           margin="dense"
           id="mailAddress"
           label="Mail Adresse"
-          value={mailAddress}
+          value={mailAddress || ""}
           onChange={(s) => updateData({ mailAddress: s })}
           fullWidth
           variant="standard"
         />
       </DialogContent>
       <DialogActions>
-        <Button disabled={!isSavingAllowed} onClick={() => handleAccept(data)}>
+        <Button
+          disabled={!isSavingAllowed}
+          onClick={() => isReceiverRow(data) && handleAccept(data)}
+        >
           {"Speichern"}
         </Button>
         <Button onClick={handleCancel}>{"Abbrechen"}</Button>
