@@ -10,7 +10,7 @@ import { useAuthorizationToken } from "../../auth/AuthorizationProvider";
 import { defaultFetchOptions, defaultPageSize } from "../options/Utils";
 import { useTablesCount } from "../useTablesCount";
 
-const tables = ["storesection"];
+const tables = ["store_section"];
 
 export const useStoreSectionSelect = (
   apiUrl: string,
@@ -41,8 +41,8 @@ export const useStoreSectionSelect = (
 
   useEffect(() => {
     const { response } = countApiResponse;
-    const storesectionResponse = response?.length ? response[0] : undefined;
-    const { result } = storesectionResponse || {};
+    const storeSectionResponse = response?.length ? response[0] : undefined;
+    const { result } = storeSectionResponse || {};
     const { row } = result || {};
     const { countOfRows } = row || {};
     if (typeof countOfRows === "number") {
@@ -61,7 +61,7 @@ export const useStoreSectionSelect = (
     if (currentPage >= 0 && typeof totalCount === "number") {
       const maxPage = Math.ceil(totalCount / pageSize) - 1;
       const options = defaultFetchOptions(token);
-      const url = `${apiUrl}/storesection/page/select?page=${currentPage}&page_size=${pageSize}`;
+      const url = `${apiUrl}/store-section/page/select?page=${currentPage}&page_size=${pageSize}`;
       fetch(url, options)
         .then((response) => {
           response

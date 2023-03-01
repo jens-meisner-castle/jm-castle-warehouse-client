@@ -174,7 +174,7 @@ export const useMasterdata = (
 
     setMasterdata((previous) => ({
       errors: previous.errors,
-      rows: { ...previous.rows, storeSectionRows: newRows },
+      rows: { ...previous.rows, sectionRows: newRows },
     }));
   }, [storeSectionPages]);
 
