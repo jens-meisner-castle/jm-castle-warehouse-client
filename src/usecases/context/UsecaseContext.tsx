@@ -27,8 +27,12 @@ const initialValue: ContextState = {};
 const usecaseContext = createContext<ContextState>(initialValue);
 const { Provider } = usecaseContext;
 
-export const UsecaseContextProvider = (props: PropsWithChildren) => {
-  const { children } = props;
+export type UsecaseContextProviderProps = PropsWithChildren & {
+  onCancelUsecase?: () => void;
+};
+
+export const UsecaseContextProvider = (props: UsecaseContextProviderProps) => {
+  const { children, onCancelUsecase } = props;
   const [usecaseState, setUsecaseState] = useState<UsecaseState>({
     id: "empty",
     data: undefined,
@@ -64,7 +68,8 @@ export const UsecaseContextProvider = (props: PropsWithChildren) => {
 
   const cancelUsecase = useCallback(() => {
     setUsecaseState({ id: "empty" });
-  }, []);
+    onCancelUsecase && onCancelUsecase();
+  }, [onCancelUsecase]);
 
   const [contextValue, setContextValue] = useState<ContextState>({
     startUsecase,

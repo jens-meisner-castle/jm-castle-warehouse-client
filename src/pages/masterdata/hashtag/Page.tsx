@@ -23,7 +23,7 @@ import {
 } from "../../../filter/useArbitraryFilter";
 import { useHashtagInsert } from "../../../hooks/useHashtagInsert";
 import { useHashtagUpdate } from "../../../hooks/useHashtagUpdate";
-import { useMasterdata } from "../../../hooks/useMasterdata";
+import { useMasterdata } from "../../../hooks/pagination/useMasterdata";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
 import { allRoutes } from "../../../navigation/AppRoutes";

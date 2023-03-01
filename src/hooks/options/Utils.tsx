@@ -34,3 +34,5 @@ export const useDefaultFetchOptions = (): RequestInit => {
   }, [token]);
   return options;
 };
+
+export const defaultPageSize = 20;

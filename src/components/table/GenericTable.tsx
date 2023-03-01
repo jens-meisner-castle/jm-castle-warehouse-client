@@ -15,7 +15,7 @@ import { SizeVariant } from "../SizeVariant";
 import { TablePaginationActions } from "./TablePaginationActions";
 import { labelRowsPerPage } from "./Utils";
 
-interface TableSettings {
+export interface TableSettings {
   rowsPerPage: number;
 }
 

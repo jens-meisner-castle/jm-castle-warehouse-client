@@ -5,7 +5,7 @@ import { ErrorData } from "../../../components/ErrorDisplays";
 import { ArticleEditor } from "../../../components/row-editor/ArticleEditor";
 import { ViewFrame } from "../../../components/usecase/ViewFrame";
 import { backendApiUrl } from "../../../configuration/Urls";
-import { useMasterdata } from "../../../hooks/useMasterdata";
+import { useMasterdata } from "../../../hooks/pagination/useMasterdata";
 import { ArticleRow } from "../../../types/RowTypes";
 
 export interface CreateArticleProps {

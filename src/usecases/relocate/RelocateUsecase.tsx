@@ -5,7 +5,7 @@ import { AppAction } from "../../components/AppActions";
 import { ErrorData } from "../../components/ErrorDisplays";
 import { backendApiUrl } from "../../configuration/Urls";
 import { useEmissionInsert } from "../../hooks/useEmissionInsert";
-import { useMasterdata } from "../../hooks/useMasterdata";
+import { useMasterdata } from "../../hooks/pagination/useMasterdata";
 import { useReceiptInsert } from "../../hooks/useReceiptInsert";
 import {
   ArticleRow,

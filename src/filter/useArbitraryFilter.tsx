@@ -24,7 +24,7 @@ const pass = <T,>(
         : undefined;
       const keys = test.nameFragment;
       if (nameRegex && keys) {
-        return keys.every((k) => {
+        return !!keys.find((k) => {
           const rowValue = row[k] as string | undefined | null;
           const matchResult = rowValue ? rowValue.match(nameRegex) : undefined;
           return matchResult ? matchResult.length > 0 : false;

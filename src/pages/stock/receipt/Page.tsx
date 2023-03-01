@@ -27,7 +27,7 @@ import {
   useArbitraryFilter,
 } from "../../../filter/useArbitraryFilter";
 import { useTimeintervalFilter } from "../../../filter/useTimeintervalFilter";
-import { useMasterdata } from "../../../hooks/useMasterdata";
+import { useMasterdata } from "../../../hooks/pagination/useMasterdata";
 import { useReceiptInsert } from "../../../hooks/useReceiptInsert";
 import { useReceiptSelectByInterval } from "../../../hooks/useReceiptSelectByInterval";
 import { useUrlAction } from "../../../hooks/useUrlAction";

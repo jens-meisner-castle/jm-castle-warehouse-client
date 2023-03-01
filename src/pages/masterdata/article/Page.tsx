@@ -21,9 +21,9 @@ import {
   FilterTest,
   useArbitraryFilter,
 } from "../../../filter/useArbitraryFilter";
+import { useMasterdata } from "../../../hooks/pagination/useMasterdata";
 import { useArticleInsert } from "../../../hooks/useArticleInsert";
 import { useArticleUpdate } from "../../../hooks/useArticleUpdate";
-import { useMasterdata } from "../../../hooks/useMasterdata";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
 import { allRoutes } from "../../../navigation/AppRoutes";

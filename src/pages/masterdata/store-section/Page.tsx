@@ -25,7 +25,7 @@ import {
   FilterTest,
   useArbitraryFilter,
 } from "../../../filter/useArbitraryFilter";
-import { useMasterdata } from "../../../hooks/useMasterdata";
+import { useMasterdata } from "../../../hooks/pagination/useMasterdata";
 import { useStoreSectionInsert } from "../../../hooks/useStoreSectionInsert";
 import { useStoreSectionUpdate } from "../../../hooks/useStoreSectionUpdate";
 import { useUrlAction } from "../../../hooks/useUrlAction";

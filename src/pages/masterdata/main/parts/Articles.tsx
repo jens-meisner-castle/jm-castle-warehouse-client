@@ -6,7 +6,7 @@ import { AppAction, AppActions } from "../../../../components/AppActions";
 import { ErrorDisplays } from "../../../../components/ErrorDisplays";
 import { backendApiUrl } from "../../../../configuration/Urls";
 import { useArticleInsert } from "../../../../hooks/useArticleInsert";
-import { useMasterdata } from "../../../../hooks/useMasterdata";
+import { useMasterdata } from "../../../../hooks/pagination/useMasterdata";
 import {
   ArticleRow,
   fromRawArticle,

@@ -93,7 +93,7 @@ export const Page = () => {
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
-              <StockSections stock={stock || {}} />
+              <Emissions emissions={emissionRows || []} />
             </Paper>
           </Grid>
           <Grid item>
@@ -107,7 +107,7 @@ export const Page = () => {
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
-              <Emissions emissions={emissionRows || []} />
+              <StockSections stock={stock || {}} />
             </Paper>
           </Grid>
         </Grid>

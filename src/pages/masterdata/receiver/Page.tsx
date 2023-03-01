@@ -21,7 +21,7 @@ import {
   FilterTest,
   useArbitraryFilter,
 } from "../../../filter/useArbitraryFilter";
-import { useMasterdata } from "../../../hooks/useMasterdata";
+import { useMasterdata } from "../../../hooks/pagination/useMasterdata";
 import { useReceiverInsert } from "../../../hooks/useReceiverInsert";
 import { useReceiverUpdate } from "../../../hooks/useReceiverUpdate";
 import { useUrlAction } from "../../../hooks/useUrlAction";

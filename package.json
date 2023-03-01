@@ -1,6 +1,6 @@
 {
   "name": "jm-castle-warehouse-client",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "private": false,
   "files": [
     "build",

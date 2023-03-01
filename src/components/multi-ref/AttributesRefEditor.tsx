@@ -142,7 +142,12 @@ export const AttributesRefEditor = (props: AttributesRefEditorProps) => {
         );
       })}
       <Grid item width="100%">
-        <Grid container direction="row" alignItems="center" alignContent="end">
+        <Grid
+          container
+          direction="row"
+          alignItems="flex-end"
+          alignContent="end"
+        >
           <Grid item xs={10}>
             <AttributeRefAutocomplete
               style={{ minWidth: 300 }}
@@ -166,6 +171,7 @@ export const AttributesRefEditor = (props: AttributesRefEditorProps) => {
               }}
             >
               <Button
+                style={{ marginBottom: 4 }}
                 disabled={!attributeToAdd}
                 onClick={() => handleAddAttribute(attributeToAdd)}
                 variant="contained"

@@ -95,20 +95,6 @@ export const Page = () => {
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
-              <Stores count={counts.store || 0} />
-            </Paper>
-          </Grid>
-          <Grid item>
-            <Paper
-              style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
-            >
-              <StoreSections count={counts.store_section || 0} />
-            </Paper>
-          </Grid>
-          <Grid item>
-            <Paper
-              style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
-            >
               <Articles
                 count={counts.article || 0}
                 onNew={handleNewMasterdata}
@@ -119,7 +105,7 @@ export const Page = () => {
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
-              <Receivers count={counts.receiver || 0} />
+              <Attributes count={counts.attribute || 0} />
             </Paper>
           </Grid>
           <Grid item>
@@ -136,14 +122,14 @@ export const Page = () => {
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
-              <Hashtags count={counts.hashtag || 0} />
+              <Receivers count={counts.receiver || 0} />
             </Paper>
           </Grid>
           <Grid item>
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
-              <Costunits count={counts.costunit || 0} />
+              <Hashtags count={counts.hashtag || 0} />
             </Paper>
           </Grid>
           <Grid item>
@@ -157,7 +143,21 @@ export const Page = () => {
             <Paper
               style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
             >
-              <Attributes count={counts.attribute || 0} />
+              <Costunits count={counts.costunit || 0} />
+            </Paper>
+          </Grid>
+          <Grid item>
+            <Paper
+              style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
+            >
+              <Stores count={counts.store || 0} />
+            </Paper>
+          </Grid>
+          <Grid item>
+            <Paper
+              style={{ padding: 5, margin: 5, marginTop: 0, marginLeft: 0 }}
+            >
+              <StoreSections count={counts.store_section || 0} />
             </Paper>
           </Grid>
         </Grid>
