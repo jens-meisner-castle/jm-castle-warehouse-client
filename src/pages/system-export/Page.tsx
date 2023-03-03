@@ -7,7 +7,7 @@ import { ErrorData, ErrorDisplays } from "../../components/ErrorDisplays";
 import { TextareaComponent } from "../../components/TextareaComponent";
 import { backendApiUrl } from "../../configuration/Urls";
 import { useDbExport } from "../../hooks/useDbExport";
-import { useDbExportFile } from "../../hooks/useDbExportFile";
+import { useSystemExportFile } from "../../hooks/useSystemExportFile";
 
 export const Page = () => {
   const handleExpiredToken = useHandleExpiredToken();
@@ -20,7 +20,7 @@ export const Page = () => {
   );
   const { response: dbExportResponse } = dbExportApiResponse;
 
-  const exportFileApiResponse = useDbExportFile(
+  const exportFileApiResponse = useSystemExportFile(
     backendApiUrl,
     updateIndicator,
     handleExpiredToken

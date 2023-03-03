@@ -7,14 +7,14 @@ import { ErrorData, ErrorDisplays } from "../../components/ErrorDisplays";
 import { FileInputField } from "../../components/FileInputField";
 import { TextareaComponent } from "../../components/TextareaComponent";
 import { backendApiUrl } from "../../configuration/Urls";
-import { useDbImportFile } from "../../hooks/useDbImportFile";
+import { useSystemImportFile } from "../../hooks/useSystemImportFile";
 
 export const Page = () => {
   const handleExpiredToken = useHandleExpiredToken();
   const [updateIndicator, setUpdateIndicator] = useState(0);
   const [file, setFile] = useState<File | undefined>(undefined);
 
-  const importFileApiResponse = useDbImportFile(
+  const importFileApiResponse = useSystemImportFile(
     backendApiUrl,
     file,
     updateIndicator,

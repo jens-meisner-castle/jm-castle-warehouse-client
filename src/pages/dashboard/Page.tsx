@@ -34,13 +34,13 @@ export const Page = () => {
   const optionsSelectionRef = useRef<HTMLButtonElement | null>(null);
   const [filter, setFilter] = useState<TimeintervalFilter>({
     from: DateTime.now().minus({ day: 7 }).startOf("day"),
-    to: DateTime.now(),
+    to: DateTime.now().endOf("day"),
   });
 
   const refreshStatus = useCallback(() => {
     setFilter({
       from: DateTime.now().minus({ day: 1 }).startOf("day"),
-      to: DateTime.now(),
+      to: DateTime.now().endOf("day"),
     });
   }, []);
   const actions = useMemo(() => {

@@ -11,7 +11,7 @@ interface ImportResult {
   success: boolean;
 }
 
-export const useDbImportFile = (
+export const useSystemImportFile = (
   apiUrl: string,
   content: File | undefined,
   updateIndicator: number,
@@ -40,7 +40,7 @@ export const useDbImportFile = (
           : {
               enctype: "multipart/form-data",
             };
-        const url = `${apiUrl}/import/db/file`;
+        const url = `${apiUrl}/import/system/file`;
         setQueryStatus({ response: undefined });
         fetch(url, options)
           .then((response) => {

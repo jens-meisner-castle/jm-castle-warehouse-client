@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
-export const useDbExportFile = (
+export const useSystemExportFile = (
   apiUrl: string,
   updateIndicator: number,
   handleExpiredToken?: (errorCode: ErrorCode | undefined) => void
