@@ -32,7 +32,7 @@ export const useFilterData = (
   const what = useMemo(
     () => ({
       section:
-        aspects.includes("storeSection") || aspects.includes("storeSection"),
+        aspects.includes("storeSection") || aspects.includes("storeSections"),
       store: aspects.includes("store"),
       hashtag: aspects.includes("hashtags"),
       manufacturer: aspects.includes("manufacturer"),
