@@ -5,22 +5,26 @@ import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { TextareaComponent } from "../../components/TextareaComponent";
 import { backendApiUrl } from "../../configuration/Urls";
-import { useStoreSelect } from "../../hooks/useStoreSelect";
+import { useMasterdata } from "../../hooks/pagination/useMasterdata";
 
 export const SelectFromStore = () => {
   const handleExpiredToken = useHandleExpiredToken();
+
   const [indicatorSelect, setIndicatorSelect] = useState(0);
-  const { error, response, errorDetails, errorCode } = useStoreSelect(
+
+  const { errors, rows } = useMasterdata(
     backendApiUrl,
-    undefined,
+    { store: true },
     indicatorSelect,
     handleExpiredToken
   );
-  const { result } = response || {};
-  const { rows, cmd } = result || {};
+
+  const { storeRows } = rows || {};
+
   const executeTest = useCallback(() => {
     setIndicatorSelect((previous) => previous + 1);
   }, []);
+
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
@@ -29,6 +33,7 @@ export const SelectFromStore = () => {
     });
     return newActions;
   }, [executeTest]);
+
   const leftColumnWidth = 200;
 
   return (
@@ -46,19 +51,7 @@ export const SelectFromStore = () => {
           </Grid>
         </Grid>
       </Grid>
-      {errorCode && (
-        <Grid item>
-          <Grid container direction="row">
-            <Grid item style={{ width: leftColumnWidth }}>
-              <Typography>{"Error code"}</Typography>
-            </Grid>
-            <Grid item flexGrow={1}>
-              <Typography>{errorCode}</Typography>
-            </Grid>
-          </Grid>
-        </Grid>
-      )}
-      {error && (
+      {errors.store && (
         <Grid item>
           <Grid container direction="row">
             <Grid item style={{ width: leftColumnWidth }}>
@@ -66,7 +59,7 @@ export const SelectFromStore = () => {
             </Grid>
             <Grid item flexGrow={1}>
               <TextareaComponent
-                value={error}
+                value={errors.store}
                 maxRows={10}
                 style={{
                   width: "90%",
@@ -78,52 +71,13 @@ export const SelectFromStore = () => {
           </Grid>
         </Grid>
       )}
-      {errorDetails && (
-        <Grid item>
-          <Grid container direction="row">
-            <Grid item style={{ width: leftColumnWidth }}>
-              <Typography>{"Error details"}</Typography>
-            </Grid>
-            <Grid item flexGrow={1}>
-              <TextareaComponent
-                value={errorDetails}
-                formatObject
-                maxRows={10}
-                style={{
-                  width: "90%",
-                  resize: "none",
-                  marginRight: 30,
-                }}
-              />
-            </Grid>
-          </Grid>
-        </Grid>
-      )}
-      <Grid item>
-        <Grid container direction="row">
-          <Grid item style={{ width: leftColumnWidth }}>
-            <Typography>{"Command"}</Typography>
-          </Grid>
-          <Grid item flexGrow={1}>
-            <TextareaComponent
-              value={cmd || ""}
-              maxRows={10}
-              style={{
-                width: "90%",
-                resize: "none",
-                marginRight: 30,
-              }}
-            />
-          </Grid>
-        </Grid>
-      </Grid>
       <Grid item>
         <Grid container direction="row">
           <Grid item style={{ width: leftColumnWidth }}>
             <Typography>{"Result (count of rows)"}</Typography>
           </Grid>
           <Grid item flexGrow={1}>
-            <Typography>{rows ? rows.length : 0}</Typography>
+            <Typography>{storeRows ? storeRows.length : 0}</Typography>
           </Grid>
         </Grid>
       </Grid>
@@ -134,7 +88,7 @@ export const SelectFromStore = () => {
           </Grid>
           <Grid item flexGrow={1}>
             <TextareaComponent
-              value={rows || ""}
+              value={storeRows || ""}
               formatObject
               maxRows={10}
               style={{

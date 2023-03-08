@@ -21,6 +21,7 @@ export const useCostunitInsert = (
   >({
     response: undefined,
   });
+
   const token = useAuthorizationToken();
 
   useEffect(() => {

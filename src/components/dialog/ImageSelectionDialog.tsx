@@ -110,22 +110,35 @@ export const ImageSelectionDialog = (props: ImageSelectionDialogProps) => {
           }
         </DialogContentText>
         <ErrorDisplays results={errors} />
-        <TablePagination
-          labelRowsPerPage={"Bilder pro Seite"}
-          rowsPerPageOptions={[10, 20, 30, 40, 50, { label: "All", value: -1 }]}
-          count={filteredOrderedRows ? filteredOrderedRows.length : 0}
-          rowsPerPage={rowsPerPage}
-          page={usedPage}
-          SelectProps={{
-            inputProps: {
-              "aria-label": "rows per page",
-            },
-            native: true,
-          }}
-          onPageChange={handlePageChange}
-          onRowsPerPageChange={handleRowsPerPageChange}
-          ActionsComponent={TablePaginationActions}
-        />
+        <table>
+          <thead>
+            <tr>
+              <TablePagination
+                labelRowsPerPage={"Bilder pro Seite"}
+                rowsPerPageOptions={[
+                  10,
+                  20,
+                  30,
+                  40,
+                  50,
+                  { label: "All", value: -1 },
+                ]}
+                count={filteredOrderedRows ? filteredOrderedRows.length : 0}
+                rowsPerPage={rowsPerPage}
+                page={usedPage}
+                SelectProps={{
+                  inputProps: {
+                    "aria-label": "rows per page",
+                  },
+                  native: true,
+                }}
+                onPageChange={handlePageChange}
+                onRowsPerPageChange={handleRowsPerPageChange}
+                ActionsComponent={TablePaginationActions}
+              />
+            </tr>
+          </thead>
+        </table>
         <Grid container direction="row">
           <Grid item>
             <Typography>{visibleRowsWarning}</Typography>

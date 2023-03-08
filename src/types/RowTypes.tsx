@@ -479,6 +479,10 @@ export const compareArticleRow: Record<
     compareString<ArticleRow>("articleId", direction),
   name: (direction: OrderDirection) =>
     compareString<ArticleRow>("name", direction),
+  editedAt: (direction: OrderDirection) =>
+    compareDate<ArticleRow>("editedAt", direction),
+  createdAt: (direction: OrderDirection) =>
+    compareDate<ArticleRow>("createdAt", direction),
 };
 
 export const compareAttributeRow: Record<
@@ -497,6 +501,10 @@ export const compareImageRow: Record<
 > = {
   imageId: (direction: OrderDirection) =>
     compareString<ImageContentRow>("imageId", direction),
+  editedAt: (direction: OrderDirection) =>
+    compareDate<ImageContentRow>("editedAt", direction),
+  createdAt: (direction: OrderDirection) =>
+    compareDate<ImageContentRow>("createdAt", direction),
 };
 
 export const compareReceiverRow: Record<
@@ -507,6 +515,10 @@ export const compareReceiverRow: Record<
     compareString<ReceiverRow>("receiverId", direction),
   name: (direction: OrderDirection) =>
     compareString<ReceiverRow>("name", direction),
+  editedAt: (direction: OrderDirection) =>
+    compareDate<ReceiverRow>("editedAt", direction),
+  createdAt: (direction: OrderDirection) =>
+    compareDate<ReceiverRow>("createdAt", direction),
 };
 
 export const compareManufacturerRow: Record<
@@ -539,6 +551,10 @@ export const compareStoreSectionRow: Record<
     compareString<StoreSectionRow>("storeId", direction),
   name: (direction: OrderDirection) =>
     compareString<StoreSectionRow>("name", direction),
+  editedAt: (direction: OrderDirection) =>
+    compareDate<StoreSectionRow>("editedAt", direction),
+  createdAt: (direction: OrderDirection) =>
+    compareDate<StoreSectionRow>("createdAt", direction),
 };
 
 export const compareHashtagRow: Record<
@@ -613,6 +629,8 @@ export const compareMasterdataChangeRow: Record<
     compareString<MasterdataChangeRow>("what", direction),
   editedAt: (direction: OrderDirection) =>
     compareDate<MasterdataChangeRow>("editedAt", direction),
+  createdAt: (direction: OrderDirection) =>
+    compareDate<MasterdataChangeRow>("createdAt", direction),
 };
 
 export const toRawMasterdataFields = (row: MasterdataRow): Row_Masterdata => {

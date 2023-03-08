@@ -3,6 +3,10 @@ export const backendApiUrl =
     ? `${window.location.protocol}//${window.location.hostname}:53001/api`
     : `${window.location.protocol}//${window.location.hostname}:${window.location.port}/api`;
 
+export const backendPubSubApiUrl =
+  process.env.NODE_ENV === "development"
+    ? `wss://${window.location.hostname}:53001/api`
+    : `wss://${window.location.hostname}:${window.location.port}/api`;
 export const enterUrl = `${window.location.protocol}//${window.location.hostname}:${window.location.port}/landing-page`;
 
 export const getCompleteUrlForPath = (path: string) =>

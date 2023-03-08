@@ -16,6 +16,8 @@ export const availableOrderElements: Partial<
 > = {
   name: { field: "name", direction: undefined },
   articleId: { field: "articleId", direction: undefined },
+  editedAt: { field: "editedAt", direction: undefined },
+  createdAt: { field: "createdAt", direction: undefined },
 };
 
 export const sizeVariantForWidth = (width: number): SizeVariant => {
@@ -131,12 +133,22 @@ export const ArticlesTable = (props: ArticlesTableProps) => {
             )}
             {reduceColumns < 1 && (
               <TableCell key={"createdAt"} style={cellStyle}>
-                {"erzeugt"}
+                <ColumnLabel
+                  label="erzeugt"
+                  order={order}
+                  orderElement={orderElements.createdAt}
+                  onClick={handleClickOnOrderElement}
+                />
               </TableCell>
             )}
             {reduceColumns < 1 && (
               <TableCell key={"editedAt"} style={cellStyle}>
-                {"bearbeitet"}
+                <ColumnLabel
+                  label="bearbeitet"
+                  order={order}
+                  orderElement={orderElements.editedAt}
+                  onClick={handleClickOnOrderElement}
+                />
               </TableCell>
             )}
             {reduceColumns < 1 && (

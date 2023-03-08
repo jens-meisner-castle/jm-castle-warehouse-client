@@ -8,6 +8,7 @@ export type FilterTest<T> = Partial<{
   storeSection: AllowedKeys<T, string>[];
   storeSections: AllowedKeys<T, string>[];
   store: AllowedKeys<T, string>[];
+  manufacturer: AllowedKeys<T, string>[];
 }>;
 
 const pass = <T,>(
@@ -74,6 +75,17 @@ const pass = <T,>(
         return keys.every((k) => {
           const rowValue = row[k] as string | undefined | null;
           return rowValue ? store === rowValue : false;
+        });
+      }
+      return true;
+    }
+    case "manufacturer": {
+      const { manufacturer } = filter;
+      const keys = test.manufacturer;
+      if (manufacturer && keys) {
+        return keys.every((k) => {
+          const rowValue = row[k] as string | undefined | null;
+          return rowValue ? manufacturer === rowValue : false;
         });
       }
       return true;

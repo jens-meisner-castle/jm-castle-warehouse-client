@@ -6,9 +6,9 @@ import {
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
-import { useAuthorizationToken } from "../../auth/AuthorizationProvider";
-import { defaultFetchOptions, defaultPageSize } from "../options/Utils";
+import { defaultPageSize } from "../options/Utils";
 import { useTablesCount } from "../useTablesCount";
+import { useHashtagPage } from "./useHashtagPage";
 
 const tables = ["hashtag"];
 
@@ -30,7 +30,17 @@ export const useHashtagSelect = (
 
   const [currentPage, setCurrentPage] = useState(-1);
 
-  const token = useAuthorizationToken();
+  useEffect(() => {
+    if (updateIndicator > 0) {
+      setQueryStatus((previous) => ({
+        response: {
+          totalCount: undefined,
+          pages: previous.response?.pages || [],
+          finished: false,
+        },
+      }));
+    }
+  }, [updateIndicator]);
 
   const countApiResponse = useTablesCount(
     apiUrl,
@@ -57,54 +67,56 @@ export const useHashtagSelect = (
 
   const pageSize = defaultPageSize;
 
+  const { data, isLoading } = useHashtagPage(
+    apiUrl,
+    currentPage,
+    pageSize,
+    currentPage >= 0 ? updateIndicator : 0
+  );
+
   useEffect(() => {
-    if (currentPage >= 0 && typeof totalCount === "number") {
+    if (currentPage >= 0 && typeof totalCount === "number" && !isLoading) {
       const maxPage = Math.ceil(totalCount / pageSize) - 1;
-      const options = defaultFetchOptions(token);
-      const url = `${apiUrl}/hashtag/page/select?page=${currentPage}&page_size=${pageSize}`;
-      fetch(url, options)
-        .then((response) => {
-          response
-            .json()
-            .then((obj: ApiServiceResponse<SelectResponse<Row_Hashtag>>) => {
-              const { response, error, errorDetails, errorCode } = obj || {};
-              if (handleExpiredToken) {
-                handleExpiredToken(errorCode);
-              }
-              if (error) {
-                return setQueryStatus({ error, errorCode, errorDetails });
-              }
-              if (response) {
-                setQueryStatus((previous) => {
-                  const newPages = previous.response?.pages
-                    ? [...previous.response.pages, response]
-                    : [response];
-                  return {
-                    response: {
-                      totalCount: previous.response?.totalCount,
-                      pages: newPages,
-                      finished: currentPage === maxPage,
-                    },
-                  };
-                });
-                return setCurrentPage((previous) =>
-                  previous < maxPage ? previous + 1 : previous
-                );
-              }
-              return setQueryStatus({
-                errorCode: UnknownErrorCode,
-                error: `Received no error and undefined result.`,
-              });
-            });
-        })
-        .catch((error) => {
-          setQueryStatus({
-            errorCode: UnknownErrorCode,
-            error: error.toString(),
-          });
+      const { response, error, errorDetails, errorCode } = data || {};
+      if (handleExpiredToken) {
+        handleExpiredToken(errorCode);
+      }
+      if (error) {
+        return setQueryStatus({ error, errorCode, errorDetails });
+      }
+      if (response) {
+        setQueryStatus((previous) => {
+          const previousPages = previous.response?.pages || [];
+          const newPages =
+            previousPages.length > currentPage
+              ? [...previousPages.slice(0, currentPage), response]
+              : [...previousPages, response];
+          return {
+            response: {
+              totalCount: previous.response?.totalCount,
+              pages: newPages,
+              finished: currentPage === maxPage,
+            },
+          };
         });
+        return setCurrentPage((previous) =>
+          previous < maxPage ? previous + 1 : previous
+        );
+      }
+      return setQueryStatus({
+        errorCode: UnknownErrorCode,
+        error: `Received no error and undefined result.`,
+      });
     }
-  }, [apiUrl, currentPage, pageSize, totalCount, token, handleExpiredToken]);
+  }, [
+    apiUrl,
+    currentPage,
+    pageSize,
+    totalCount,
+    data,
+    isLoading,
+    handleExpiredToken,
+  ]);
 
   return queryStatus;
 };

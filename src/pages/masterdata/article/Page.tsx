@@ -42,6 +42,7 @@ import { EditArticleDialog } from "./dialogs/EditArticleDialog";
 const filterTest: FilterTest<ArticleRow> = {
   nameFragment: ["articleId", "name"],
   hashtags: ["hashtags"],
+  manufacturer: ["manufacturer"],
 };
 
 const filterAspects = Object.keys(filterTest) as FilterAspect[];

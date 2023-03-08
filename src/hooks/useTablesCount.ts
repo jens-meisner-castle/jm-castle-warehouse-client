@@ -15,7 +15,13 @@ export const useTablesCount = (
   handleExpiredToken?: (errorCode: ErrorCode | undefined) => void
 ) => {
   const [queryStatus, setQueryStatus] = useState<
-    | ApiServiceResponse<FindResponse<{ table: string; countOfRows: number }>[]>
+    | ApiServiceResponse<
+        FindResponse<{
+          table: string;
+          countOfRows: number;
+          lastChangeAt: number | undefined;
+        }>[]
+      >
     | ApiServiceResponse<undefined>
   >({
     response: undefined,
@@ -30,32 +36,34 @@ export const useTablesCount = (
         .join("&")}`;
       fetch(url, options)
         .then((response) => {
-          response
-            .json()
-            .then(
-              (
-                obj: ApiServiceResponse<
-                  FindResponse<{ table: string; countOfRows: number }>[]
-                >
-              ) => {
-                const { response, error, errorDetails, errorCode } = obj || {};
-                if (handleExpiredToken) {
-                  handleExpiredToken(errorCode);
-                }
-                if (error) {
-                  return setQueryStatus({ error, errorCode, errorDetails });
-                }
-                if (response) {
-                  return setQueryStatus({
-                    response,
-                  });
-                }
+          response.json().then(
+            (
+              obj: ApiServiceResponse<
+                FindResponse<{
+                  table: string;
+                  countOfRows: number;
+                  lastChangeAt: number | undefined;
+                }>[]
+              >
+            ) => {
+              const { response, error, errorDetails, errorCode } = obj || {};
+              if (handleExpiredToken) {
+                handleExpiredToken(errorCode);
+              }
+              if (error) {
+                return setQueryStatus({ error, errorCode, errorDetails });
+              }
+              if (response) {
                 return setQueryStatus({
-                  errorCode: UnknownErrorCode,
-                  error: `Received no error and undefined result.`,
+                  response,
                 });
               }
-            );
+              return setQueryStatus({
+                errorCode: UnknownErrorCode,
+                error: `Received no error and undefined result.`,
+              });
+            }
+          );
         })
         .catch((error) => {
           setQueryStatus({

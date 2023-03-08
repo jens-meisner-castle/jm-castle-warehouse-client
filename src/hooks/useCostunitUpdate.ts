@@ -21,6 +21,7 @@ export const useCostunitUpdate = (
   >({
     response: undefined,
   });
+
   const token = useAuthorizationToken();
 
   useEffect(() => {
@@ -44,25 +45,27 @@ export const useCostunitUpdate = (
       .then((response) => {
         response
           .json()
-          .then((obj: ApiServiceResponse<UpdateResponse<Row_Costunit>>) => {
-            const { response, error, errorDetails, errorCode } = obj || {};
-            if (handleExpiredToken) {
-              handleExpiredToken(errorCode);
-            }
-            if (error) {
-              return setQueryStatus({ error, errorCode, errorDetails });
-            }
-            const { result } = response || {};
-            if (result) {
+          .then(
+            async (obj: ApiServiceResponse<UpdateResponse<Row_Costunit>>) => {
+              const { response, error, errorDetails, errorCode } = obj || {};
+              if (handleExpiredToken) {
+                handleExpiredToken(errorCode);
+              }
+              if (error) {
+                return setQueryStatus({ error, errorCode, errorDetails });
+              }
+              const { result } = response || {};
+              if (result) {
+                return setQueryStatus({
+                  response: { result },
+                });
+              }
               return setQueryStatus({
-                response: { result },
+                errorCode: UnknownErrorCode,
+                error: `Received no error and undefined result.`,
               });
             }
-            return setQueryStatus({
-              errorCode: UnknownErrorCode,
-              error: `Received no error and undefined result.`,
-            });
-          });
+          );
       })
       .catch((error) => {
         setQueryStatus({

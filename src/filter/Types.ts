@@ -5,7 +5,8 @@ export type FilterAspect =
   | "nameFragment"
   | "store"
   | "storeSection"
-  | "storeSections";
+  | "storeSections"
+  | "manufacturer";
 
 export interface TimeintervalFilter {
   from: DateTime;
@@ -18,4 +19,5 @@ export interface ArbitraryFilter {
   store?: string;
   storeSection?: string;
   storeSections?: string[];
+  manufacturer?: string;
 }

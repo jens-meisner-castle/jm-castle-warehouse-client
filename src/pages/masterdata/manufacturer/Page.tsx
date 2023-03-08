@@ -133,7 +133,6 @@ export const Page = () => {
           break;
         case "edit": {
           const manufacturerId = params?.manufacturerId;
-          console.log(manufacturerId);
           const row = manufacturerId
             ? manufacturerRows.find(
                 (row) => row.manufacturerId === manufacturerId

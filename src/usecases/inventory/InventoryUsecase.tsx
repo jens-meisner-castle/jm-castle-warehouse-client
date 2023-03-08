@@ -4,15 +4,10 @@ import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
 import { AppAction } from "../../components/AppActions";
 import { ErrorData } from "../../components/ErrorDisplays";
 import { backendApiUrl } from "../../configuration/Urls";
-import { useArticleSelect } from "../../hooks/useArticleSelect";
-import { useCostunitSelect } from "../../hooks/useCostunitSelect";
-import { useStoreSectionSelect } from "../../hooks/useStoreSectionSelect";
+import { useMasterdata } from "../../hooks/pagination/useMasterdata";
 import {
   ArticleRow,
   EmissionRow,
-  fromRawArticle,
-  fromRawCostunit,
-  fromRawStoreSection,
   isArticleRow,
   isSavingArticleAllowed,
   ReceiptRow,
@@ -72,60 +67,20 @@ export const InventoryUsecase = (props: InventoryUsecaseProps) => {
 
   const handleExpiredToken = useHandleExpiredToken();
 
-  const articleApiResponse = useArticleSelect(
+  const { rows, errors } = useMasterdata(
     backendApiUrl,
-    "%",
+    { article: true, section: true, costunit: true },
     1,
     handleExpiredToken
   );
 
-  const availableArticles = useMemo(
-    () =>
-      articleApiResponse.response?.result?.rows?.map((r) => fromRawArticle(r)),
-    [articleApiResponse]
-  );
+  const {
+    articleRows: availableArticles,
+    sectionRows: allSections,
+    costunitRows: allCostunits,
+  } = rows || {};
 
-  const sectionApiResponse = useStoreSectionSelect(
-    backendApiUrl,
-    "%",
-    1,
-    handleExpiredToken
-  );
-
-  const allSections = useMemo(
-    () =>
-      sectionApiResponse.response?.result?.rows?.map((r) =>
-        fromRawStoreSection(r)
-      ),
-    [sectionApiResponse]
-  );
-
-  const costunitApiResponse = useCostunitSelect(
-    backendApiUrl,
-    "%",
-    1,
-    handleExpiredToken
-  );
-
-  const allCostunits = useMemo(
-    () =>
-      costunitApiResponse.response?.result?.rows?.map((r) =>
-        fromRawCostunit(r)
-      ),
-    [costunitApiResponse]
-  );
-
-  useEffect(() => {
-    if (articleApiResponse.error) {
-      updateErrorData({ article: articleApiResponse });
-    }
-  }, [articleApiResponse, updateErrorData]);
-
-  useEffect(() => {
-    if (sectionApiResponse.error) {
-      updateErrorData({ section: sectionApiResponse });
-    }
-  }, [sectionApiResponse, updateErrorData]);
+  useEffect(() => updateErrorData(errors), [updateErrorData, errors]);
 
   const handleChangedSelectedArticle = useCallback(
     (article: ArticleRow | null) => {

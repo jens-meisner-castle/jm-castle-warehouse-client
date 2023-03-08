@@ -14,6 +14,8 @@ export const availableOrderElements: Partial<
   Record<keyof ImageContentRow, OrderElement<ImageContentRow>>
 > = {
   imageId: { field: "imageId", direction: undefined },
+  editedAt: { field: "editedAt", direction: undefined },
+  createdAt: { field: "createdAt", direction: undefined },
 };
 
 export const sizeVariantForWidth = (width: number): SizeVariant => {
@@ -95,7 +97,14 @@ export const ImagesTable = (props: ImagesTableProps) => {
               <TableCell style={cellStyle}>{"erzeugt"}</TableCell>
             )}
             {reduceColumns < 1 && (
-              <TableCell style={cellStyle}>{"bearbeitet"}</TableCell>
+              <TableCell style={cellStyle}>
+                <ColumnLabel
+                  label="bearbeitet"
+                  order={order}
+                  orderElement={orderElements.editedAt}
+                  onClick={handleClickOnOrderElement}
+                />
+              </TableCell>
             )}
             {reduceColumns < 2 && (
               <TableCell style={cellStyle} align="right">

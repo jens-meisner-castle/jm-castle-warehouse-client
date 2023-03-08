@@ -1,6 +1,7 @@
 import { Grid } from "@mui/material";
 import { ErrorCode } from "jm-castle-warehouse-types/build";
 import { CSSProperties } from "react";
+import { ManufacturerRefAutocomplete } from "../components/autocomplete/ManufacturerRefAutocomplete";
 import { StoreRefAutocomplete } from "../components/autocomplete/StoreRefAutocomplete";
 import { StoreSectionRefAutocomplete } from "../components/autocomplete/StoreSectionRefAutocomplete";
 import { ErrorDisplays } from "../components/ErrorDisplays";
@@ -24,14 +25,21 @@ export const ArbitraryFilterComponent = (
 ) => {
   const { filter, onChange, helpNameFragment, aspects, handleExpiredToken } =
     props;
-  const { hashtags, nameFragment, store, storeSection, storeSections } = filter;
+  const {
+    hashtags,
+    nameFragment,
+    store,
+    storeSection,
+    storeSections,
+    manufacturer,
+  } = filter;
 
   const { errors, rows } = useFilterData(
     backendApiUrl,
     aspects,
     handleExpiredToken
   );
-  const { storeRows, hashtagRows, sectionRows } = rows;
+  const { storeRows, hashtagRows, sectionRows, manufacturerRows } = rows;
 
   const currentStore = storeRows?.find((r) => r.storeId === store);
   const currentSection = sectionRows?.find((r) => r.sectionId === storeSection);
@@ -40,6 +48,9 @@ export const ArbitraryFilterComponent = (
   );
   const currentHashtags = hashtagRows?.filter((r) =>
     hashtags?.includes(r.tagId)
+  );
+  const currentManufacturer = manufacturerRows?.find(
+    (r) => r.manufacturerId === manufacturer
   );
 
   const elementContainerStyle: CSSProperties = {
@@ -125,6 +136,23 @@ export const ArbitraryFilterComponent = (
               onChange={(hashtags) =>
                 onChange({ hashtags: hashtags?.map((r) => r.tagId) })
               }
+            />
+          </div>
+        </Grid>
+      )}
+      {aspects.includes("manufacturer") && (
+        <Grid item style={{ minWidth: 250 }}>
+          <div style={elementContainerStyle}>
+            <ManufacturerRefAutocomplete
+              value={currentManufacturer}
+              manufacturers={manufacturerRows || []}
+              onChange={(manufacturer) =>
+                onChange({ manufacturer: manufacturer?.manufacturerId })
+              }
+              margin="dense"
+              fullWidth
+              variant="standard"
+              helperText="Wählen Sie einen Hersteller"
             />
           </div>
         </Grid>
