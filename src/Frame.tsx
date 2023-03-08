@@ -18,7 +18,11 @@ const Frame = () => {
   const { response, error } = useServiceWorkerExists(1);
   const { exists: withServiceWorker } = response || {};
   error && console.log("service worker not active", error);
-  const [queryClient] = useState(new QueryClient());
+  const [queryClient] = useState(
+    new QueryClient({
+      defaultOptions: { queries: { staleTime: 1000 * 60 * 60 * 24 } },
+    })
+  );
 
   const { state, clearChanges } =
     usePubSubTableRowsChanges(backendPubSubApiUrl);
