@@ -1,64 +1,47 @@
-import { CloudDownload, FileDownload } from "@mui/icons-material";
+import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 import { Grid, Paper, Typography } from "@mui/material";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { ErrorData, ErrorDisplays } from "../../components/ErrorDisplays";
 import { TextareaComponent } from "../../components/TextareaComponent";
 import { backendApiUrl } from "../../configuration/Urls";
-import { useSystemExportFile } from "../../hooks/useSystemExportFile";
+import { useSystemBackup } from "../../hooks/useSystemBackup";
 
 export const Page = () => {
   const handleExpiredToken = useHandleExpiredToken();
   const [updateIndicator, setUpdateIndicator] = useState(0);
 
-  const exportFileApiResponse = useSystemExportFile(
+  const backupApiResponse = useSystemBackup(
     backendApiUrl,
     updateIndicator,
     handleExpiredToken
   );
-  const { response: exportFileResponse } = exportFileApiResponse;
+  const { response: backupResponse } = backupApiResponse;
 
   const errorData = useMemo(() => {
     const newData: Record<string, ErrorData> = {};
-    newData.exportFile = exportFileApiResponse;
+    newData.backup = backupApiResponse;
     return newData;
-  }, [exportFileApiResponse]);
+  }, [backupApiResponse]);
 
-  const { blob, filename } = exportFileResponse || {};
-  const downloadUrl = useMemo(() => {
-    return blob ? URL.createObjectURL(blob) : undefined;
-  }, [blob]);
-
-  const anchorRef = useRef<HTMLAnchorElement | null>(null);
-
-  const download = useCallback(() => {
-    anchorRef.current?.click();
-    downloadUrl && URL.revokeObjectURL(downloadUrl);
-    setUpdateIndicator(0);
-  }, [downloadUrl]);
+  const { version, file } = backupResponse || {};
 
   const actions = useMemo(() => {
     const newActions: AppAction[] = [];
     newActions.push({
-      label: <CloudDownload />,
-      tooltip: "Exportdaten erzeugen",
-      disabled: !!updateIndicator && !blob,
+      label: <DriveFileMoveIcon />,
+      tooltip: "Backup erzeugen",
+      disabled: !!updateIndicator && !file,
       onClick: () => setUpdateIndicator((previous) => previous + 1),
     });
-    newActions.push({
-      label: <FileDownload />,
-      tooltip: "Datei herunterladen",
-      disabled: !filename,
-      onClick: download,
-    });
     return newActions;
-  }, [download, filename, updateIndicator, blob]);
+  }, [file, updateIndicator]);
 
   return (
     <Grid container direction="column">
       <Grid item>
-        <Typography variant="h5">{"System export"}</Typography>
+        <Typography variant="h5">{"System Sicherung"}</Typography>
       </Grid>
       <Grid item>
         <Paper style={{ padding: 5, marginBottom: 5 }}>
@@ -68,20 +51,10 @@ export const Page = () => {
       <Grid item>
         <ErrorDisplays results={errorData} />
       </Grid>
-      {downloadUrl && (
-        <Grid item>
-          <a
-            href={downloadUrl}
-            download={filename || true}
-            ref={anchorRef}
-            style={{ display: "none" }}
-          ></a>
-        </Grid>
-      )}
       <Grid item>
         <Paper>
           <TextareaComponent
-            value={filename || ""}
+            value={file ? { version, file } : ""}
             formatObject
             maxRows={50}
             style={{

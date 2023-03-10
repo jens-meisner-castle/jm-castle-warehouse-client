@@ -1,53 +1,49 @@
 import {
   ApiServiceResponse,
   ErrorCode,
+  SystemBackupResponse,
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
 import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
 
-export const useSystemExportFile = (
+export const useSystemBackup = (
   apiUrl: string,
   updateIndicator: number,
   handleExpiredToken?: (errorCode: ErrorCode | undefined) => void
 ) => {
   const [queryStatus, setQueryStatus] = useState<
-    | ApiServiceResponse<{ blob: Blob; filename: string | undefined }>
-    | ApiServiceResponse<undefined>
+    ApiServiceResponse<SystemBackupResponse> | ApiServiceResponse<undefined>
   >({
     response: undefined,
   });
   const token = useAuthorizationToken();
 
   useEffect(() => {
-    setQueryStatus({ response: undefined });
     if (updateIndicator) {
       const options = defaultFetchOptions(token);
-      options.headers = options.headers
-        ? { ...options.headers, responseType: "blob" }
-        : { responseType: "blob" };
-      const url = `${apiUrl}/export/system/file`;
+      const url = `${apiUrl}/export/system/backup`;
       fetch(url, options)
         .then((response) => {
           response
-            .blob()
-            .then((blob) => {
-              const header = response.headers.get("Content-Disposition");
-              const parts = header && header.split(";");
-              let filename = Array.isArray(parts)
-                ? parts[1].split("=")[1]
-                : undefined;
-              filename = filename && filename.replaceAll('"', "");
-              filename = filename && filename.replaceAll("\\", "");
+            .json()
+            .then((obj: ApiServiceResponse<SystemBackupResponse>) => {
+              const { response, error, errorDetails, errorCode } = obj || {};
+              if (handleExpiredToken) {
+                handleExpiredToken(errorCode);
+              }
+              if (error) {
+                return setQueryStatus({ error, errorCode, errorDetails });
+              }
+              if (response) {
+                return setQueryStatus({
+                  response,
+                });
+              }
               return setQueryStatus({
-                response: { blob, filename },
-              });
-            })
-            .catch((error) => {
-              setQueryStatus({
                 errorCode: UnknownErrorCode,
-                error: error.toString(),
+                error: `Received no error and undefined result.`,
               });
             });
         })

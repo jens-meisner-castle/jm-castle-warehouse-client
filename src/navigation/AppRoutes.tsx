@@ -24,6 +24,7 @@ import { Page as EmissionPage } from "../pages/stock/emission/Page";
 import { Page as StockPage } from "../pages/stock/main/Page";
 import { Page as ReceiptPage } from "../pages/stock/receipt/Page";
 import { Page as StockSectionDetailPage } from "../pages/stock/section-detail/Page";
+import { Page as SystemBackupPage } from "../pages/system-backup/Page";
 import { Page as SystemExportPage } from "../pages/system-export/Page";
 import { Page as SystemImportPage } from "../pages/system-import/Page";
 import { Page as SystemSetupPage } from "../pages/system-setup/Page";
@@ -157,6 +158,11 @@ const masterdataManufacturer: AppRoute = {
   path: "/masterdata/manufacturer",
   element: ManufacturerPage,
 };
+const systemBackup: AppRoute = {
+  neededRole: "admin",
+  path: "/system-backup",
+  element: SystemBackupPage,
+};
 const systemExport: AppRoute = {
   neededRole: "admin",
   path: "/system-export",
@@ -199,6 +205,7 @@ const AllRoutes = {
   stockEmission,
   stockReceipt,
   usecase,
+  systemBackup,
   systemExport,
   systemImport,
 };

@@ -12,6 +12,7 @@ import {
   useSystemControls,
 } from "../../hooks/useSystemControls";
 import { useSystemStatus } from "../../hooks/useSystemStatus";
+import { BackupPart } from "./parts/BackupPart";
 import { ExportPart } from "./parts/ExportPart";
 import { ImportPart } from "./parts/ImportPart";
 
@@ -101,6 +102,11 @@ export const Page = () => {
       <Grid item>
         <Paper>
           <SystemStatusComponent status={status} />
+        </Paper>
+      </Grid>
+      <Grid item>
+        <Paper style={{ marginTop: 5 }}>
+          <BackupPart />
         </Paper>
       </Grid>
       <Grid item>
