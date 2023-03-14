@@ -1,6 +1,6 @@
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Grid, Paper, Typography } from "@mui/material";
-import { ExecuteSetupResponse } from "jm-castle-warehouse-types/build";
+import { ExecuteSetupResponse } from "jm-castle-types/build";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppAction, AppActions } from "../../components/AppActions";
 import { ErrorData, ErrorDisplays } from "../../components/ErrorDisplays";

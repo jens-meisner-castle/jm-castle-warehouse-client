@@ -1,9 +1,9 @@
-import { LuxonKey } from "jm-castle-warehouse-types/build";
+import { LuxonKey } from "jm-castle-types/build";
 import { DateTime, Duration } from "luxon";
 import {
   getDateFormat,
   getDateFormatWithoutYear,
-  getDateLevelFormat,
+  getDateLevelFormat
 } from "../../utils/Format";
 
 interface IScaleDateProps {

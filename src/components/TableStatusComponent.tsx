@@ -5,7 +5,7 @@ import {
   AccordionSummary,
   Typography,
 } from "@mui/material";
-import { TableStatus } from "jm-castle-warehouse-types/build";
+import { TableStatus } from "jm-castle-types/build";
 import { useState } from "react";
 
 export interface TableStatusComponentProps {

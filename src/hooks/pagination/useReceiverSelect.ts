@@ -1,8 +1,8 @@
+import { SelectResponse } from "jm-castle-types/build";
 import {
   ApiServiceResponse,
   ErrorCode,
   Row_Receiver,
-  SelectResponse,
   UnknownErrorCode,
 } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";

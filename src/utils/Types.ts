@@ -1,8 +1,8 @@
+import { LuxonKey } from "jm-castle-types/build";
 import {
   AnyDataValue,
   AnyDate,
   AnyNumber,
-  LuxonKey,
 } from "jm-castle-warehouse-types/build";
 
 export type NumberFormatter = (n: AnyNumber) => string;
