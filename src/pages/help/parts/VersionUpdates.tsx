@@ -1,7 +1,7 @@
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { Grid, IconButton, Paper, Typography } from "@mui/material";
+import { TextareaComponent } from "jm-castle-components/build";
 import { useState } from "react";
-import { TextareaComponent } from "../../../components/TextareaComponent";
 
 const updateDescriptions = [
   {

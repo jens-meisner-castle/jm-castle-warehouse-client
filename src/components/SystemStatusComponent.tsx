@@ -6,7 +6,7 @@ import { SystemStatus } from "jm-castle-warehouse-types/build";
 import { DateTime } from "luxon";
 import { useState } from "react";
 import { getDateFormat } from "../utils/Format";
-import { TextareaComponent } from "./TextareaComponent";
+import { TextareaComponent } from "jm-castle-components/build";
 
 export interface SystemStatusComponentProps {
   status: SystemStatus | undefined;

@@ -1,7 +1,7 @@
 import EditIcon from "@mui/icons-material/Edit";
 import EditOffIcon from "@mui/icons-material/EditOff";
+import { AppAction } from "jm-castle-components/build";
 import { useEffect, useState } from "react";
-import { AppAction } from "../components/AppActions";
 
 export const useAppActionEdit = (initialActive: boolean) => {
   const [isEditActive, setIsEditActive] = useState(initialActive);

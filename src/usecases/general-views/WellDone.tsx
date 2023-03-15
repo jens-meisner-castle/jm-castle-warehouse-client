@@ -1,6 +1,5 @@
 import { Grid, Paper } from "@mui/material";
-import { AppAction } from "../../components/AppActions";
-import { TextComponent } from "../../components/TextComponent";
+import { AppAction, TextComponent } from "jm-castle-components/build";
 import { ViewFrame } from "../../components/usecase/ViewFrame";
 
 export interface WellDoneProps {

@@ -1,11 +1,14 @@
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { Grid, Paper, Typography } from "@mui/material";
+import {
+  AppAction,
+  AppActions,
+  TextareaComponent,
+} from "jm-castle-components/build";
 import { useCallback, useMemo, useState } from "react";
 import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
-import { AppAction, AppActions } from "../../components/AppActions";
 import { ErrorData, ErrorDisplays } from "../../components/ErrorDisplays";
 import { FileInputField } from "../../components/FileInputField";
-import { TextareaComponent } from "../../components/TextareaComponent";
 import { backendApiUrl } from "../../configuration/Urls";
 import { useSystemImportFile } from "../../hooks/useSystemImportFile";
 

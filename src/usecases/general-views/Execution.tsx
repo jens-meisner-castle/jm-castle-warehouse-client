@@ -1,5 +1,5 @@
 import { Grid, Paper } from "@mui/material";
-import { TextComponent } from "../../components/TextComponent";
+import { TextComponent } from "jm-castle-components/build";
 
 export interface ExecutionProps {
   description: string;

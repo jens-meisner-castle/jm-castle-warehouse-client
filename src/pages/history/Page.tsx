@@ -1,10 +1,10 @@
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Grid, Paper, Tooltip, Typography } from "@mui/material";
+import { AppAction, AppActions } from "jm-castle-components/build";
 import { DateTime } from "luxon";
 import { useCallback, useMemo, useState } from "react";
 import { useAppActionFilter } from "../../app-action/useAppActionFilter";
 import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
-import { AppAction, AppActions } from "../../components/AppActions";
 import { ErrorData, ErrorDisplays } from "../../components/ErrorDisplays";
 import { FilteredRowsDisplay } from "../../components/FilteredRowsDisplay";
 import {

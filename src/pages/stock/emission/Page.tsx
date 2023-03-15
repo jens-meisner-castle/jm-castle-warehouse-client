@@ -1,6 +1,7 @@
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Grid, Paper, Typography } from "@mui/material";
+import { AppAction, AppActions } from "jm-castle-components/build";
 import { DateTime } from "luxon";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -8,15 +9,14 @@ import { useAppActionEdit } from "../../../app-action/useAppActionEdit";
 import { useAppActionFilter } from "../../../app-action/useAppActionFilter";
 import {
   useHandleExpiredToken,
-  useVerifiedUser,
+  useVerifiedUser
 } from "../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../components/ActionStateSnackbars";
-import { AppAction, AppActions } from "../../../components/AppActions";
 import { ErrorData, ErrorDisplays } from "../../../components/ErrorDisplays";
 import { FilteredRowsDisplay } from "../../../components/FilteredRowsDisplay";
 import {
   EmissionsTable,
-  sizeVariantForWidth,
+  sizeVariantForWidth
 } from "../../../components/table/EmissionsTable";
 import { backendApiUrl } from "../../../configuration/Urls";
 import { ArbitraryFilterComponent } from "../../../filter/ArbitraryFilterComponent";
@@ -24,12 +24,12 @@ import { TimeFilterComponent } from "../../../filter/TimeFilterComponent";
 import { FilterAspect } from "../../../filter/Types";
 import {
   FilterTest,
-  useArbitraryFilter,
+  useArbitraryFilter
 } from "../../../filter/useArbitraryFilter";
 import { useTimeintervalFilter } from "../../../filter/useTimeintervalFilter";
+import { useMasterdata } from "../../../hooks/pagination/useMasterdata";
 import { useEmissionInsert } from "../../../hooks/useEmissionInsert";
 import { useEmissionSelect } from "../../../hooks/useEmissionSelect";
-import { useMasterdata } from "../../../hooks/pagination/useMasterdata";
 import { useUrlAction } from "../../../hooks/useUrlAction";
 import { useWindowSize } from "../../../hooks/useWindowSize";
 import { allRoutes } from "../../../navigation/AppRoutes";
@@ -37,13 +37,13 @@ import {
   compareEmissionRow,
   EmissionRow,
   fromRawEmission,
-  toRawEmission,
+  toRawEmission
 } from "../../../types/RowTypes";
 import { OrderElement } from "../../../types/Types";
 import {
   CompareFunction,
   concatCompares,
-  isNonEmptyArray,
+  isNonEmptyArray
 } from "../../../utils/Compare";
 import { getNewFilter } from "../../../utils/Filter";
 import { ActionStateReducer, getValidInitialAction } from "../utils/Reducer";

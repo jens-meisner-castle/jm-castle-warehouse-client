@@ -1,11 +1,14 @@
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { Grid, Paper, Typography } from "@mui/material";
+import {
+  AppAction,
+  AppActions,
+  SystemSetupResultComponent,
+  SystemSetupStatusComponent,
+} from "jm-castle-components/build";
 import { ExecuteSetupResponse } from "jm-castle-types/build";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AppAction, AppActions } from "../../components/AppActions";
 import { ErrorData, ErrorDisplays } from "../../components/ErrorDisplays";
-import { SystemSetupResultComponent } from "../../components/SystemSetupResultComponent";
-import { SystemSetupStatusComponent } from "../../components/SystemSetupStatusComponent";
 import { backendApiUrl } from "../../configuration/Urls";
 import {
   ExecuteState,

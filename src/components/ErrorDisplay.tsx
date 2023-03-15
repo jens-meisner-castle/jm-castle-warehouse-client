@@ -1,6 +1,6 @@
 import { Grid, Typography } from "@mui/material";
+import { TextareaComponent } from "jm-castle-components/build";
 import { ErrorCode } from "jm-castle-warehouse-types/build";
-import { TextareaComponent } from "./TextareaComponent";
 
 export interface ErrorDisplayProps {
   leftColumnWidth?: number | string;

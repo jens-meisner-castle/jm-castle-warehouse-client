@@ -3,7 +3,7 @@ import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
 import { Grid, Paper, Typography } from "@mui/material";
 import { DateTime } from "luxon";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { AppAction, AppActions } from "../../components/AppActions";
+import { AppAction, AppActions } from "jm-castle-components/build";
 import { TimeintervalFilter } from "../../filter/Types";
 import { allRoutes } from "../../navigation/AppRoutes";
 import {

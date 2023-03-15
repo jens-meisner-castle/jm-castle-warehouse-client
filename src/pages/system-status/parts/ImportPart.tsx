@@ -1,6 +1,6 @@
 import { Grid, Typography } from "@mui/material";
+import { AppAction, AppActions } from "jm-castle-components/build";
 import { useMemo } from "react";
-import { AppAction, AppActions } from "../../../components/AppActions";
 import { allRoutes } from "../../../navigation/AppRoutes";
 
 export const ImportPart = () => {

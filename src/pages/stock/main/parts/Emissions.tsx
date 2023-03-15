@@ -1,7 +1,7 @@
 import { Grid, Typography } from "@mui/material";
+import { AppAction, AppActions } from "jm-castle-components/build";
 import { Row_Emission } from "jm-castle-warehouse-types/build";
 import { useMemo } from "react";
-import { AppAction, AppActions } from "../../../../components/AppActions";
 
 export interface EmissionsProps {
   emissions: Row_Emission[];

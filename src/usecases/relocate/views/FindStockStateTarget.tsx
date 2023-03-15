@@ -1,7 +1,7 @@
 import { Grid, Typography } from "@mui/material";
+import { AppAction } from "jm-castle-components/build";
 import { ErrorCode, StockStateCounts } from "jm-castle-warehouse-types/build";
 import { useEffect, useMemo } from "react";
-import { AppAction } from "../../../components/AppActions";
 import { ArticleComponent } from "../../../components/ArticleComponent";
 import { StoreSectionRefAutocomplete } from "../../../components/autocomplete/StoreSectionRefAutocomplete";
 import { ErrorData } from "../../../components/ErrorDisplays";

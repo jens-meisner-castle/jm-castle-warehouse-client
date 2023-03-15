@@ -1,4 +1,4 @@
-import { AppAction } from "../../../components/AppActions";
+import { AppAction } from "jm-castle-components/build";
 import { ArticleRefAutocomplete } from "../../../components/autocomplete/ArticleRefAutocomplete";
 import { ViewFrame } from "../../../components/usecase/ViewFrame";
 import { ArticleRow } from "../../../types/RowTypes";

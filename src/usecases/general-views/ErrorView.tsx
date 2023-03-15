@@ -1,7 +1,6 @@
 import { Grid, Paper } from "@mui/material";
-import { AppAction } from "../../components/AppActions";
+import { AppAction, TextComponent } from "jm-castle-components/build";
 import { ErrorData, ErrorDisplays } from "../../components/ErrorDisplays";
-import { TextComponent } from "../../components/TextComponent";
 import { ViewFrame } from "../../components/usecase/ViewFrame";
 
 export interface ErrorViewProps {

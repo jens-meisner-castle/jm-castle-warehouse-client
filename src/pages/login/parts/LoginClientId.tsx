@@ -1,6 +1,6 @@
 import { Grid, TextField } from "@mui/material";
+import { AppAction, AppActions } from "jm-castle-components/build";
 import { useMemo } from "react";
-import { AppAction, AppActions } from "../../../components/AppActions";
 import { loadClientId } from "../../../utils/LocalStorage";
 
 export interface LoginClientIdProps {

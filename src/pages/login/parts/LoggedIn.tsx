@@ -1,7 +1,7 @@
 import { Grid, Typography } from "@mui/material";
+import { AppAction, AppActions } from "jm-castle-components/build";
 import { DateTime } from "luxon";
 import { useMemo } from "react";
-import { AppAction, AppActions } from "../../../components/AppActions";
 
 export interface LoggedInProps {
   user: string;

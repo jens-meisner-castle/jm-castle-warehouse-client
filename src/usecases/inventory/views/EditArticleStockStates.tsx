@@ -7,9 +7,9 @@ import {
   Grid,
   Typography,
 } from "@mui/material";
+import { AppAction } from "jm-castle-components/build";
 import { ErrorCode } from "jm-castle-warehouse-types/build";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AppAction } from "../../../components/AppActions";
 import { CostunitRefAutocomplete } from "../../../components/autocomplete/CostunitRefAutocomplete";
 import { StoreSectionRefAutocomplete } from "../../../components/autocomplete/StoreSectionRefAutocomplete";
 import { CountField } from "../../../components/CountField";

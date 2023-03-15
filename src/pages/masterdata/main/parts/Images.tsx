@@ -1,8 +1,8 @@
 import { Grid, Typography } from "@mui/material";
+import { AppAction, AppActions } from "jm-castle-components/build";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useHandleExpiredToken } from "../../../../auth/AuthorizationProvider";
 import { ActionStateSnackbars } from "../../../../components/ActionStateSnackbars";
-import { AppAction, AppActions } from "../../../../components/AppActions";
 import { ImageContentEditState } from "../../../../components/row-editor/ImageContentEditor";
 import { backendApiUrl } from "../../../../configuration/Urls";
 import { useImageContentInsert } from "../../../../hooks/useImageContentInsert";

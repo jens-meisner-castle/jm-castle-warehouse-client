@@ -1,6 +1,6 @@
+import { AppAction } from "jm-castle-components/build";
 import { ErrorCode } from "jm-castle-warehouse-types/build";
 import { useEffect } from "react";
-import { AppAction } from "../../../components/AppActions";
 import { ErrorData } from "../../../components/ErrorDisplays";
 import { ArticleEditor } from "../../../components/row-editor/ArticleEditor";
 import { ViewFrame } from "../../../components/usecase/ViewFrame";

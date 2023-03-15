@@ -1,10 +1,13 @@
 import PlayCircleFilledIcon from "@mui/icons-material/PlayCircleFilled";
 import { Grid, Typography } from "@mui/material";
+import {
+  AppAction,
+  AppActions,
+  TextareaComponent,
+} from "jm-castle-components/build";
 import { Row_Article } from "jm-castle-warehouse-types/build";
 import { useCallback, useMemo, useState } from "react";
 import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
-import { AppAction, AppActions } from "../../components/AppActions";
-import { TextareaComponent } from "../../components/TextareaComponent";
 import { backendApiUrl } from "../../configuration/Urls";
 import { useArticleInsert } from "../../hooks/useArticleInsert";
 import { toRawMasterdataFields } from "../../types/RowTypes";

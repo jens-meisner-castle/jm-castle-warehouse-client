@@ -3,6 +3,7 @@ import { AppBar, Box, Toolbar } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import { ToolbarLink } from "jm-castle-components/build";
 import {
   MouseEventHandler,
   ReactElement,
@@ -11,7 +12,6 @@ import {
   useState,
 } from "react";
 import { usePages } from "./Pages";
-import { ToolbarLink } from "./ToolbarLink";
 
 export const NavigationBar = () => {
   const pages = usePages();

@@ -1,5 +1,5 @@
 import { Grid, Paper, Typography } from "@mui/material";
-import { TextComponent } from "../../components/TextComponent";
+import { TextComponent } from "jm-castle-components/build";
 import { welcome } from "./Welcome";
 
 export const Page = () => {

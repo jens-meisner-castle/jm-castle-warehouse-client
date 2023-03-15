@@ -1,9 +1,9 @@
 import RefreshIcon from "@mui/icons-material/Refresh";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { Grid, Paper, Tooltip, Typography } from "@mui/material";
+import { AppAction, AppActions } from "jm-castle-components/build";
 import { useCallback, useMemo, useState } from "react";
 import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
-import { AppAction, AppActions } from "../../components/AppActions";
 import { ErrorData, ErrorDisplays } from "../../components/ErrorDisplays";
 import { SystemStatusComponent } from "../../components/SystemStatusComponent";
 import { backendApiUrl } from "../../configuration/Urls";

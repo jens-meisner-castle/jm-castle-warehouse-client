@@ -1,7 +1,7 @@
 import { Grid, Paper, Typography } from "@mui/material";
+import { AppAction } from "jm-castle-components/build";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useHandleExpiredToken } from "../../auth/AuthorizationProvider";
-import { AppAction } from "../../components/AppActions";
 import { ErrorData } from "../../components/ErrorDisplays";
 import { backendApiUrl } from "../../configuration/Urls";
 import { useMasterdata } from "../../hooks/pagination/useMasterdata";

@@ -1,8 +1,8 @@
 import { Grid, Typography } from "@mui/material";
+import { AppAction } from "jm-castle-components/build";
 import { ErrorCode } from "jm-castle-warehouse-types/build";
 import { useEffect, useMemo } from "react";
 import { useVerifiedUser } from "../../../auth/AuthorizationProvider";
-import { AppAction } from "../../../components/AppActions";
 import { SizeVariant } from "../../../components/SizeVariant";
 import { EmissionsTable } from "../../../components/table/EmissionsTable";
 import { ReceiptsTable } from "../../../components/table/ReceiptsTable";

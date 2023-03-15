@@ -1,8 +1,8 @@
 import { Grid, Paper, Typography } from "@mui/material";
+import { TextComponent } from "jm-castle-components/build";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useVerifiedUser } from "../../auth/AuthorizationProvider";
-import { TextComponent } from "../../components/TextComponent";
 import { allRoutes } from "../../navigation/AppRoutes";
 
 export type ProgressState =

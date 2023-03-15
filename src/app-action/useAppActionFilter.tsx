@@ -1,6 +1,6 @@
 import { FilterAlt, FilterAltOff } from "@mui/icons-material";
+import { AppAction } from "jm-castle-components/build";
 import { useEffect, useState } from "react";
-import { AppAction } from "../components/AppActions";
 
 export const useAppActionFilter = (initialVisible: boolean) => {
   const [isFilterVisible, setIsFilterVisible] = useState(initialVisible);
