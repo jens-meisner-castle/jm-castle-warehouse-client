@@ -1,10 +1,10 @@
 import {
   ApiServiceResponse,
   ErrorCode,
-  Row_Receipt,
   SelectResponse,
   UnknownErrorCode,
-} from "jm-castle-warehouse-types/build";
+} from "jm-castle-types/build";
+import { Row_Receipt } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
 import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";

@@ -1,8 +1,5 @@
-import {
-  ApiServiceResponse,
-  LoginResult,
-  UnknownErrorCode,
-} from "jm-castle-warehouse-types/build";
+import { ApiServiceResponse, UnknownErrorCode } from "jm-castle-types/build";
+import { LoginResult } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
 import { defaultFetchOptions } from "./options/Utils";
 

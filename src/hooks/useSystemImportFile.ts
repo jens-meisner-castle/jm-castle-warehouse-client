@@ -2,14 +2,11 @@ import {
   ApiServiceResponse,
   ErrorCode,
   UnknownErrorCode,
-} from "jm-castle-warehouse-types/build";
+} from "jm-castle-types/build";
+import { ImportResult } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
 import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";
-
-interface ImportResult {
-  success: boolean;
-}
 
 export const useSystemImportFile = (
   apiUrl: string,
@@ -52,9 +49,8 @@ export const useSystemImportFile = (
               if (error) {
                 return setQueryStatus({ error, errorCode, errorDetails });
               }
-              const { success } = response || {};
-              if (success) {
-                return setQueryStatus({ response: { success } });
+              if (response) {
+                return setQueryStatus({ response });
               }
               return setQueryStatus({
                 errorCode: UnknownErrorCode,

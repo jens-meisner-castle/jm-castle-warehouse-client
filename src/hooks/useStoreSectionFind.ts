@@ -2,9 +2,9 @@ import {
   ApiServiceResponse,
   ErrorCode,
   FindResponse,
-  Row_StoreSection,
   UnknownErrorCode,
-} from "jm-castle-warehouse-types/build";
+} from "jm-castle-types/build";
+import { Row_StoreSection } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
 import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";

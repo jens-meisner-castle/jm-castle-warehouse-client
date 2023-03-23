@@ -1,9 +1,9 @@
 import {
   ApiServiceResponse,
   ErrorCode,
-  SystemControlResponse,
   UnknownErrorCode,
-} from "jm-castle-warehouse-types/build";
+} from "jm-castle-types/build";
+import { SystemControlResponse } from "jm-castle-warehouse-types/build";
 import { useEffect, useState } from "react";
 import { useAuthorizationToken } from "../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "./options/Utils";

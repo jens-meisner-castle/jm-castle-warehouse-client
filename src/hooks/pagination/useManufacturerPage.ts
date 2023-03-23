@@ -1,9 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  ApiServiceResponse,
-  Row_Manufacturer,
-  SelectResponse,
-} from "jm-castle-warehouse-types/build";
+import { ApiServiceResponse, SelectResponse } from "jm-castle-types/build";
+import { Row_Manufacturer } from "jm-castle-warehouse-types/build";
 import { useCallback } from "react";
 import { useAuthorizationToken } from "../../auth/AuthorizationProvider";
 import { defaultFetchOptions } from "../options/Utils";

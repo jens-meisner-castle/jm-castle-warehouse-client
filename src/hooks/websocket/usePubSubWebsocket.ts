@@ -15,33 +15,40 @@ export const usePubSubWebsocket = <T>(apiUrl: string, subscribe: WsMessage) => {
     error: undefined,
   });
 
-  const onMessage = useCallback(async (evt: MessageEvent<Blob>) => {
-    const { data } = evt;
-    try {
-      const str = await data.text();
-      const msg = JSON.parse(str);
-      if (isWsMessage(msg)) {
-        const { method } = msg;
-        switch (method) {
-          case "welcome":
-            break;
-          case "publish": {
-            const { params } = msg;
-            const { data } = params || {};
-            setResult({ data: data ? (data as T) : undefined });
-            break;
+  const { topic } = subscribe.params || {};
+
+  const onMessage = useCallback(
+    async (evt: MessageEvent<Blob>) => {
+      const { data } = evt;
+      try {
+        const str = await data.text();
+        const msg = JSON.parse(str);
+        if (isWsMessage(msg)) {
+          const { method, params } = msg;
+          switch (method) {
+            case "welcome":
+              break;
+            case "publish": {
+              if (topic !== params?.topic) {
+                return;
+              }
+              const { data } = params || {};
+              setResult({ data: data ? (data as T) : undefined });
+              break;
+            }
+            default:
+              console.log("Received unknown message:", msg);
           }
-          default:
-            console.log("Received unknown message:", msg);
         }
+      } catch (error) {
+        setResult((previous) => ({
+          data: previous.data,
+          error: (error as Error).toString(),
+        }));
       }
-    } catch (error) {
-      setResult((previous) => ({
-        data: previous.data,
-        error: (error as Error).toString(),
-      }));
-    }
-  }, []);
+    },
+    [topic]
+  );
 
   useEffect(() => {
     let newSocket: WebSocket;

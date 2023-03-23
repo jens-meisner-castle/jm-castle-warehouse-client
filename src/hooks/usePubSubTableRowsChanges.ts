@@ -2,18 +2,16 @@ import { msg_subscribe } from "jm-castle-types/build";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePubSubWebsocket } from "./websocket/usePubSubWebsocket";
 
-export interface SystemDatastatePubSubStatus {
+export interface PubSubStatusTableRows {
   state: { changes: { table: string }[] } | undefined;
   error: string | undefined;
 }
 
 export const usePubSubTableRowsChanges = (apiUrl: string) => {
-  const [pubSubStatus, setPubSubStatus] = useState<SystemDatastatePubSubStatus>(
-    {
-      state: undefined,
-      error: undefined,
-    }
-  );
+  const [pubSubStatus, setPubSubStatus] = useState<PubSubStatusTableRows>({
+    state: undefined,
+    error: undefined,
+  });
   const clearChanges = useCallback((tables: string[]) => {
     setPubSubStatus((previous) => ({
       error: previous.error,
