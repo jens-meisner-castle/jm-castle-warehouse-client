@@ -9,7 +9,7 @@ const certificateDirectory =
 export default defineConfig({
   server: {
     host: "desktop-61mus1j",
-    port: 5333,
+    port: 3001,
     https: {
       cert: fs.readFileSync(
         path.join(certificateDirectory, "DESKTOP-61MUS1J.crt"),
