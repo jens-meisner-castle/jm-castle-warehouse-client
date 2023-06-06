@@ -8,7 +8,8 @@ const certificateDirectory =
 // https://vitejs.dev/config/
 export default defineConfig({
   server: {
-    host: "desktop-61mus1j",
+    // concrete host name was not working, but 0.0.0.0 works also for the host name
+    host: "0.0.0.0",
     port: 3001,
     https: {
       cert: fs.readFileSync(
