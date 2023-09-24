@@ -1,17 +1,18 @@
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
 import { Grid, Paper, Typography } from "@mui/material";
+import { AppAction, AppActions } from "jm-castle-components/build";
 import { DateTime } from "luxon";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { AppAction, AppActions } from "jm-castle-components/build";
 import { TimeintervalFilter } from "../../filter/Types";
 import { allRoutes } from "../../navigation/AppRoutes";
 import {
   loadOptionsForPage,
   storeOptionsForPage,
 } from "../../utils/LocalStorage";
+import { ExtensionUser } from "../../web-components/ExtensionUser";
 import { MasterdataChanges } from "./parts/MasterdataChanges";
-import { getNewOptions, PageOptions } from "./parts/OptionsComponent";
+import { PageOptions, getNewOptions } from "./parts/OptionsComponent";
 import { OptionsMenu } from "./parts/OptionsMenu";
 import { Receipts } from "./parts/Receipts";
 
@@ -76,6 +77,9 @@ export const Page = () => {
           <Paper style={{ padding: 5, marginBottom: 5 }}>
             <AppActions actions={actions} />
           </Paper>
+        </Grid>
+        <Grid item>
+          <ExtensionUser />
         </Grid>
         <Grid item>
           <Grid container direction="row" gap={1}>

@@ -36,6 +36,7 @@ import {
   isNonEmptyArray,
 } from "../../utils/Compare";
 import { getNewFilter } from "../../utils/Filter";
+import { TimeFilterFlex } from "../../filter/TimeFilterFlex";
 
 const filterTest: FilterTest<StockChangingRow> = {
   nameFragment: ["articleId"],
@@ -159,6 +160,16 @@ export const Page = () => {
           <Grid item>
             <Paper style={{ marginBottom: 5 }}>
               <TimeFilterComponent
+                filter={timeFilter}
+                onChange={handleTimeFilterChange}
+              />
+            </Paper>
+          </Grid>
+        )}
+        {isFilterVisible && (
+          <Grid item>
+            <Paper style={{ marginBottom: 5 }}>
+              <TimeFilterFlex
                 filter={timeFilter}
                 onChange={handleTimeFilterChange}
               />
